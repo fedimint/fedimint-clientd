@@ -9,17 +9,6 @@ use tower_http::validate_request::ValidateRequestHeaderLayer;
 
 use crate::{config::CONFIG, state::AppState};
 
-use anyhow::Result;
-use axum::routing::post;
-use axum::{http::Method, routing::get, Router};
-pub mod handlers;
-
-use handlers::*;
-use tower_http::cors::{Any, CorsLayer};
-use tower_http::validate_request::ValidateRequestHeaderLayer;
-
-use crate::{config::CONFIG, state::AppState};
-
 /// Create a router with various routes.
 ///
 /// The routes include:

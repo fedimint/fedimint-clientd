@@ -6,7 +6,6 @@ use crate::{error::AppError, state::AppState};
 use anyhow::{anyhow, Result};
 use axum::http::StatusCode;
 use axum::{extract::State, Json};
-use fedimint_core::config::FederationId;
 use fedimint_core::{Amount, TieredMulti};
 use fedimint_mint_client::{
     MintClientModule,
@@ -16,13 +15,6 @@ use fedimint_mint_client::{
 use fedimint_wallet_client::WalletClientModule;
 use futures::StreamExt;
 use tracing::{info, warn};
-
-#[axum_macros::debug_handler]
-pub async fn handle_federation_id(
-    State(state): State<AppState>,
-) -> Result<Json<FederationId>, AppError> {
-    Ok(Json(state.fm.federation_id()))
-}
 
 #[axum_macros::debug_handler]
 pub async fn handle_info(State(state): State<AppState>) -> Result<Json<InfoResponse>, AppError> {
@@ -143,4 +135,106 @@ pub async fn handle_split(Json(req): Json<SplitRequest>) -> Result<Json<SplitRes
         .collect::<BTreeMap<_, _>>();
 
     Ok(Json(SplitResponse { notes }))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_combine() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_lninvoice() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_awaitinvoice() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_lnpay() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_awaitlnpay() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_listgateways() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_switchgateway() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_depositaddress() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_awaitdeposit() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_withdraw() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_backup() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_discoverversion() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_restore() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_printsecret() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_listoperations() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_module() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_config() -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
 }
