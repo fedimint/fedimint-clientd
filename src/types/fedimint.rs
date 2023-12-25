@@ -56,3 +56,13 @@ pub struct SplitRequest {
 pub struct SplitResponse {
     pub notes: BTreeMap<Amount, OOBNotes>,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct CombineRequest {
+    pub notes: Vec<OOBNotes>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CombineResponse {
+    pub notes: OOBNotes,
+}
