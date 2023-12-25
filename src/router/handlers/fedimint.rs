@@ -1,8 +1,6 @@
 use std::time::Duration;
 
-use crate::types::fedimint::{
-    InfoResponse, ReissueRequest, ReissueResponse, SpendRequest, SpendResponse,
-};
+use crate::types::fedimint::*;
 use crate::{error::AppError, state::AppState};
 use anyhow::{anyhow, Result};
 use axum::http::StatusCode;
@@ -53,7 +51,7 @@ pub async fn handle_reissue(
     State(state): State<AppState>,
     Json(req): Json<ReissueRequest>,
 ) -> Result<Json<ReissueResponse>, AppError> {
-    let amount = req.notes.total_amount();
+    let amount_msat = req.notes.total_amount();
 
     let mint = state.fm.get_first_module::<MintClientModule>();
 
@@ -73,7 +71,7 @@ pub async fn handle_reissue(
         info!("Update: {update_clone:?}");
     }
 
-    Ok(Json(ReissueResponse { amount }))
+    Ok(Json(ReissueResponse { amount_msat }))
 }
 
 #[axum_macros::debug_handler]
@@ -87,10 +85,10 @@ pub async fn handle_spend(
     let timeout = Duration::from_secs(req.timeout);
     // let (operation, notes) = if req.allow_overpay {  TODO: not backported yet
     let (operation, notes) = mint_module
-        .spend_notes_with_selector(&SelectNotesWithAtleastAmount, req.amount, timeout, ())
+        .spend_notes_with_selector(&SelectNotesWithAtleastAmount, req.amount_msat, timeout, ())
         .await?;
 
-    let overspend_amount = notes.total_amount() - req.amount;
+    let overspend_amount = notes.total_amount() - req.amount_msat;
     if overspend_amount != Amount::ZERO {
         warn!(
             "Selected notes {} worth more than requested",
@@ -104,4 +102,19 @@ pub async fn handle_spend(
     //     .spend_notes_with_selector(&SelectNotesWithExactAmount, req.amount, timeout, ()) TODO: not backported yet
     //     .await?
     // };
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_validate(
+    State(state): State<AppState>,
+    Json(req): Json<ValidateRequest>,
+) -> Result<Json<ValidateResponse>, AppError> {
+    let amount_msat =
+        state
+            .fm
+            .get_first_module::<MintClientModule>()
+            .validate_notes(req.notes)
+            .await?;
+
+    Ok(Json(ValidateResponse { amount_msat }))
 }

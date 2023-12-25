@@ -3,7 +3,7 @@ use fedimint_mint_client::OOBNotes;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct InfoResponse {
     pub federation_id: FederationId,
@@ -14,25 +14,35 @@ pub struct InfoResponse {
     pub denominations_msat: TieredSummary,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ReissueRequest {
     pub notes: OOBNotes,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct ReissueResponse {
-    pub amount: Amount,
+    pub amount_msat: Amount,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct SpendRequest {
-    pub amount: Amount,
+    pub amount_msat: Amount,
     pub allow_overpay: bool,
     pub timeout: u64,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Serialize)]
 pub struct SpendResponse {
     pub operation: OperationId,
     pub notes: OOBNotes,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ValidateRequest {
+    pub notes: OOBNotes,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ValidateResponse {
+    pub amount_msat: Amount,
 }

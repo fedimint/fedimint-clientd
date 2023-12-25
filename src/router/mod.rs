@@ -22,6 +22,7 @@ pub async fn create_router(state: AppState) -> Result<Router> {
         .route("/api/info", get(fedimint::handle_info))
         .route("/api/reissue", post(fedimint::handle_reissue))
         .route("/api/spend", post(fedimint::handle_spend))
+        .route("/api/validate", post(fedimint::handle_validate))
         .with_state(state)
         .layer(cors)
         .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
