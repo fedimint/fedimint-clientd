@@ -63,7 +63,7 @@ pub async fn create_router(state: AppState) -> Result<Router> {
             get(fedimint::handle_discoverversion),
         )
         .route("/api/restore", post(fedimint::handle_restore))
-        .route("/api/printsecret", get(fedimint::handle_printsecret))
+        // .route("/api/printsecret", get(fedimint::handle_printsecret))
         .route("/api/listoperations", get(fedimint::handle_listoperations))
         .route("/api/module", post(fedimint::handle_module))
         .route("/api/config", get(fedimint::handle_config))

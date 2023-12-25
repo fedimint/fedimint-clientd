@@ -18,6 +18,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f26201604c87b1e01bd3d98f8d5d9a8fcbb815e8cedb41ffccbeb4bf593a35fe"
 
 [[package]]
+name = "aes"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac1f845298e95f983ff1944b728ae08b8cebab80d684f0a832ed0fc74dfa27e2"
+dependencies = [
+ "cfg-if",
+ "cipher",
+ "cpufeatures",
+]
+
+[[package]]
 name = "ahash"
 version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -330,6 +341,7 @@ dependencies = [
  "bitcoin_hashes 0.12.0",
  "hex_lit",
  "secp256k1 0.27.0",
+ "serde",
 ]
 
 [[package]]
@@ -375,6 +387,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d7066118b13d4b20b23645932dfb3a81ce7e29f95726c2036fa33cd7b092501"
 dependencies = [
  "bitcoin-private",
+ "serde",
 ]
 
 [[package]]
@@ -463,6 +476,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "block-padding"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8894febbff9f758034a5b8e12d87918f56dfc64a8e1fe757d65e29041538d93"
+dependencies = [
+ "generic-array",
+]
+
+[[package]]
 name = "bls12_381"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -512,6 +534,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cbc"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26b52a9543ae338f279b96b0b9fed9c8093744685043739079ce85cd58f289a6"
+dependencies = [
+ "cipher",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.83"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -535,6 +566,16 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cipher"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "773f3b9af64447d2ce9850330c473515014aa235e6a783b02db81ff39e4a3dad"
+dependencies = [
+ "crypto-common",
+ "inout",
+]
 
 [[package]]
 name = "clang-sys"
@@ -628,6 +669,15 @@ name = "either"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
+
+[[package]]
+name = "email_address"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2153bd83ebc09db15bcbdc3e2194d901804952e3dc96967e1cd3b0c5c32d112"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "encoding_rs"
@@ -778,8 +828,8 @@ dependencies = [
  "jsonrpsee-types",
  "jsonrpsee-wasm-client",
  "jsonrpsee-ws-client",
- "lightning",
- "lightning-invoice",
+ "lightning 0.0.118",
+ "lightning-invoice 0.26.0",
  "macro_rules_attribute",
  "miniscript",
  "parity-scale-codec",
@@ -849,7 +899,7 @@ dependencies = [
  "fedimint-threshold-crypto",
  "futures",
  "itertools 0.10.5",
- "lightning-invoice",
+ "lightning-invoice 0.26.0",
  "rand",
  "reqwest",
  "secp256k1 0.24.3",
@@ -880,8 +930,8 @@ dependencies = [
  "fedimint-threshold-crypto",
  "futures",
  "itertools 0.10.5",
- "lightning",
- "lightning-invoice",
+ "lightning 0.0.118",
+ "lightning-invoice 0.26.0",
  "rand",
  "secp256k1 0.24.3",
  "serde",
@@ -1620,6 +1670,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "inout"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0c10553d664a4d0bcff9f4215d0aac67a639cc68ef660840afe309b807bc9f5"
+dependencies = [
+ "block-padding",
+ "generic-array",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1678,6 +1738,8 @@ dependencies = [
  "futures",
  "itertools 0.12.0",
  "lazy_static",
+ "lightning-invoice 0.27.0",
+ "lnurl-rs",
  "serde",
  "serde_json",
  "tokio",
@@ -1875,6 +1937,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "lightning"
+version = "0.0.119"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32899363dc48d297838ce1264c4bb6867ede6ec11f06f3b9823f3ff403f1ccc2"
+dependencies = [
+ "bitcoin 0.30.2",
+ "hex-conservative",
+]
+
+[[package]]
 name = "lightning-invoice"
 version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1883,10 +1955,42 @@ dependencies = [
  "bech32 0.9.1",
  "bitcoin 0.29.2",
  "bitcoin_hashes 0.11.0",
- "lightning",
+ "lightning 0.0.118",
  "num-traits",
  "secp256k1 0.24.3",
  "serde",
+]
+
+[[package]]
+name = "lightning-invoice"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd3421ccfaeac77763114f68f3fc5308f11a0e8a880618b4f84d1d22493aa465"
+dependencies = [
+ "bech32 0.9.1",
+ "bitcoin 0.30.2",
+ "lightning 0.0.119",
+ "num-traits",
+ "secp256k1 0.27.0",
+]
+
+[[package]]
+name = "lnurl-rs"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ce3b5abaabb22f7e6d68e58e269c0cd5d144760872a5a436c308de6a90f422f"
+dependencies = [
+ "aes",
+ "anyhow",
+ "base64 0.13.1",
+ "bech32 0.9.1",
+ "bitcoin 0.30.2",
+ "cbc",
+ "email_address",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "url",
 ]
 
 [[package]]
@@ -2523,7 +2627,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25996b82292a7a57ed3508f052cfff8640d38d32018784acd714758b43da9c8f"
 dependencies = [
  "bitcoin_hashes 0.12.0",
+ "rand",
  "secp256k1-sys 0.8.1",
+ "serde",
 ]
 
 [[package]]

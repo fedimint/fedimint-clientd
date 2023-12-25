@@ -232,9 +232,43 @@ pub async fn handle_awaitinvoice(
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_lnpay() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_lnpay(
+    State(state): State<AppState>,
+    Json(req): Json<LnPayRequest>,
+) -> Result<Json<LnPayResponse>, AppError> {
+    let bolt11 = get_invoice(&payment_info, amount, lnurl_comment).await?;
+    info!("Paying invoice: {bolt11}");
+    let lightning_module = client.get_first_module::<LightningClientModule>();
+    lightning_module.select_active_gateway().await?;
+
+    let gateway = lightning_module.select_active_gateway_opt().await;
+    let OutgoingLightningPayment {
+        payment_type,
+        contract_id,
+        fee,
+    } = lightning_module
+        .pay_bolt11_invoice(gateway, bolt11, ())
+        .await?;
+    let operation_id = payment_type.operation_id();
+    info!("Gateway fee: {fee}, payment operation id: {operation_id}");
+    if finish_in_background {
+        wait_for_ln_payment(&client, payment_type, contract_id, true).await?;
+        info!("Payment will finish in background, use await-ln-pay to get the result");
+        Ok(serde_json::json! {
+            {
+                "operation_id": operation_id,
+                "payment_type": payment_type.payment_type(),
+                "contract_id": contract_id,
+                "fee": fee,
+            }
+        })
+    } else {
+        Ok(
+            wait_for_ln_payment(&client, payment_type, contract_id, false)
+                .await?
+                .context("expected a response")?,
+        )
+    }
 }
 
 #[axum_macros::debug_handler]
@@ -291,11 +325,11 @@ pub async fn handle_restore() -> Result<(), AppError> {
     Ok(())
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_printsecret() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
-}
+// #[axum_macros::debug_handler]
+// pub async fn handle_printsecret() -> Result<(), AppError> {
+//     // TODO: Implement this function
+//     Ok(())
+// }
 
 #[axum_macros::debug_handler]
 pub async fn handle_listoperations() -> Result<(), AppError> {

@@ -84,3 +84,19 @@ pub struct LnInvoiceResponse {
 pub struct AwaitInvoiceRequest {
     pub operation_id: OperationId,
 }
+
+#[derive(Debug, Serialize)]
+pub struct LnPayRequest {
+    payment_info: String,
+    amount: Option<Amount>,
+    finish_in_background: bool,
+    lnurl_comment: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LnPayResponse {
+    pub operation_id: OperationId,
+    pub payment_type: String,
+    pub contract_id: String,
+    pub fee: Amount,
+}
