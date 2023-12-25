@@ -1,3 +1,4 @@
+use fedimint_ln_client::LightningClientModule;
 use itertools::Itertools;
 use std::collections::BTreeMap;
 use std::time::Duration;
@@ -175,9 +176,20 @@ pub async fn handle_combine(req: Json<CombineRequest>) -> Result<Json<CombineRes
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_lninvoice() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_lninvoice(
+    State(state): State<AppState>,
+    Json(req): Json<LnInvoiceRequest>,
+) -> Result<Json<LnInvoiceResponse>, AppError> {
+    let lightning_module = state.fm.get_first_module::<LightningClientModule>();
+    lightning_module.select_active_gateway().await?;
+
+    let (operation_id, invoice) = lightning_module
+        .create_bolt11_invoice(req.amount_msat, req.description, req.expiry_time, ())
+        .await?;
+    Ok(Json(LnInvoiceResponse {
+        operation_id,
+        invoice: invoice.to_string(),
+    }))
 }
 
 #[axum_macros::debug_handler]

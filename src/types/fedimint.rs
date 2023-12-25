@@ -66,3 +66,16 @@ pub struct CombineRequest {
 pub struct CombineResponse {
     pub notes: OOBNotes,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct LnInvoiceRequest {
+    pub amount_msat: Amount,
+    pub description: String,
+    pub expiry_time: Option<u64>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LnInvoiceResponse {
+    pub operation_id: OperationId,
+    pub invoice: String,
+}
