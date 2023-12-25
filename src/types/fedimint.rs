@@ -79,3 +79,8 @@ pub struct LnInvoiceResponse {
     pub operation_id: OperationId,
     pub invoice: String,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct AwaitInvoiceRequest {
+    pub operation_id: OperationId,
+}

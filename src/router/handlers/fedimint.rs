@@ -1,9 +1,15 @@
-use fedimint_ln_client::LightningClientModule;
+use fedimint_ln_client::{LightningClientModule, LnReceiveState};
 use itertools::Itertools;
 use std::collections::BTreeMap;
 use std::time::Duration;
 
-use crate::types::fedimint::*;
+use crate::types::fedimint::{
+    AwaitInvoiceRequest, CombineRequest, CombineResponse, InfoResponse, LnInvoiceRequest,
+    LnInvoiceResponse, ReissueRequest, ReissueResponse, SpendRequest, SpendResponse, SplitRequest,
+    SplitResponse, ValidateRequest, ValidateResponse,
+};
+
+use crate::utils::get_note_summary;
 use crate::{error::AppError, state::AppState};
 use anyhow::{anyhow, Result};
 use axum::http::StatusCode;
@@ -193,9 +199,36 @@ pub async fn handle_lninvoice(
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_awaitinvoice() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_awaitinvoice(
+    State(state): State<AppState>,
+    Json(req): Json<AwaitInvoiceRequest>,
+) -> Result<Json<InfoResponse>, AppError> {
+    let lightning_module = &state.fm.get_first_module::<LightningClientModule>();
+    let mut updates = lightning_module
+        .subscribe_ln_receive(req.operation_id)
+        .await?
+        .into_stream();
+    while let Some(update) = updates.next().await {
+        match update {
+            LnReceiveState::Claimed => {
+                return Ok(Json(get_note_summary(&state.fm).await?));
+            }
+            LnReceiveState::Canceled { reason } => {
+                return Err(AppError::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    anyhow!(reason),
+                ))
+            }
+            _ => {}
+        }
+
+        info!("Update: {update:?}");
+    }
+
+    Err(AppError::new(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        anyhow!("Unexpected end of stream"),
+    ))
 }
 
 #[axum_macros::debug_handler]
