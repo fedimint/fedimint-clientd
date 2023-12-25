@@ -10,7 +10,8 @@ use axum::{extract::State, Json};
 use fedimint_core::config::FederationId;
 use fedimint_core::Amount;
 use fedimint_mint_client::{
-    MintClientModule, SelectNotesWithAtleastAmount, SelectNotesWithExactAmount,
+    MintClientModule,
+    SelectNotesWithAtleastAmount, // SelectNotesWithExactAmount, TODO: not backported yet
 };
 use fedimint_wallet_client::WalletClientModule;
 use futures::StreamExt;
@@ -84,26 +85,23 @@ pub async fn handle_spend(
 
     let mint_module = state.fm.get_first_module::<MintClientModule>();
     let timeout = Duration::from_secs(req.timeout);
-    let (operation, notes) = if req.allow_overpay {
-        let (operation, notes) = mint_module
-            .spend_notes_with_selector(&SelectNotesWithAtleastAmount, req.amount, timeout, ())
-            .await?;
+    // let (operation, notes) = if req.allow_overpay {  TODO: not backported yet
+    let (operation, notes) = mint_module
+        .spend_notes_with_selector(&SelectNotesWithAtleastAmount, req.amount, timeout, ())
+        .await?;
 
-        let overspend_amount = notes.total_amount() - req.amount;
-        if overspend_amount != Amount::ZERO {
-            warn!(
-                "Selected notes {} worth more than requested",
-                overspend_amount
-            );
-        }
-
-        (operation, notes)
-    } else {
-        mint_module
-            .spend_notes_with_selector(&SelectNotesWithExactAmount, req.amount, timeout, ())
-            .await?
-    };
+    let overspend_amount = notes.total_amount() - req.amount;
+    if overspend_amount != Amount::ZERO {
+        warn!(
+            "Selected notes {} worth more than requested",
+            overspend_amount
+        );
+    }
     info!("Spend e-cash operation: {operation}");
-
     Ok(Json(SpendResponse { operation, notes }))
+    // } else {
+    // mint_module
+    //     .spend_notes_with_selector(&SelectNotesWithExactAmount, req.amount, timeout, ()) TODO: not backported yet
+    //     .await?
+    // };
 }
