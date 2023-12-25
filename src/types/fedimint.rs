@@ -1,4 +1,5 @@
 use fedimint_core::{config::FederationId, core::OperationId, Amount, TieredSummary};
+use fedimint_ln_client::PayType;
 use fedimint_mint_client::OOBNotes;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -85,18 +86,18 @@ pub struct AwaitInvoiceRequest {
     pub operation_id: OperationId,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize)]
 pub struct LnPayRequest {
-    payment_info: String,
-    amount: Option<Amount>,
-    finish_in_background: bool,
-    lnurl_comment: Option<String>,
+    pub payment_info: String,
+    pub amount_msat: Option<Amount>,
+    pub finish_in_background: bool,
+    pub lnurl_comment: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct LnPayResponse {
     pub operation_id: OperationId,
-    pub payment_type: String,
+    pub payment_type: PayType,
     pub contract_id: String,
     pub fee: Amount,
 }

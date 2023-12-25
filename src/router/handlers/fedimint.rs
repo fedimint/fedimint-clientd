@@ -1,15 +1,15 @@
-use fedimint_ln_client::{LightningClientModule, LnReceiveState};
+use fedimint_ln_client::{LightningClientModule, LnReceiveState, OutgoingLightningPayment};
 use itertools::Itertools;
 use std::collections::BTreeMap;
 use std::time::Duration;
 
 use crate::types::fedimint::{
     AwaitInvoiceRequest, CombineRequest, CombineResponse, InfoResponse, LnInvoiceRequest,
-    LnInvoiceResponse, ReissueRequest, ReissueResponse, SpendRequest, SpendResponse, SplitRequest,
-    SplitResponse, ValidateRequest, ValidateResponse,
+    LnInvoiceResponse, LnPayRequest, LnPayResponse, ReissueRequest, ReissueResponse, SpendRequest,
+    SpendResponse, SplitRequest, SplitResponse, ValidateRequest, ValidateResponse,
 };
 
-use crate::utils::get_note_summary;
+use crate::utils::{get_invoice, get_note_summary};
 use crate::{error::AppError, state::AppState};
 use anyhow::{anyhow, Result};
 use axum::http::StatusCode;
@@ -236,35 +236,31 @@ pub async fn handle_lnpay(
     State(state): State<AppState>,
     Json(req): Json<LnPayRequest>,
 ) -> Result<Json<LnPayResponse>, AppError> {
-    let bolt11 = get_invoice(&payment_info, amount, lnurl_comment).await?;
+    let bolt11 = get_invoice(&req).await?;
     info!("Paying invoice: {bolt11}");
-    let lightning_module = client.get_first_module::<LightningClientModule>();
+    let lightning_module = state.fm.get_first_module::<LightningClientModule>();
     lightning_module.select_active_gateway().await?;
 
-    let gateway = lightning_module.select_active_gateway_opt().await;
+    // let gateway = lightning_module.select_active_gateway_opt().await;
     let OutgoingLightningPayment {
         payment_type,
         contract_id,
         fee,
-    } = lightning_module
-        .pay_bolt11_invoice(gateway, bolt11, ())
-        .await?;
+    } = lightning_module.pay_bolt11_invoice(bolt11, ()).await?;
     let operation_id = payment_type.operation_id();
     info!("Gateway fee: {fee}, payment operation id: {operation_id}");
-    if finish_in_background {
-        wait_for_ln_payment(&client, payment_type, contract_id, true).await?;
+    if req.finish_in_background {
+        wait_for_ln_payment(&state.fm, payment_type, contract_id, true).await?;
         info!("Payment will finish in background, use await-ln-pay to get the result");
-        Ok(serde_json::json! {
-            {
-                "operation_id": operation_id,
-                "payment_type": payment_type.payment_type(),
-                "contract_id": contract_id,
-                "fee": fee,
-            }
-        })
+        Ok(Json(LnPayResponse {
+            operation_id,
+            payment_type: format!("{:?}", payment_type),
+            contract_id: format!("{:?}", contract_id),
+            fee,
+        }))
     } else {
         Ok(
-            wait_for_ln_payment(&client, payment_type, contract_id, false)
+            wait_for_ln_payment(&state.fm, payment_type, contract_id, false)
                 .await?
                 .context("expected a response")?,
         )
