@@ -897,6 +897,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "fedimint-http"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-utility",
+ "axum",
+ "axum-macros",
+ "bitcoin 0.31.0",
+ "dotenv",
+ "fedimint",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-ln-client",
+ "fedimint-mint-client",
+ "fedimint-rocksdb",
+ "fedimint-wallet-client",
+ "futures",
+ "itertools 0.12.0",
+ "lazy_static",
+ "lightning-invoice 0.27.0",
+ "lnurl-rs",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
 name = "fedimint-ln-client"
 version = "0.2.1-rc3"
 source = "git+https://github.com/fedimint/fedimint?branch=releases/v0.2#c80aad995a7399b2a5ab96da51194af68efc653a"
@@ -1761,38 +1793,6 @@ name = "itoa"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "af150ab688ff2122fcef229be89cb50dd66af9e01a4ff320cc137eecc9bacc38"
-
-[[package]]
-name = "janus"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-utility",
- "axum",
- "axum-macros",
- "bitcoin 0.31.0",
- "dotenv",
- "fedimint",
- "fedimint-client",
- "fedimint-core",
- "fedimint-ln-client",
- "fedimint-mint-client",
- "fedimint-rocksdb",
- "fedimint-wallet-client",
- "futures",
- "itertools 0.12.0",
- "lazy_static",
- "lightning-invoice 0.27.0",
- "lnurl-rs",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "url",
-]
 
 [[package]]
 name = "jobserver"

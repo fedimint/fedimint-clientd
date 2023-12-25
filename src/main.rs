@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", CONFIG.host, CONFIG.port))
         .await
         .unwrap();
-    info!("Janus Listening on {}", CONFIG.port);
+    info!("fedimint-http Listening on {}", CONFIG.port);
     axum::serve(listener, app).await.unwrap();
 
     Ok(())

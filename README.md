@@ -1,5 +1,5 @@
-<img src="assets/janus.png" width="500">
+<img src="assets/fedimint-http.png" width="500">
 
-# Janus: A Fedimint Client Server
+# fedimint-http: A Fedimint Client Server
 
-Janus exposes a REST API to interact with the Fedimint client.
+fedimint-http exposes a REST API to interact with the Fedimint client.
