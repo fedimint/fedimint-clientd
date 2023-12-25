@@ -46,3 +46,13 @@ pub struct ValidateRequest {
 pub struct ValidateResponse {
     pub amount_msat: Amount,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct SplitRequest {
+    pub notes: OOBNotes,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SplitResponse {
+    pub notes: BTreeMap<Amount, OOBNotes>,
+}

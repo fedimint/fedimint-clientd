@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::time::Duration;
 
 use crate::types::fedimint::*;
@@ -6,10 +7,11 @@ use anyhow::{anyhow, Result};
 use axum::http::StatusCode;
 use axum::{extract::State, Json};
 use fedimint_core::config::FederationId;
-use fedimint_core::Amount;
+use fedimint_core::{Amount, TieredMulti};
 use fedimint_mint_client::{
     MintClientModule,
-    SelectNotesWithAtleastAmount, // SelectNotesWithExactAmount, TODO: not backported yet
+    OOBNotes, // SelectNotesWithExactAmount, TODO: not backported yet
+    SelectNotesWithAtleastAmount,
 };
 use fedimint_wallet_client::WalletClientModule;
 use futures::StreamExt;
@@ -117,4 +119,28 @@ pub async fn handle_validate(
             .await?;
 
     Ok(Json(ValidateResponse { amount_msat }))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_split(Json(req): Json<SplitRequest>) -> Result<Json<SplitResponse>, AppError> {
+    let federation = req.notes.federation_id_prefix();
+    let notes = req
+        .notes
+        .notes()
+        .iter()
+        .map(|(amount, notes)| {
+            let notes = notes
+                .iter()
+                .map(|note| {
+                    OOBNotes::new(
+                        federation,
+                        TieredMulti::new(vec![(*amount, vec![*note])].into_iter().collect()),
+                    )
+                })
+                .collect::<Vec<_>>();
+            (*amount, notes[0].clone()) // clone the amount and return a single OOBNotes
+        })
+        .collect::<BTreeMap<_, _>>();
+
+    Ok(Json(SplitResponse { notes }))
 }
