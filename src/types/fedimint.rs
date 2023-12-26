@@ -186,3 +186,8 @@ pub struct OperationOutput {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub outcome: Option<serde_json::Value>,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct BackupRequest {
+    pub metadata: BTreeMap<String, String>,
+}

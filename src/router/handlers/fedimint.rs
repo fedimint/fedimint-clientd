@@ -1,4 +1,5 @@
 use bitcoin::secp256k1::PublicKey;
+use fedimint_client::backup::Metadata;
 use fedimint_core::time::now;
 use fedimint_ln_client::{
     LightningClientModule, LnReceiveState, OutgoingLightningPayment, PayType,
@@ -12,7 +13,7 @@ use time::format_description::well_known::iso8601;
 use time::OffsetDateTime;
 
 use crate::types::fedimint::{
-    AwaitDepositRequest, AwaitDepositResponse, AwaitInvoiceRequest, CombineRequest,
+    AwaitDepositRequest, AwaitDepositResponse, AwaitInvoiceRequest, BackupRequest, CombineRequest,
     CombineResponse, DepositAddressRequest, DepositAddressResponse, InfoResponse,
     ListOperationsRequest, LnInvoiceRequest, LnInvoiceResponse, LnPayRequest, LnPayResponse,
     OperationOutput, ReissueRequest, ReissueResponse, SpendRequest, SpendResponse, SplitRequest,
@@ -469,16 +470,22 @@ pub async fn handle_withdraw(
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_backup() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
-}
-
-#[axum_macros::debug_handler]
 pub async fn handle_discoverversion(
     State(state): State<AppState>,
 ) -> Result<Json<Value>, AppError> {
     Ok(Json(json!({ "version": state.fm.discover_common_api_version().await? })))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_backup(
+    State(state): State<AppState>,
+    Json(req): Json<BackupRequest>,
+) -> Result<Json<()>, AppError> {
+    state
+        .fm
+        .backup_to_federation(Metadata::from_json_serialized(req.metadata))
+        .await?;
+    Ok(Json(()))
 }
 
 #[axum_macros::debug_handler]
