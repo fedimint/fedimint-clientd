@@ -1,3 +1,3 @@
-pub mod awaitdeposit;
-pub mod depositaddress;
+pub mod await_deposit;
+pub mod deposit_address;
 pub mod withdraw;

@@ -1,6 +1,6 @@
-pub mod awaitinvoice;
-pub mod awaitpay;
+pub mod await_invoice;
+pub mod await_pay;
 pub mod invoice;
-pub mod listgateways;
+pub mod list_gateways;
 pub mod pay;
-pub mod switchgateway;
+pub mod switch_gateway;
