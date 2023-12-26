@@ -27,45 +27,74 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 }
 
 /// Implements Fedimint V0.2 API Route matching against CLI commands:
-/// - `/fedimint/api/info`: Display wallet info (holdings, tiers).
-/// - `/fedimint/api/reissue`: Reissue notes received from a third party to avoid double spends.
-/// - `/fedimint/api/spend`: Prepare notes to send to a third party as a payment.
-/// - `/fedimint/api/validate`: Verifies the signatures of e-cash notes, but *not* if they have been spent already.
-/// - `/fedimint/api/split`: Splits a string containing multiple e-cash notes (e.g. from the `spend` command) into ones that contain exactly one.
-/// - `/fedimint/api/combine`: Combines two or more serialized e-cash notes strings.
-/// - `/fedimint/api/lninvoice`: Create a lightning invoice to receive payment via gateway.
-/// - `/fedimint/api/awaitinvoice`: Wait for incoming invoice to be paid.
-/// - `/fedimint/api/lnpay`: Pay a lightning invoice or lnurl via a gateway.
-/// - `/fedimint/api/awaitlnpay`: Wait for a lightning payment to complete.
-/// - `/fedimint/api/listgateways`: List registered gateways.
-/// - `/fedimint/api/switchgateway`: Switch active gateway.
-/// - `/fedimint/api/depositaddress`: Generate a new deposit address, funds sent to it can later be claimed.
-/// - `/fedimint/api/awaitdeposit`: Wait for deposit on previously generated address.
-/// - `/fedimint/api/withdraw`: Withdraw funds from the federation.
-/// - `/fedimint/api/backup`: Upload the (encrypted) snapshot of mint notes to federation.
-/// - `/fedimint/api/discoverversion`: Discover the common api version to use to communicate with the federation.
-/// - `/fedimint/api/restore`: Restore the previously created backup of mint notes (with `backup` command).
-/// - `/fedimint/api/printsecret`: Print the secret key of the client.
-/// - `/fedimint/api/listoperations`: List operations.
-/// - `/fedimint/api/module`: Call a module subcommand.
-/// - `/fedimint/api/config`: Returns the client config.
+/// - `/fedimint/v2/info`: Display wallet info (holdings, tiers).
+/// - `/fedimint/v2/backup`: Upload the (encrypted) snapshot of mint notes to federation.
+/// - `/fedimint/v2/discoverversion`: Discover the common api version to use to communicate with the federation.
+/// - `/fedimint/v2/restore`: Restore the previously created backup of mint notes (with `backup` command).
+/// - `/fedimint/v2/listoperations`: List operations.
+/// - `/fedimint/v2/module`: Call a module subcommand.
+/// - `/fedimint/v2/config`: Returns the client config.
+///
+/// Mint related commands:
+/// - `/fedimint/v2/mint/reissue`: Reissue notes received from a third party to avoid double spends.
+/// - `/fedimint/v2/mint/spend`: Prepare notes to send to a third party as a payment.
+/// - `/fedimint/v2/mint/validate`: Verifies the signatures of e-cash notes, but *not* if they have been spent already.
+/// - `/fedimint/v2/mint/split`: Splits a string containing multiple e-cash notes (e.g. from the `spend` command) into ones that contain exactly one.
+/// - `/fedimint/v2/mint/combine`: Combines two or more serialized e-cash notes strings.
+///
+/// Lightning network related commands:
+/// - `/fedimint/v2/ln/invoice`: Create a lightning invoice to receive payment via gateway.
+/// - `/fedimint/v2/ln/awaitinvoice`: Wait for incoming invoice to be paid.
+/// - `/fedimint/v2/ln/pay`: Pay a lightning invoice or lnurl via a gateway.
+/// - `/fedimint/v2/ln/awaitpay`: Wait for a lightning payment to complete.
+/// - `/fedimint/v2/ln/listgateways`: List registered gateways.
+/// - `/fedimint/v2/ln/switchgateway`: Switch active gateway.
+///
+/// Onchain related commands:
+/// - `/fedimint/v2/onchain/depositaddress`: Generate a new deposit address, funds sent to it can later be claimed.
+/// - `/fedimint/v2/onchain/awaitdeposit`: Wait for deposit on previously generated address.
+/// - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
 fn fedimint_v2_router() -> Router<AppState> {
-    Router::new()
+    let mint_router = Router::new()
+        .route("/reissue", post(fedimint::mint::reissue::handle_reissue))
+        .route("/spend", post(fedimint::mint::spend::handle_spend))
+        .route("/validate", post(fedimint::mint::validate::handle_validate))
+        .route("/split", post(fedimint::mint::split::handle_split))
+        .route("/combine", post(fedimint::mint::combine::handle_combine));
+
+    let ln_router = Router::new()
+        .route("/invoice", post(fedimint::ln::invoice::handle_invoice))
+        .route(
+            "/awaitinvoice",
+            post(fedimint::ln::awaitinvoice::handle_awaitinvoice),
+        )
+        .route("/pay", post(fedimint::ln::pay::handle_pay))
+        .route("/awaitpay", post(fedimint::ln::awaitpay::handle_awaitpay))
+        .route(
+            "/listgateways",
+            get(fedimint::ln::listgateways::handle_listgateways),
+        )
+        .route(
+            "/switchgateway",
+            post(fedimint::ln::switchgateway::handle_switchgateway),
+        );
+
+    let onchain_router = Router::new()
+        .route(
+            "/depositaddress",
+            post(fedimint::onchain::depositaddress::handle_depositaddress),
+        )
+        .route(
+            "/awaitdeposit",
+            post(fedimint::onchain::awaitdeposit::handle_awaitdeposit),
+        )
+        .route(
+            "/withdraw",
+            post(fedimint::onchain::withdraw::handle_withdraw),
+        );
+
+    let main_router = Router::new()
         .route("/info", get(fedimint::handle_info))
-        .route("/reissue", post(fedimint::handle_reissue))
-        .route("/spend", post(fedimint::handle_spend))
-        .route("/validate", post(fedimint::handle_validate))
-        .route("/split", post(fedimint::handle_split))
-        .route("/combine", post(fedimint::handle_combine))
-        .route("/lninvoice", post(fedimint::handle_lninvoice))
-        .route("/awaitinvoice", post(fedimint::handle_awaitinvoice))
-        .route("/lnpay", post(fedimint::handle_lnpay))
-        .route("/awaitlnpay", post(fedimint::handle_awaitlnpay))
-        .route("/listgateways", get(fedimint::handle_listgateways))
-        .route("/switchgateway", post(fedimint::handle_switchgateway))
-        .route("/depositaddress", post(fedimint::handle_depositaddress))
-        .route("/awaitdeposit", post(fedimint::handle_awaitdeposit))
-        .route("/withdraw", post(fedimint::handle_withdraw))
         .route("/backup", post(fedimint::handle_backup))
         .route("/discoverversion", get(fedimint::handle_discoverversion))
         .route("/restore", post(fedimint::handle_restore))
@@ -73,9 +102,16 @@ fn fedimint_v2_router() -> Router<AppState> {
         .route("/listoperations", get(fedimint::handle_listoperations))
         .route("/module", post(fedimint::handle_module))
         .route("/config", get(fedimint::handle_config))
+        .nest("/mint", mint_router)
+        .nest("/ln", ln_router)
+        .nest("/onchain", onchain_router);
+
+    main_router
 }
 
 /// Implements Cashu V1 API Routes:
+///
+/// REQUIRED
 /// NUT-01 Mint Public Key Exchange && NUT-02 Keysets and Keyset IDs
 /// - `/cashu/v1/keys`
 /// - `/cashu/v1/keys/{keyset_id}`
@@ -91,9 +127,17 @@ fn fedimint_v2_router() -> Router<AppState> {
 /// - `/cashu/v1/melt/quote/{method}/{quote_id}`
 /// NUT-06 Mint Information
 /// - `/cashu/v1/info`
+///
+/// OPTIONAL
 /// NUT-07 Token State Check
 /// - `/cashu/v1/check`
-///
+/// NUT-08 Lightning Fee Return
+/// - Modification of NUT-05 Melt
+/// NUT-10 Spending Conditions
+/// NUT-11 Pay to Public Key (P2PK)
+/// - Fedimint already does this
+/// NUT-12 Offline Ecash Signature Validation
+/// - DLEQ in BlindedSignature for Mint to User
 fn cashu_v1_router() -> Router<AppState> {
     let cashu_router = Router::new()
         .route("/keys", get(cashu::handle_keys))
