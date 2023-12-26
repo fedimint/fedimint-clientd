@@ -7,14 +7,17 @@ use itertools::Itertools;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::str::FromStr;
-use std::time::Duration;
+use std::time::{Duration, UNIX_EPOCH};
+use time::format_description::well_known::iso8601;
+use time::OffsetDateTime;
 
 use crate::types::fedimint::{
     AwaitDepositRequest, AwaitDepositResponse, AwaitInvoiceRequest, CombineRequest,
-    CombineResponse, DepositAddressRequest, DepositAddressResponse, InfoResponse, LnInvoiceRequest,
-    LnInvoiceResponse, LnPayRequest, LnPayResponse, ReissueRequest, ReissueResponse, SpendRequest,
-    SpendResponse, SplitRequest, SplitResponse, SwitchGatewayRequest, ValidateRequest,
-    ValidateResponse, WithdrawRequest, WithdrawResponse,
+    CombineResponse, DepositAddressRequest, DepositAddressResponse, InfoResponse,
+    ListOperationsRequest, LnInvoiceRequest, LnInvoiceResponse, LnPayRequest, LnPayResponse,
+    OperationOutput, ReissueRequest, ReissueResponse, SpendRequest, SpendResponse, SplitRequest,
+    SplitResponse, SwitchGatewayRequest, ValidateRequest, ValidateResponse, WithdrawRequest,
+    WithdrawResponse,
 };
 
 use crate::utils::{get_invoice, get_note_summary, wait_for_ln_payment};
@@ -491,9 +494,43 @@ pub async fn handle_restore() -> Result<(), AppError> {
 // }
 
 #[axum_macros::debug_handler]
-pub async fn handle_listoperations() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_listoperations(
+    State(state): State<AppState>,
+    Json(req): Json<ListOperationsRequest>,
+) -> Result<Json<Value>, AppError> {
+    const ISO8601_CONFIG: iso8601::EncodedConfig = iso8601::Config::DEFAULT
+        .set_formatted_components(iso8601::FormattedComponents::DateTime)
+        .encode();
+    let operations = state
+        .fm
+        .operation_log()
+        .list_operations(req.limit, None)
+        .await
+        .into_iter()
+        .map(|(k, v)| {
+            let creation_time = OffsetDateTime::from_unix_timestamp(
+                k.creation_time
+                    .duration_since(UNIX_EPOCH)
+                    .expect("Couldn't convert time from SystemTime to timestamp")
+                    .as_secs() as i64,
+            )
+            .expect("Couldn't convert time from SystemTime to OffsetDateTime")
+            .format(&iso8601::Iso8601::<ISO8601_CONFIG>)
+            .expect("Couldn't format OffsetDateTime as ISO8601");
+
+            OperationOutput {
+                id: k.operation_id,
+                creation_time,
+                operation_kind: v.operation_module_kind().to_owned(),
+                operation_meta: v.meta(),
+                outcome: v.outcome(),
+            }
+        })
+        .collect::<Vec<_>>();
+
+    Ok(Json(json!({
+        "operations": operations,
+    })))
 }
 
 #[axum_macros::debug_handler]

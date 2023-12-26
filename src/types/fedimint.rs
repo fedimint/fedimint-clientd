@@ -170,3 +170,19 @@ pub struct ModuleRequest {
     pub module: ModuleSelector,
     pub args: Vec<String>,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct ListOperationsRequest {
+    pub limit: usize,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+pub struct OperationOutput {
+    pub id: OperationId,
+    pub creation_time: String,
+    pub operation_kind: String,
+    pub operation_meta: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub outcome: Option<serde_json::Value>,
+}
