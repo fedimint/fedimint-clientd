@@ -152,22 +152,22 @@ fn fedimint_v2_router() -> Router<AppState> {
 /// - DLEQ in BlindedSignature for Mint to User
 fn cashu_v1_router() -> Router<AppState> {
     let cashu_router = Router::new()
-        .route("/keys", get(cashu::handle_keys))
-        .route("/keys/{keyset_id}", get(cashu::handle_keys_keyset_id))
-        .route("/keysets", get(cashu::handle_keysets))
-        .route("/swap", post(cashu::handle_swap))
-        .route("/mint/quote/{method}", get(cashu::handle_mint_quote))
+        .route("/keys", get(cashu::keys::handle_keys))
+        .route("/keys/{keyset_id}", get(cashu::keys::handle_keys_keyset_id))
+        .route("/keysets", get(cashu::keysets::handle_keysets))
+        .route("/swap", post(cashu::swap::handle_swap))
+        .route("/mint/quote/{method}", get(cashu::mint::handle_mint_quote))
         .route(
             "/mint/quote/{method}/{quote_id}",
-            get(cashu::handle_mint_quote_quote_id),
+            get(cashu::mint::handle_mint_quote_quote_id),
         )
-        .route("/mint/{method}", post(cashu::handle_mint))
-        .route("/melt/quote/{method}", get(cashu::handle_melt_quote))
+        .route("/mint/{method}", post(cashu::mint::handle_mint))
+        .route("/melt/quote/{method}", get(cashu::melt::handle_melt_quote))
         .route(
             "/melt/quote/{method}/{quote_id}",
-            get(cashu::handle_melt_quote_quote_id),
+            get(cashu::melt::handle_melt_quote_quote_id),
         )
-        .route("/info", get(cashu::handle_info))
-        .route("/check", post(cashu::handle_check));
+        .route("/info", get(cashu::info::handle_info))
+        .route("/check", post(cashu::check::handle_check));
     cashu_router
 }
