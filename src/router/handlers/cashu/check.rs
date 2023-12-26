@@ -1,9 +1,31 @@
-use axum::extract::State;
+use axum::{extract::State, Json};
+use fedimint_core::Amount;
+use fedimint_mint_client::{MintClientModule, OOBNotes};
+use serde::{Deserialize, Serialize};
 
 use crate::{error::AppError, state::AppState};
 
+#[derive(Debug, Deserialize)]
+pub struct CheckRequest {
+    pub notes: OOBNotes,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CheckResponse {
+    pub amount_msat: Amount,
+}
+
 #[axum_macros::debug_handler]
-pub async fn handle_check(State(_state): State<AppState>) -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_check(
+    State(state): State<AppState>,
+    Json(req): Json<CheckRequest>,
+) -> Result<Json<CheckResponse>, AppError> {
+    let amount_msat =
+        state
+            .fm
+            .get_first_module::<MintClientModule>()
+            .validate_notes(req.notes)
+            .await?;
+
+    Ok(Json(CheckResponse { amount_msat }))
 }
