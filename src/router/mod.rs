@@ -29,9 +29,9 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 /// Implements Fedimint V0.2 API Route matching against CLI commands:
 /// - `/fedimint/v2/info`: Display wallet info (holdings, tiers).
 /// - `/fedimint/v2/backup`: Upload the (encrypted) snapshot of mint notes to federation.
-/// - `/fedimint/v2/discoverversion`: Discover the common api version to use to communicate with the federation.
+/// - `/fedimint/v2/discover-version`: Discover the common api version to use to communicate with the federation.
 /// - `/fedimint/v2/restore`: Restore the previously created backup of mint notes (with `backup` command).
-/// - `/fedimint/v2/listoperations`: List operations.
+/// - `/fedimint/v2/list-operations`: List operations.
 /// - `/fedimint/v2/module`: Call a module subcommand.
 /// - `/fedimint/v2/config`: Returns the client config.
 ///
@@ -44,15 +44,15 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 ///
 /// Lightning network related commands:
 /// - `/fedimint/v2/ln/invoice`: Create a lightning invoice to receive payment via gateway.
-/// - `/fedimint/v2/ln/awaitinvoice`: Wait for incoming invoice to be paid.
+/// - `/fedimint/v2/ln/await-invoice`: Wait for incoming invoice to be paid.
 /// - `/fedimint/v2/ln/pay`: Pay a lightning invoice or lnurl via a gateway.
-/// - `/fedimint/v2/ln/awaitpay`: Wait for a lightning payment to complete.
-/// - `/fedimint/v2/ln/listgateways`: List registered gateways.
-/// - `/fedimint/v2/ln/switchgateway`: Switch active gateway.
+/// - `/fedimint/v2/ln/await-pay`: Wait for a lightning payment to complete.
+/// - `/fedimint/v2/ln/list-gateways`: List registered gateways.
+/// - `/fedimint/v2/ln/switch-gateway`: Switch active gateway.
 ///
 /// Onchain related commands:
-/// - `/fedimint/v2/onchain/depositaddress`: Generate a new deposit address, funds sent to it can later be claimed.
-/// - `/fedimint/v2/onchain/awaitdeposit`: Wait for deposit on previously generated address.
+/// - `/fedimint/v2/onchain/deposit-address`: Generate a new deposit address, funds sent to it can later be claimed.
+/// - `/fedimint/v2/onchain/await-deposit`: Wait for deposit on previously generated address.
 /// - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
 fn fedimint_v2_router() -> Router<AppState> {
     let mint_router = Router::new()
