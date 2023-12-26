@@ -1,3 +1,4 @@
+pub mod cashu;
 pub mod fedimint;
 
 use std::fs::read_to_string;

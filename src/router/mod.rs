@@ -9,38 +9,54 @@ use tower_http::validate_request::ValidateRequestHeaderLayer;
 
 use crate::{config::CONFIG, state::AppState};
 
-/// Create a router with various routes.
-///
-/// The routes include:
 /// - `/`: Display the README.
-/// - `/api/info`: Display wallet info (holdings, tiers).
-/// - `/api/reissue`: Reissue notes received from a third party to avoid double spends.
-/// - `/api/spend`: Prepare notes to send to a third party as a payment.
-/// - `/api/validate`: Verifies the signatures of e-cash notes, but *not* if they have been spent already.
-/// - `/api/split`: Splits a string containing multiple e-cash notes (e.g. from the `spend` command) into ones that contain exactly one.
-/// - `/api/combine`: Combines two or more serialized e-cash notes strings.
-/// - `/api/lninvoice`: Create a lightning invoice to receive payment via gateway.
-/// - `/api/awaitinvoice`: Wait for incoming invoice to be paid.
-/// - `/api/lnpay`: Pay a lightning invoice or lnurl via a gateway.
-/// - `/api/awaitlnpay`: Wait for a lightning payment to complete.
-/// - `/api/listgateways`: List registered gateways.
-/// - `/api/switchgateway`: Switch active gateway.
-/// - `/api/depositaddress`: Generate a new deposit address, funds sent to it can later be claimed.
-/// - `/api/awaitdeposit`: Wait for deposit on previously generated address.
-/// - `/api/withdraw`: Withdraw funds from the federation.
-/// - `/api/backup`: Upload the (encrypted) snapshot of mint notes to federation.
-/// - `/api/discoverversion`: Discover the common api version to use to communicate with the federation.
-/// - `/api/restore`: Restore the previously created backup of mint notes (with `backup` command).
-/// - `/api/printsecret`: Print the secret key of the client.
-/// - `/api/listoperations`: List operations.
-/// - `/api/module`: Call a module subcommand.
-/// - `/api/config`: Returns the client config.
+///
+/// Implements Fedimint API Route matching against CLI commands:
+/// - `/fedimint/api/info`: Display wallet info (holdings, tiers).
+/// - `/fedimint/api/reissue`: Reissue notes received from a third party to avoid double spends.
+/// - `/fedimint/api/spend`: Prepare notes to send to a third party as a payment.
+/// - `/fedimint/api/validate`: Verifies the signatures of e-cash notes, but *not* if they have been spent already.
+/// - `/fedimint/api/split`: Splits a string containing multiple e-cash notes (e.g. from the `spend` command) into ones that contain exactly one.
+/// - `/fedimint/api/combine`: Combines two or more serialized e-cash notes strings.
+/// - `/fedimint/api/lninvoice`: Create a lightning invoice to receive payment via gateway.
+/// - `/fedimint/api/awaitinvoice`: Wait for incoming invoice to be paid.
+/// - `/fedimint/api/lnpay`: Pay a lightning invoice or lnurl via a gateway.
+/// - `/fedimint/api/awaitlnpay`: Wait for a lightning payment to complete.
+/// - `/fedimint/api/listgateways`: List registered gateways.
+/// - `/fedimint/api/switchgateway`: Switch active gateway.
+/// - `/fedimint/api/depositaddress`: Generate a new deposit address, funds sent to it can later be claimed.
+/// - `/fedimint/api/awaitdeposit`: Wait for deposit on previously generated address.
+/// - `/fedimint/api/withdraw`: Withdraw funds from the federation.
+/// - `/fedimint/api/backup`: Upload the (encrypted) snapshot of mint notes to federation.
+/// - `/fedimint/api/discoverversion`: Discover the common api version to use to communicate with the federation.
+/// - `/fedimint/api/restore`: Restore the previously created backup of mint notes (with `backup` command).
+/// - `/fedimint/api/printsecret`: Print the secret key of the client.
+/// - `/fedimint/api/listoperations`: List operations.
+/// - `/fedimint/api/module`: Call a module subcommand.
+/// - `/fedimint/api/config`: Returns the client config.
+///
+/// Implements Cashu API Routes:
+/// NUT-01 Mint Public Key Exchange && NUT-02 Keysets and Keyset IDs
+/// - `/cashu/v1/keys`
+/// - `/cashu/v1/keys/{keyset_id}`
+/// - `/cashu/v1/keysets`
+/// NUT-03 Swap Tokens (Equivalent to `reissue` command)
+/// - `/cashu/v1/swap`
+/// NUT-04 Mint Tokens: supports `bolt11` and `onchain` methods
+/// - `/cashu/v1/mint/quote/{method}`
+/// - `/cashu/v1/mint/quote/{method}/{quote_id}`
+/// - `/cashu/v1/mint/{method}`
+/// NUT-05 Melting Tokens: supports `bolt11` and `onchain` methods
+/// - `/cashu/v1/melt/quote/{method}`
+/// - `/cashu/v1/melt/quote/{method}/{quote_id}`
+/// NUT-06 Mint Information
+/// - `/cashu/v1/info`
 pub async fn create_router(state: AppState) -> Result<Router> {
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST])
         .allow_origin(Any);
 
-    let app = Router::new()
+    let fedimint_router = Router::new()
         .route("/", get(handle_readme))
         .route("/api/info", get(fedimint::handle_info))
         .route("/api/reissue", post(fedimint::handle_reissue))
@@ -66,7 +82,29 @@ pub async fn create_router(state: AppState) -> Result<Router> {
         // .route("/api/printsecret", get(fedimint::handle_printsecret))
         .route("/api/listoperations", get(fedimint::handle_listoperations))
         .route("/api/module", post(fedimint::handle_module))
-        .route("/api/config", get(fedimint::handle_config))
+        .route("/api/config", get(fedimint::handle_config));
+
+    let cashu_router = Router::new()
+        .route("/v1/keys", get(cashu::handle_keys))
+        .route("/v1/keys/{keyset_id}", get(cashu::handle_keys_keyset_id))
+        .route("/v1/keysets", get(cashu::handle_keysets))
+        .route("/v1/swap", post(cashu::handle_swap))
+        .route("/v1/mint/quote/{method}", get(cashu::handle_mint_quote))
+        .route(
+            "/v1/mint/quote/{method}/{quote_id}",
+            get(cashu::handle_mint_quote_quote_id),
+        )
+        .route("/v1/mint/{method}", post(cashu::handle_mint))
+        .route("/v1/melt/quote/{method}", get(cashu::handle_melt_quote))
+        .route(
+            "/v1/melt/quote/{method}/{quote_id}",
+            get(cashu::handle_melt_quote_quote_id),
+        )
+        .route("/v1/info", get(cashu::handle_info));
+
+    let app = Router::new()
+        .nest("/fedimint", fedimint_router)
+        .nest("/cashu", cashu_router)
         .with_state(state)
         .layer(cors)
         .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
