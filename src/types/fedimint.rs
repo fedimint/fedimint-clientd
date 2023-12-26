@@ -2,6 +2,7 @@ use bitcoin::Address;
 use fedimint_core::{config::FederationId, core::OperationId, Amount, TieredSummary};
 use fedimint_ln_client::PayType;
 use fedimint_mint_client::OOBNotes;
+use fedimint_wallet_client::DepositState;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -130,4 +131,14 @@ pub struct DepositAddressRequest {
 pub struct DepositAddressResponse {
     pub operation_id: OperationId,
     pub address: Address,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AwaitDepositRequest {
+    pub operation_id: OperationId,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AwaitDepositResponse {
+    pub status: DepositState,
 }

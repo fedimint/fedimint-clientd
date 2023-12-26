@@ -10,10 +10,11 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use crate::types::fedimint::{
-    AwaitInvoiceRequest, CombineRequest, CombineResponse, DepositAddressRequest,
-    DepositAddressResponse, InfoResponse, LnInvoiceRequest, LnInvoiceResponse, LnPayRequest,
-    LnPayResponse, ReissueRequest, ReissueResponse, SpendRequest, SpendResponse, SplitRequest,
-    SplitResponse, SwitchGatewayRequest, ValidateRequest, ValidateResponse,
+    AwaitDepositRequest, AwaitDepositResponse, AwaitInvoiceRequest, CombineRequest,
+    CombineResponse, DepositAddressRequest, DepositAddressResponse, InfoResponse, LnInvoiceRequest,
+    LnInvoiceResponse, LnPayRequest, LnPayResponse, ReissueRequest, ReissueResponse, SpendRequest,
+    SpendResponse, SplitRequest, SplitResponse, SwitchGatewayRequest, ValidateRequest,
+    ValidateResponse,
 };
 
 use crate::utils::{get_invoice, get_note_summary, wait_for_ln_payment};
@@ -27,7 +28,7 @@ use fedimint_mint_client::{
     OOBNotes, // SelectNotesWithExactAmount, TODO: not backported yet
     SelectNotesWithAtleastAmount,
 };
-use fedimint_wallet_client::WalletClientModule;
+use fedimint_wallet_client::{DepositState, WalletClientModule};
 use futures::StreamExt;
 use tracing::{info, warn};
 
@@ -355,9 +356,44 @@ pub async fn handle_depositaddress(
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_awaitdeposit() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_awaitdeposit(
+    State(state): State<AppState>,
+    Json(req): Json<AwaitDepositRequest>,
+) -> Result<Json<AwaitDepositResponse>, AppError> {
+    let mut updates = state
+        .fm
+        .get_first_module::<WalletClientModule>()
+        .subscribe_deposit_updates(req.operation_id)
+        .await?
+        .into_stream();
+
+    //
+    while let Some(update) = updates.next().await {
+        match update {
+            DepositState::Confirmed(tx) => {
+                return Ok(Json(AwaitDepositResponse {
+                    status: DepositState::Confirmed(tx),
+                }))
+            }
+            DepositState::Claimed(tx) => {
+                return Ok(Json(AwaitDepositResponse {
+                    status: DepositState::Claimed(tx),
+                }))
+            }
+            DepositState::Failed(reason) => {
+                return Err(AppError::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    anyhow!(reason),
+                ))
+            }
+            _ => {}
+        }
+    }
+
+    Err(AppError::new(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        anyhow!("Unexpected end of stream"),
+    ))
 }
 
 #[axum_macros::debug_handler]
