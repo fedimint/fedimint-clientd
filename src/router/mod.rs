@@ -101,7 +101,7 @@ fn fedimint_v2_router() -> Router<AppState> {
             get(fedimint::admin::discoverversion::handle_discoverversion),
         )
         .route("/restore", post(fedimint::admin::restore::handle_restore))
-        // .route("/printsecret", get(fedimint::handle_printsecret))
+        // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this under admin?
         .route(
             "/listoperations",
             get(fedimint::admin::listoperations::handle_listoperations),
