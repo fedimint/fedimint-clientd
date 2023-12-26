@@ -1,4 +1,4 @@
-use bitcoin::PublicKey;
+use bitcoin::secp256k1::PublicKey;
 use fedimint_ln_client::{
     LightningClientModule, LnReceiveState, OutgoingLightningPayment, PayType,
 };
