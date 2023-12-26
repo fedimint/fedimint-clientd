@@ -472,9 +472,10 @@ pub async fn handle_backup() -> Result<(), AppError> {
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_discoverversion() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_discoverversion(
+    State(state): State<AppState>,
+) -> Result<Json<Value>, AppError> {
+    Ok(Json(json!({ "version": state.fm.discover_common_api_version().await? })))
 }
 
 #[axum_macros::debug_handler]
