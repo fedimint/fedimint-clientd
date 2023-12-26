@@ -61,3 +61,9 @@ pub async fn handle_info(State(_state): State<AppState>) -> Result<(), AppError>
     // TODO: Implement this function
     Ok(())
 }
+
+#[axum_macros::debug_handler]
+pub async fn handle_check(State(_state): State<AppState>) -> Result<(), AppError> {
+    // TODO: Implement this function
+    Ok(())
+}

@@ -91,6 +91,9 @@ fn fedimint_v2_router() -> Router<AppState> {
 /// - `/cashu/v1/melt/quote/{method}/{quote_id}`
 /// NUT-06 Mint Information
 /// - `/cashu/v1/info`
+/// NUT-07 Token State Check
+/// - `/cashu/v1/check`
+///
 fn cashu_v1_router() -> Router<AppState> {
     let cashu_router = Router::new()
         .route("/keys", get(cashu::handle_keys))
@@ -108,6 +111,7 @@ fn cashu_v1_router() -> Router<AppState> {
             "/melt/quote/{method}/{quote_id}",
             get(cashu::handle_melt_quote_quote_id),
         )
-        .route("/info", get(cashu::handle_info));
+        .route("/info", get(cashu::handle_info))
+        .route("/check", post(cashu::handle_check));
     cashu_router
 }
