@@ -157,18 +157,24 @@ fn cashu_v1_router() -> Router<AppState> {
         .route("/keys/{keyset_id}", get(cashu::keys::handle_keys_keyset_id))
         .route("/keysets", get(cashu::keysets::handle_keysets))
         .route("/swap", post(cashu::swap::handle_swap))
-        .route("/mint/quote/{method}", get(cashu::mint::handle_mint_quote))
+        .route(
+            "/mint/quote/{method}",
+            get(cashu::mint::quote::handle_method),
+        )
         .route(
             "/mint/quote/{method}/{quote_id}",
-            get(cashu::mint::handle_mint_quote_quote_id),
+            get(cashu::mint::quote::handle_method_quote_id),
         )
-        .route("/mint/{method}", post(cashu::mint::handle_mint))
-        .route("/melt/quote/{method}", get(cashu::melt::handle_melt_quote))
+        .route("/mint/{method}", post(cashu::mint::method::handle_method))
+        .route(
+            "/melt/quote/{method}",
+            get(cashu::melt::quote::handle_method),
+        )
         .route(
             "/melt/quote/{method}/{quote_id}",
-            get(cashu::melt::handle_melt_quote_quote_id),
+            get(cashu::melt::quote::handle_method_quote_id),
         )
-        .route("/melt/{method}", post(cashu::melt::handle_melt))
+        .route("/melt/{method}", post(cashu::melt::method::handle_method))
         .route("/info", get(cashu::info::handle_info))
         .route("/check", post(cashu::check::handle_check));
     cashu_router
