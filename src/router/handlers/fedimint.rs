@@ -1,4 +1,5 @@
 use bitcoin::secp256k1::PublicKey;
+use fedimint_core::time::now;
 use fedimint_ln_client::{
     LightningClientModule, LnReceiveState, OutgoingLightningPayment, PayType,
 };
@@ -9,10 +10,10 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use crate::types::fedimint::{
-    AwaitInvoiceRequest, CombineRequest, CombineResponse, InfoResponse, LnInvoiceRequest,
-    LnInvoiceResponse, LnPayRequest, LnPayResponse, ReissueRequest, ReissueResponse, SpendRequest,
-    SpendResponse, SplitRequest, SplitResponse, SwitchGatewayRequest, ValidateRequest,
-    ValidateResponse,
+    AwaitInvoiceRequest, CombineRequest, CombineResponse, DepositAddressRequest,
+    DepositAddressResponse, InfoResponse, LnInvoiceRequest, LnInvoiceResponse, LnPayRequest,
+    LnPayResponse, ReissueRequest, ReissueResponse, SpendRequest, SpendResponse, SplitRequest,
+    SplitResponse, SwitchGatewayRequest, ValidateRequest, ValidateResponse,
 };
 
 use crate::utils::{get_invoice, get_note_summary, wait_for_ln_payment};
@@ -339,9 +340,18 @@ pub async fn handle_switchgateway(
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_depositaddress() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_depositaddress(
+    State(state): State<AppState>,
+    Json(req): Json<DepositAddressRequest>,
+) -> Result<Json<DepositAddressResponse>, AppError> {
+    let wallet_client = state.fm.get_first_module::<WalletClientModule>();
+    let (operation_id, address) = wallet_client
+        .get_deposit_address(now() + Duration::from_secs(req.timeout), ())
+        .await?;
+    Ok(Json(DepositAddressResponse {
+        operation_id,
+        address,
+    }))
 }
 
 #[axum_macros::debug_handler]

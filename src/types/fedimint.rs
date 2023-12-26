@@ -1,3 +1,4 @@
+use bitcoin::Address;
 use fedimint_core::{config::FederationId, core::OperationId, Amount, TieredSummary};
 use fedimint_ln_client::PayType;
 use fedimint_mint_client::OOBNotes;
@@ -118,4 +119,15 @@ pub struct AwaitLnPayResponse {
 #[derive(Debug, Deserialize)]
 pub struct SwitchGatewayRequest {
     pub gateway_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DepositAddressRequest {
+    pub timeout: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DepositAddressResponse {
+    pub operation_id: OperationId,
+    pub address: Address,
 }
