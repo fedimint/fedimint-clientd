@@ -1,6 +1,8 @@
 use bitcoin::Address;
 use fedimint_core::{
-    config::FederationId, core::OperationId, Amount, BitcoinAmountOrAll, TieredSummary,
+    config::FederationId,
+    core::{ModuleInstanceId, ModuleKind, OperationId},
+    Amount, BitcoinAmountOrAll, TieredSummary,
 };
 use fedimint_ln_client::PayType;
 use fedimint_mint_client::OOBNotes;
@@ -155,4 +157,16 @@ pub struct WithdrawRequest {
 pub struct WithdrawResponse {
     pub txid: String,
     pub fees_sat: u64,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub enum ModuleSelector {
+    Id(ModuleInstanceId),
+    Kind(ModuleKind),
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ModuleRequest {
+    pub module: ModuleSelector,
+    pub args: Vec<String>,
 }
