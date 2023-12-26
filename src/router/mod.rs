@@ -137,6 +137,7 @@ fn fedimint_v2_router() -> Router<AppState> {
 /// NUT-05 Melting Tokens: supports `bolt11` and `onchain` methods
 /// - `/cashu/v1/melt/quote/{method}`
 /// - `/cashu/v1/melt/quote/{method}/{quote_id}`
+/// - `/cashu/v1/melt/{method}`
 /// NUT-06 Mint Information
 /// - `/cashu/v1/info`
 ///
@@ -167,6 +168,7 @@ fn cashu_v1_router() -> Router<AppState> {
             "/melt/quote/{method}/{quote_id}",
             get(cashu::melt::handle_melt_quote_quote_id),
         )
+        .route("/melt/{method}", post(cashu::melt::handle_melt))
         .route("/info", get(cashu::info::handle_info))
         .route("/check", post(cashu::check::handle_check));
     cashu_router
