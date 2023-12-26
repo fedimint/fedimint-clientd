@@ -8,7 +8,7 @@ use tracing::info;
 
 use crate::{
     error::AppError,
-    router::handlers::fedimint::{admin::info::InfoResponse, get_note_summary},
+    router::handlers::fedimint::admin::{get_note_summary, info::InfoResponse},
     state::AppState,
 };
 

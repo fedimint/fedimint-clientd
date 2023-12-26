@@ -4,11 +4,8 @@ use fedimint_core::core::OperationId;
 use fedimint_ln_client::{LightningClientModule, PayType};
 use serde::Deserialize;
 
-use crate::{
-    error::AppError,
-    router::handlers::fedimint::ln::{pay::LnPayResponse, wait_for_ln_payment},
-    state::AppState,
-};
+use super::{pay::LnPayResponse, wait_for_ln_payment};
+use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
 pub struct AwaitLnPayRequest {
