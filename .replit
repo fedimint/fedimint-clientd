@@ -1,0 +1,12 @@
+hidden = ["target", ".cargo"]
+modules = ["rust-1.72:v1-20230911-f253fb1"]
+run = "cargo run"
+
+[nix]
+channel = "stable-23_05"
+
+[gitHubImport]
+requiredFiles = [".replit"]
+
+[deployment]
+run = ["sh", "-c", "cargo run"]
