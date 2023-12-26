@@ -58,53 +58,50 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 
     let fedimint_router = Router::new()
         .route("/", get(handle_readme))
-        .route("/api/info", get(fedimint::handle_info))
-        .route("/api/reissue", post(fedimint::handle_reissue))
-        .route("/api/spend", post(fedimint::handle_spend))
-        .route("/api/validate", post(fedimint::handle_validate))
-        .route("/api/split", post(fedimint::handle_split))
-        .route("/api/combine", post(fedimint::handle_combine))
-        .route("/api/lninvoice", post(fedimint::handle_lninvoice))
-        .route("/api/awaitinvoice", post(fedimint::handle_awaitinvoice))
-        .route("/api/lnpay", post(fedimint::handle_lnpay))
-        .route("/api/awaitlnpay", post(fedimint::handle_awaitlnpay))
-        .route("/api/listgateways", get(fedimint::handle_listgateways))
-        .route("/api/switchgateway", post(fedimint::handle_switchgateway))
-        .route("/api/depositaddress", post(fedimint::handle_depositaddress))
-        .route("/api/awaitdeposit", post(fedimint::handle_awaitdeposit))
-        .route("/api/withdraw", post(fedimint::handle_withdraw))
-        .route("/api/backup", post(fedimint::handle_backup))
-        .route(
-            "/api/discoverversion",
-            get(fedimint::handle_discoverversion),
-        )
-        .route("/api/restore", post(fedimint::handle_restore))
-        // .route("/api/printsecret", get(fedimint::handle_printsecret))
-        .route("/api/listoperations", get(fedimint::handle_listoperations))
-        .route("/api/module", post(fedimint::handle_module))
-        .route("/api/config", get(fedimint::handle_config));
+        .route("/info", get(fedimint::handle_info))
+        .route("/reissue", post(fedimint::handle_reissue))
+        .route("/spend", post(fedimint::handle_spend))
+        .route("/validate", post(fedimint::handle_validate))
+        .route("/split", post(fedimint::handle_split))
+        .route("/combine", post(fedimint::handle_combine))
+        .route("/lninvoice", post(fedimint::handle_lninvoice))
+        .route("/awaitinvoice", post(fedimint::handle_awaitinvoice))
+        .route("/lnpay", post(fedimint::handle_lnpay))
+        .route("/awaitlnpay", post(fedimint::handle_awaitlnpay))
+        .route("/listgateways", get(fedimint::handle_listgateways))
+        .route("/switchgateway", post(fedimint::handle_switchgateway))
+        .route("/depositaddress", post(fedimint::handle_depositaddress))
+        .route("/awaitdeposit", post(fedimint::handle_awaitdeposit))
+        .route("/withdraw", post(fedimint::handle_withdraw))
+        .route("/backup", post(fedimint::handle_backup))
+        .route("/discoverversion", get(fedimint::handle_discoverversion))
+        .route("/restore", post(fedimint::handle_restore))
+        // .route("/printsecret", get(fedimint::handle_printsecret))
+        .route("/listoperations", get(fedimint::handle_listoperations))
+        .route("/module", post(fedimint::handle_module))
+        .route("/config", get(fedimint::handle_config));
 
     let cashu_router = Router::new()
-        .route("/v1/keys", get(cashu::handle_keys))
-        .route("/v1/keys/{keyset_id}", get(cashu::handle_keys_keyset_id))
-        .route("/v1/keysets", get(cashu::handle_keysets))
-        .route("/v1/swap", post(cashu::handle_swap))
-        .route("/v1/mint/quote/{method}", get(cashu::handle_mint_quote))
+        .route("/keys", get(cashu::handle_keys))
+        .route("/keys/{keyset_id}", get(cashu::handle_keys_keyset_id))
+        .route("/keysets", get(cashu::handle_keysets))
+        .route("/swap", post(cashu::handle_swap))
+        .route("/mint/quote/{method}", get(cashu::handle_mint_quote))
         .route(
-            "/v1/mint/quote/{method}/{quote_id}",
+            "/mint/quote/{method}/{quote_id}",
             get(cashu::handle_mint_quote_quote_id),
         )
-        .route("/v1/mint/{method}", post(cashu::handle_mint))
-        .route("/v1/melt/quote/{method}", get(cashu::handle_melt_quote))
+        .route("/mint/{method}", post(cashu::handle_mint))
+        .route("/melt/quote/{method}", get(cashu::handle_melt_quote))
         .route(
-            "/v1/melt/quote/{method}/{quote_id}",
+            "/melt/quote/{method}/{quote_id}",
             get(cashu::handle_melt_quote_quote_id),
         )
-        .route("/v1/info", get(cashu::handle_info));
+        .route("/info", get(cashu::handle_info));
 
     let app = Router::new()
-        .nest("/fedimint", fedimint_router)
-        .nest("/cashu", cashu_router)
+        .nest("/fedimint/v2", fedimint_router)
+        .nest("/cashu/v1", cashu_router)
         .with_state(state)
         .layer(cors)
         .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
