@@ -1,20 +1,21 @@
-use std::{str::FromStr, time::Duration};
+use std::str::FromStr;
 
 use crate::{
     error::AppError,
     router::handlers::cashu::{Method, Unit},
     state::AppState,
 };
-use anyhow::{anyhow, bail};
+use anyhow::anyhow;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     Json,
 };
 use fedimint_client::ClientArc;
-use fedimint_core::{time::now, Amount};
+use fedimint_core::Amount;
 use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment};
-use fedimint_wallet_client::WalletClientModule;
+use fedimint_wallet_client::{WalletClientModule, WithdrawState};
+use futures::StreamExt;
 use lightning_invoice::Bolt11Invoice;
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -46,20 +47,23 @@ pub async fn handle_method(
             Unit::Msat => melt_bolt11(state.fm, req.request, req.amount).await,
             Unit::Sat => melt_bolt11(state.fm, req.request, req.amount * 1000).await,
         },
-        Method::Onchain => match req.unit {
-            Unit::Msat => Err(AppError::new(
-                StatusCode::BAD_REQUEST,
-                anyhow!("Unsupported unit for onchain melt, use sat instead"),
-            )),
-            Unit::Sat => melt_onchain(state.fm, req.amount * 1000).await,
-        },
+        Method::Onchain => {
+            match req.unit {
+                Unit::Msat => {
+                    let amount_sat = bitcoin::Amount::from_sat(req.amount.try_into_sats()?);
+                    melt_onchain(state.fm, req.request, amount_sat).await
+                }
+                Unit::Sat => {
+                    let amount_sat = req.amount * 1000;
+                    let amount_sat = bitcoin::Amount::from_sat(amount_sat.try_into_sats()?);
+                    melt_onchain(state.fm, req.request, amount_sat).await
+                }
+            }
+        }
     }?;
 
     Ok(Json(res))
 }
-
-const DEFAULT_MELT_EXPIRY_OFFSET: u64 = 3600;
-const DEFAULT_MELT_DESCRIPTION: &str = "Cashu melt operation";
 
 pub async fn melt_bolt11(
     client: ClientArc,
@@ -107,19 +111,53 @@ pub async fn melt_bolt11(
 
 async fn melt_onchain(
     client: ClientArc,
-    amount_sat: Amount,
+    request: String,
+    amount_sat: bitcoin::Amount,
 ) -> Result<PostMeltQuoteMethodResponse, AppError> {
-    let wallet_client = client.get_first_module::<WalletClientModule>();
-    let valid_until = now() + Duration::from_secs(DEFAULT_MELT_EXPIRY_OFFSET);
-    let expiry_time = crate::utils::system_time_to_u64(valid_until)?;
+    let address = bitcoin::Address::from_str(&request)
+        .expect("Onchain request must be a valid bitcoin address");
+    let wallet_module = client.get_first_module::<WalletClientModule>();
+    let fees = wallet_module
+        .get_withdraw_fees(address.clone(), amount_sat)
+        .await?;
+    let absolute_fees = fees.amount();
 
-    let (operation_id, address) = wallet_client.get_deposit_address(valid_until, ()).await?;
+    info!("Attempting withdraw with fees: {fees:?}");
 
-    Ok(PostMeltQuoteMethodResponse {
-        quote: operation_id.to_string(),
-        amount: amount_sat,
-        fee_reserve: Amount::from_sats(0), // Fedimint doesn't charge fees
-        paid: false,
-        expiry: expiry_time.try_into()?,
-    })
+    let operation_id = wallet_module
+        .withdraw(address, amount_sat, fees, ())
+        .await?;
+
+    let mut updates = wallet_module
+        .subscribe_withdraw_updates(operation_id)
+        .await?
+        .into_stream();
+
+    while let Some(update) = updates.next().await {
+        info!("Update: {update:?}");
+
+        match update {
+            WithdrawState::Succeeded(_txid) => {
+                return Ok(PostMeltQuoteMethodResponse {
+                    quote: operation_id.to_string(),
+                    amount: amount_sat.into(),
+                    fee_reserve: absolute_fees.into(),
+                    paid: true,
+                    expiry: 0,
+                });
+            }
+            WithdrawState::Failed(e) => {
+                return Err(AppError::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    anyhow!("Onchain melt failed: {:?}", e),
+                ));
+            }
+            _ => continue,
+        };
+    }
+
+    Err(AppError::new(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        anyhow!("Update stream ended without outcome"),
+    ))
 }
