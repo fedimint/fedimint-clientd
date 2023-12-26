@@ -9,7 +9,7 @@ use fedimint_wallet_client::{DepositState, WalletClientModule};
 use futures::StreamExt;
 
 #[axum_macros::debug_handler]
-pub async fn handle_awaitdeposit(
+pub async fn handle_await_deposit(
     State(state): State<AppState>,
     Json(req): Json<AwaitDepositRequest>,
 ) -> Result<Json<AwaitDepositResponse>, AppError> {

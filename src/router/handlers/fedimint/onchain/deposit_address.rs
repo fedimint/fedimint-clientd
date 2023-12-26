@@ -11,7 +11,7 @@ use crate::{
 };
 
 #[axum_macros::debug_handler]
-pub async fn handle_depositaddress(
+pub async fn handle_deposit_address(
     State(state): State<AppState>,
     Json(req): Json<DepositAddressRequest>,
 ) -> Result<Json<DepositAddressResponse>, AppError> {

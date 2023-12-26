@@ -11,7 +11,7 @@ use crate::{
 };
 
 #[axum_macros::debug_handler]
-pub async fn handle_listoperations(
+pub async fn handle_list_operations(
     State(state): State<AppState>,
     Json(req): Json<ListOperationsRequest>,
 ) -> Result<Json<Value>, AppError> {

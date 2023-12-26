@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 use crate::{error::AppError, state::AppState};
 
 #[axum_macros::debug_handler]
-pub async fn handle_listgateways(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
+pub async fn handle_list_gateways(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
     let lightning_module = state.fm.get_first_module::<LightningClientModule>();
     let gateways = lightning_module.fetch_registered_gateways().await?;
     if gateways.is_empty() {

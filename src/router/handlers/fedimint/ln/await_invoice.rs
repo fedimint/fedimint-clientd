@@ -12,7 +12,7 @@ use crate::{
 };
 
 #[axum_macros::debug_handler]
-pub async fn handle_awaitinvoice(
+pub async fn handle_await_invoice(
     State(state): State<AppState>,
     Json(req): Json<AwaitInvoiceRequest>,
 ) -> Result<Json<InfoResponse>, AppError> {

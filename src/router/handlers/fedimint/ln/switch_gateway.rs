@@ -8,7 +8,7 @@ use serde_json::{json, Value};
 use crate::{error::AppError, state::AppState, types::fedimint::SwitchGatewayRequest};
 
 #[axum_macros::debug_handler]
-pub async fn handle_switchgateway(
+pub async fn handle_switch_gateway(
     State(state): State<AppState>,
     Json(req): Json<SwitchGatewayRequest>,
 ) -> Result<Json<Value>, AppError> {

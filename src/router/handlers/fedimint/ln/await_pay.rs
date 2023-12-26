@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[axum_macros::debug_handler]
-pub async fn handle_awaitpay(
+pub async fn handle_await_pay(
     State(state): State<AppState>,
     Json(req): Json<AwaitInvoiceRequest>,
 ) -> Result<Json<LnPayResponse>, AppError> {

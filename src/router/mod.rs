@@ -65,28 +65,31 @@ fn fedimint_v2_router() -> Router<AppState> {
     let ln_router = Router::new()
         .route("/invoice", post(fedimint::ln::invoice::handle_invoice))
         .route(
-            "/awaitinvoice",
-            post(fedimint::ln::await_invoice::handle_awaitinvoice),
+            "/await-invoice",
+            post(fedimint::ln::await_invoice::handle_await_invoice),
         )
         .route("/pay", post(fedimint::ln::pay::handle_pay))
-        .route("/awaitpay", post(fedimint::ln::await_pay::handle_awaitpay))
         .route(
-            "/listgateways",
-            get(fedimint::ln::list_gateways::handle_listgateways),
+            "/await-pay",
+            post(fedimint::ln::await_pay::handle_await_pay),
         )
         .route(
-            "/switchgateway",
-            post(fedimint::ln::switch_gateway::handle_switchgateway),
+            "/list-gateways",
+            get(fedimint::ln::list_gateways::handle_list_gateways),
+        )
+        .route(
+            "/switch-gateway",
+            post(fedimint::ln::switch_gateway::handle_switch_gateway),
         );
 
     let onchain_router = Router::new()
         .route(
-            "/depositaddress",
-            post(fedimint::onchain::deposit_address::handle_depositaddress),
+            "/deposit-address",
+            post(fedimint::onchain::deposit_address::handle_deposit_address),
         )
         .route(
-            "/awaitdeposit",
-            post(fedimint::onchain::await_deposit::handle_awaitdeposit),
+            "/await-deposit",
+            post(fedimint::onchain::await_deposit::handle_await_deposit),
         )
         .route(
             "/withdraw",
@@ -97,14 +100,14 @@ fn fedimint_v2_router() -> Router<AppState> {
         .route("/info", get(fedimint::admin::info::handle_info))
         .route("/backup", post(fedimint::admin::backup::handle_backup))
         .route(
-            "/discoverversion",
-            get(fedimint::admin::discover_version::handle_discoverversion),
+            "/discover-version",
+            get(fedimint::admin::discover_version::handle_discover_version),
         )
         .route("/restore", post(fedimint::admin::restore::handle_restore))
         // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this under admin?
         .route(
-            "/listoperations",
-            get(fedimint::admin::list_operations::handle_listoperations),
+            "/list-operations",
+            get(fedimint::admin::list_operations::handle_list_operations),
         )
         .route("/module", post(fedimint::admin::module::handle_module))
         .route("/config", get(fedimint::admin::config::handle_config));
