@@ -1,5 +1,7 @@
 use bitcoin::Address;
-use fedimint_core::{config::FederationId, core::OperationId, Amount, TieredSummary};
+use fedimint_core::{
+    config::FederationId, core::OperationId, Amount, BitcoinAmountOrAll, TieredSummary,
+};
 use fedimint_ln_client::PayType;
 use fedimint_mint_client::OOBNotes;
 use fedimint_wallet_client::DepositState;
@@ -141,4 +143,16 @@ pub struct AwaitDepositRequest {
 #[derive(Debug, Serialize)]
 pub struct AwaitDepositResponse {
     pub status: DepositState,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WithdrawRequest {
+    pub address: Address,
+    pub amount_msat: BitcoinAmountOrAll,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WithdrawResponse {
+    pub txid: String,
+    pub fees_sat: u64,
 }

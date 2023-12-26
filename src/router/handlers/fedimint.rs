@@ -14,7 +14,7 @@ use crate::types::fedimint::{
     CombineResponse, DepositAddressRequest, DepositAddressResponse, InfoResponse, LnInvoiceRequest,
     LnInvoiceResponse, LnPayRequest, LnPayResponse, ReissueRequest, ReissueResponse, SpendRequest,
     SpendResponse, SplitRequest, SplitResponse, SwitchGatewayRequest, ValidateRequest,
-    ValidateResponse,
+    ValidateResponse, WithdrawRequest, WithdrawResponse,
 };
 
 use crate::utils::{get_invoice, get_note_summary, wait_for_ln_payment};
@@ -22,13 +22,14 @@ use crate::{error::AppError, state::AppState};
 use anyhow::{anyhow, Context, Result};
 use axum::http::StatusCode;
 use axum::{extract::State, Json};
-use fedimint_core::{Amount, TieredMulti};
+use bitcoin_hashes::hex::ToHex;
+use fedimint_core::{Amount, BitcoinAmountOrAll, TieredMulti};
 use fedimint_mint_client::{
     MintClientModule,
     OOBNotes, // SelectNotesWithExactAmount, TODO: not backported yet
     SelectNotesWithAtleastAmount,
 };
-use fedimint_wallet_client::{DepositState, WalletClientModule};
+use fedimint_wallet_client::{DepositState, WalletClientModule, WithdrawState};
 use futures::StreamExt;
 use tracing::{info, warn};
 
@@ -367,7 +368,6 @@ pub async fn handle_awaitdeposit(
         .await?
         .into_stream();
 
-    //
     while let Some(update) = updates.next().await {
         match update {
             DepositState::Confirmed(tx) => {
@@ -397,9 +397,72 @@ pub async fn handle_awaitdeposit(
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_withdraw() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_withdraw(
+    State(state): State<AppState>,
+    Json(req): Json<WithdrawRequest>,
+) -> Result<Json<WithdrawResponse>, AppError> {
+    let wallet_module = state.fm.get_first_module::<WalletClientModule>();
+    let (amount, fees) = match req.amount_msat {
+        // If the amount is "all", then we need to subtract the fees from
+        // the amount we are withdrawing
+        BitcoinAmountOrAll::All => {
+            let balance = bitcoin::Amount::from_sat(state.fm.get_balance().await.msats / 1000);
+            let fees = wallet_module
+                .get_withdraw_fees(req.address.clone(), balance)
+                .await?;
+            let amount = balance.checked_sub(fees.amount());
+            if amount.is_none() {
+                Err(AppError::new(
+                    StatusCode::BAD_REQUEST,
+                    anyhow!("Insufficient balance to pay fees"),
+                ))?;
+            }
+            (amount.unwrap(), fees)
+        }
+        BitcoinAmountOrAll::Amount(amount) => (
+            amount,
+            wallet_module
+                .get_withdraw_fees(req.address.clone(), amount)
+                .await?,
+        ),
+    };
+    let absolute_fees = fees.amount();
+
+    info!("Attempting withdraw with fees: {fees:?}");
+
+    let operation_id = wallet_module
+        .withdraw(req.address, amount, fees, ())
+        .await?;
+
+    let mut updates = wallet_module
+        .subscribe_withdraw_updates(operation_id)
+        .await?
+        .into_stream();
+
+    while let Some(update) = updates.next().await {
+        info!("Update: {update:?}");
+
+        match update {
+            WithdrawState::Succeeded(txid) => {
+                return Ok(Json(WithdrawResponse {
+                    txid: txid.to_hex(),
+                    fees_sat: absolute_fees.to_sat(),
+                }));
+            }
+            WithdrawState::Failed(e) => {
+                return Err(AppError::new(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    anyhow!("Withdraw failed: {:?}", e),
+                ));
+            }
+            _ => continue,
+        };
+    }
+
+    Err(AppError::new(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        anyhow!("Update stream ended without outcome"),
+    ))
 }
 
 #[axum_macros::debug_handler]
