@@ -9,9 +9,23 @@ use tower_http::validate_request::ValidateRequestHeaderLayer;
 
 use crate::{config::CONFIG, state::AppState};
 
-/// - `/`: Display the README.
-///
-/// Implements Fedimint API Route matching against CLI commands:
+pub async fn create_router(state: AppState) -> Result<Router> {
+    let cors = CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST])
+        .allow_origin(Any);
+
+    let app = Router::new()
+        .route("/", get(handle_readme))
+        .nest("/fedimint/v2", fedimint_v2_router())
+        .nest("/cashu/v1", cashu_v1_router())
+        .with_state(state)
+        .layer(cors)
+        .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
+
+    Ok(app)
+}
+
+/// Implements Fedimint V0.2 API Route matching against CLI commands:
 /// - `/fedimint/api/info`: Display wallet info (holdings, tiers).
 /// - `/fedimint/api/reissue`: Reissue notes received from a third party to avoid double spends.
 /// - `/fedimint/api/spend`: Prepare notes to send to a third party as a payment.
@@ -34,30 +48,8 @@ use crate::{config::CONFIG, state::AppState};
 /// - `/fedimint/api/listoperations`: List operations.
 /// - `/fedimint/api/module`: Call a module subcommand.
 /// - `/fedimint/api/config`: Returns the client config.
-///
-/// Implements Cashu API Routes:
-/// NUT-01 Mint Public Key Exchange && NUT-02 Keysets and Keyset IDs
-/// - `/cashu/v1/keys`
-/// - `/cashu/v1/keys/{keyset_id}`
-/// - `/cashu/v1/keysets`
-/// NUT-03 Swap Tokens (Equivalent to `reissue` command)
-/// - `/cashu/v1/swap`
-/// NUT-04 Mint Tokens: supports `bolt11` and `onchain` methods
-/// - `/cashu/v1/mint/quote/{method}`
-/// - `/cashu/v1/mint/quote/{method}/{quote_id}`
-/// - `/cashu/v1/mint/{method}`
-/// NUT-05 Melting Tokens: supports `bolt11` and `onchain` methods
-/// - `/cashu/v1/melt/quote/{method}`
-/// - `/cashu/v1/melt/quote/{method}/{quote_id}`
-/// NUT-06 Mint Information
-/// - `/cashu/v1/info`
-pub async fn create_router(state: AppState) -> Result<Router> {
-    let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST])
-        .allow_origin(Any);
-
-    let fedimint_router = Router::new()
-        .route("/", get(handle_readme))
+fn fedimint_v2_router() -> Router<AppState> {
+    Router::new()
         .route("/info", get(fedimint::handle_info))
         .route("/reissue", post(fedimint::handle_reissue))
         .route("/spend", post(fedimint::handle_spend))
@@ -79,8 +71,26 @@ pub async fn create_router(state: AppState) -> Result<Router> {
         // .route("/printsecret", get(fedimint::handle_printsecret))
         .route("/listoperations", get(fedimint::handle_listoperations))
         .route("/module", post(fedimint::handle_module))
-        .route("/config", get(fedimint::handle_config));
+        .route("/config", get(fedimint::handle_config))
+}
 
+/// Implements Cashu V1 API Routes:
+/// NUT-01 Mint Public Key Exchange && NUT-02 Keysets and Keyset IDs
+/// - `/cashu/v1/keys`
+/// - `/cashu/v1/keys/{keyset_id}`
+/// - `/cashu/v1/keysets`
+/// NUT-03 Swap Tokens (Equivalent to `reissue` command)
+/// - `/cashu/v1/swap`
+/// NUT-04 Mint Tokens: supports `bolt11` and `onchain` methods
+/// - `/cashu/v1/mint/quote/{method}`
+/// - `/cashu/v1/mint/quote/{method}/{quote_id}`
+/// - `/cashu/v1/mint/{method}`
+/// NUT-05 Melting Tokens: supports `bolt11` and `onchain` methods
+/// - `/cashu/v1/melt/quote/{method}`
+/// - `/cashu/v1/melt/quote/{method}/{quote_id}`
+/// NUT-06 Mint Information
+/// - `/cashu/v1/info`
+fn cashu_v1_router() -> Router<AppState> {
     let cashu_router = Router::new()
         .route("/keys", get(cashu::handle_keys))
         .route("/keys/{keyset_id}", get(cashu::handle_keys_keyset_id))
@@ -98,13 +108,5 @@ pub async fn create_router(state: AppState) -> Result<Router> {
             get(cashu::handle_melt_quote_quote_id),
         )
         .route("/info", get(cashu::handle_info));
-
-    let app = Router::new()
-        .nest("/fedimint/v2", fedimint_router)
-        .nest("/cashu/v1", cashu_router)
-        .with_state(state)
-        .layer(cors)
-        .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
-
-    Ok(app)
+    cashu_router
 }
