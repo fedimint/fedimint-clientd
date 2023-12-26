@@ -490,8 +490,11 @@ pub async fn handle_backup(
 
 #[axum_macros::debug_handler]
 pub async fn handle_restore() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+    // TODO:
+    Err(AppError::new(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        anyhow!("Not implemented"),
+    ))
 }
 
 // #[axum_macros::debug_handler]
