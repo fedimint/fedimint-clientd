@@ -1,15 +1,18 @@
+use bitcoin::PublicKey;
 use fedimint_ln_client::{
     LightningClientModule, LnReceiveState, OutgoingLightningPayment, PayType,
 };
 use itertools::Itertools;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
+use std::str::FromStr;
 use std::time::Duration;
 
 use crate::types::fedimint::{
     AwaitInvoiceRequest, CombineRequest, CombineResponse, InfoResponse, LnInvoiceRequest,
     LnInvoiceResponse, LnPayRequest, LnPayResponse, ReissueRequest, ReissueResponse, SpendRequest,
-    SpendResponse, SplitRequest, SplitResponse, ValidateRequest, ValidateResponse,
+    SpendResponse, SplitRequest, SplitResponse, SwitchGatewayRequest, ValidateRequest,
+    ValidateResponse,
 };
 
 use crate::utils::{get_invoice, get_note_summary, wait_for_ln_payment};
@@ -322,9 +325,17 @@ pub async fn handle_listgateways(State(state): State<AppState>) -> Result<Json<V
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_switchgateway() -> Result<(), AppError> {
-    // TODO: Implement this function
-    Ok(())
+pub async fn handle_switchgateway(
+    State(state): State<AppState>,
+    Json(req): Json<SwitchGatewayRequest>,
+) -> Result<Json<Value>, AppError> {
+    let public_key = PublicKey::from_str(&req.gateway_id)?;
+    let lightning_module = state.fm.get_first_module::<LightningClientModule>();
+    lightning_module.set_active_gateway(&public_key).await?;
+    let gateway = lightning_module.select_active_gateway().await?;
+    let mut gateway_json = json!(&gateway);
+    gateway_json["active"] = json!(true);
+    Ok(Json(serde_json::to_value(gateway_json).unwrap()))
 }
 
 #[axum_macros::debug_handler]

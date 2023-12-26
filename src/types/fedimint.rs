@@ -114,3 +114,8 @@ pub struct AwaitLnPayResponse {
     pub contract_id: String,
     pub fee: Amount,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct SwitchGatewayRequest {
+    pub gateway_id: String,
+}
