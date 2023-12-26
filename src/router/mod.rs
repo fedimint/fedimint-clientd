@@ -154,27 +154,27 @@ fn fedimint_v2_router() -> Router<AppState> {
 fn cashu_v1_router() -> Router<AppState> {
     let cashu_router = Router::new()
         .route("/keys", get(cashu::keys::handle_keys))
-        .route("/keys/{keyset_id}", get(cashu::keys::handle_keys_keyset_id))
+        .route("/keys/:keyset_id", get(cashu::keys::handle_keys_keyset_id))
         .route("/keysets", get(cashu::keysets::handle_keysets))
         .route("/swap", post(cashu::swap::handle_swap))
         .route(
-            "/mint/quote/{method}",
+            "/mint/quote/:method",
             get(cashu::mint::quote::handle_method),
         )
         .route(
-            "/mint/quote/{method}/{quote_id}",
+            "/mint/quote/:method/:quote_id",
             get(cashu::mint::quote::handle_method_quote_id),
         )
-        .route("/mint/{method}", post(cashu::mint::method::handle_method))
+        .route("/mint/:method", post(cashu::mint::method::handle_method))
         .route(
-            "/melt/quote/{method}",
+            "/melt/quote/:method",
             get(cashu::melt::quote::handle_method),
         )
         .route(
-            "/melt/quote/{method}/{quote_id}",
+            "/melt/quote/:method/:quote_id",
             get(cashu::melt::quote::handle_method_quote_id),
         )
-        .route("/melt/{method}", post(cashu::melt::method::handle_method))
+        .route("/melt/:method", post(cashu::melt::method::handle_method))
         .route("/info", get(cashu::info::handle_info))
         .route("/check", post(cashu::check::handle_check));
     cashu_router
