@@ -27,13 +27,13 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 }
 
 /// Implements Fedimint V0.2 API Route matching against CLI commands:
-/// - `/fedimint/v2/info`: Display wallet info (holdings, tiers).
-/// - `/fedimint/v2/backup`: Upload the (encrypted) snapshot of mint notes to federation.
-/// - `/fedimint/v2/discover-version`: Discover the common api version to use to communicate with the federation.
-/// - `/fedimint/v2/restore`: Restore the previously created backup of mint notes (with `backup` command).
-/// - `/fedimint/v2/list-operations`: List operations.
-/// - `/fedimint/v2/module`: Call a module subcommand.
-/// - `/fedimint/v2/config`: Returns the client config.
+/// - `/fedimint/v2/admin/info`: Display wallet info (holdings, tiers).
+/// - `/fedimint/v2/admin/backup`: Upload the (encrypted) snapshot of mint notes to federation.
+/// - `/fedimint/v2/admin/discover-version`: Discover the common api version to use to communicate with the federation.
+/// - `/fedimint/v2/admin/restore`: Restore the previously created backup of mint notes (with `backup` command).
+/// - `/fedimint/v2/admin/list-operations`: List operations.
+/// - `/fedimint/v2/admin/module`: Call a module subcommand.
+/// - `/fedimint/v2/admin/config`: Returns the client config.
 ///
 /// Mint related commands:
 /// - `/fedimint/v2/mint/reissue`: Reissue notes received from a third party to avoid double spends.
