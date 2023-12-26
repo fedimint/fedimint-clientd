@@ -10,12 +10,13 @@ pub mod swap;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum SupportedUnit {
+pub enum Unit {
     Msat,
     Sat,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Method {
     Bolt11,
     Onchain,
