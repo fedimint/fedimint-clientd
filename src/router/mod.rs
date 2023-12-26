@@ -93,20 +93,29 @@ fn fedimint_v2_router() -> Router<AppState> {
             post(fedimint::onchain::withdraw::handle_withdraw),
         );
 
-    let main_router = Router::new()
-        .route("/info", get(fedimint::handle_info))
-        .route("/backup", post(fedimint::handle_backup))
-        .route("/discoverversion", get(fedimint::handle_discoverversion))
-        .route("/restore", post(fedimint::handle_restore))
+    let admin_router = Router::new()
+        .route("/info", get(fedimint::admin::info::handle_info))
+        .route("/backup", post(fedimint::admin::backup::handle_backup))
+        .route(
+            "/discoverversion",
+            get(fedimint::admin::discoverversion::handle_discoverversion),
+        )
+        .route("/restore", post(fedimint::admin::restore::handle_restore))
         // .route("/printsecret", get(fedimint::handle_printsecret))
-        .route("/listoperations", get(fedimint::handle_listoperations))
-        .route("/module", post(fedimint::handle_module))
-        .route("/config", get(fedimint::handle_config))
+        .route(
+            "/listoperations",
+            get(fedimint::admin::listoperations::handle_listoperations),
+        )
+        .route("/module", post(fedimint::admin::module::handle_module))
+        .route("/config", get(fedimint::admin::config::handle_config));
+
+    let base_router = Router::new()
+        .nest("/admin", admin_router)
         .nest("/mint", mint_router)
         .nest("/ln", ln_router)
         .nest("/onchain", onchain_router);
 
-    main_router
+    base_router
 }
 
 /// Implements Cashu V1 API Routes:
