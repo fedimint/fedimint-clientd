@@ -37,7 +37,7 @@ pub async fn get_note_summary(client: &ClientArc) -> anyhow::Result<InfoResponse
 
 pub async fn get_invoice(req: &LnPayRequest) -> anyhow::Result<Bolt11Invoice> {
     let info = req.payment_info.trim();
-    match lightning_invoice::Bolt11Invoice::from_str(info) {
+    match Bolt11Invoice::from_str(info) {
         Ok(invoice) => {
             debug!("Parsed parameter as bolt11 invoice: {invoice}");
             match (invoice.amount_milli_satoshis(), req.amount_msat) {
@@ -82,7 +82,7 @@ pub async fn get_invoice(req: &LnPayRequest) -> anyhow::Result<Bolt11Invoice> {
     }
 }
 
-async fn wait_for_ln_payment(
+pub async fn wait_for_ln_payment(
     client: &ClientArc,
     payment_type: PayType,
     contract_id: String,
@@ -101,7 +101,7 @@ async fn wait_for_ln_payment(
 
             while let Some(update) = updates.next().await {
                 match update {
-                    InternalPayState::Preimage(preimage) => {
+                    InternalPayState::Preimage(_preimage) => {
                         return Ok(Some(LnPayResponse {
                             operation_id,
                             payment_type,
@@ -140,8 +140,9 @@ async fn wait_for_ln_payment(
                     .into_stream();
 
             while let Some(update) = updates.next().await {
-                match update {
-                    LnPayState::Success { preimage } => {
+                let update_clone = update.clone();
+                match update_clone {
+                    LnPayState::Success { preimage: _ } => {
                         return Ok(Some(LnPayResponse {
                             operation_id,
                             payment_type,

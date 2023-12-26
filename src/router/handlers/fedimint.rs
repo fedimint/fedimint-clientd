@@ -9,9 +9,9 @@ use crate::types::fedimint::{
     SpendResponse, SplitRequest, SplitResponse, ValidateRequest, ValidateResponse,
 };
 
-use crate::utils::{get_invoice, get_note_summary};
+use crate::utils::{get_invoice, get_note_summary, wait_for_ln_payment};
 use crate::{error::AppError, state::AppState};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use axum::http::StatusCode;
 use axum::{extract::State, Json};
 use fedimint_core::{Amount, TieredMulti};
@@ -250,20 +250,20 @@ pub async fn handle_lnpay(
     let operation_id = payment_type.operation_id();
     info!("Gateway fee: {fee}, payment operation id: {operation_id}");
     if req.finish_in_background {
-        wait_for_ln_payment(&state.fm, payment_type, contract_id, true).await?;
+        wait_for_ln_payment(&state.fm, payment_type, contract_id.to_string(), true).await?;
         info!("Payment will finish in background, use await-ln-pay to get the result");
         Ok(Json(LnPayResponse {
             operation_id,
-            payment_type: format!("{:?}", payment_type),
-            contract_id: format!("{:?}", contract_id),
+            payment_type: payment_type,
+            contract_id: contract_id.to_string(),
             fee,
         }))
     } else {
-        Ok(
-            wait_for_ln_payment(&state.fm, payment_type, contract_id, false)
+        Ok(Json(
+            wait_for_ln_payment(&state.fm, payment_type, contract_id.to_string(), false)
                 .await?
                 .context("expected a response")?,
-        )
+        ))
     }
 }
 
