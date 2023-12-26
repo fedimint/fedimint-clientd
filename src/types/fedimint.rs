@@ -101,3 +101,16 @@ pub struct LnPayResponse {
     pub contract_id: String,
     pub fee: Amount,
 }
+
+#[derive(Debug, Deserialize)]
+pub struct AwaitLnPayRequest {
+    pub operation_id: OperationId,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AwaitLnPayResponse {
+    pub operation_id: OperationId,
+    pub payment_type: PayType,
+    pub contract_id: String,
+    pub fee: Amount,
+}
