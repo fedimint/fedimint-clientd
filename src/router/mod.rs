@@ -1,25 +1,26 @@
 use anyhow::Result;
 use axum::routing::post;
-use axum::{http::Method, routing::get, Router};
+use axum::{routing::get, Router};
 pub mod handlers;
 
 use handlers::*;
-use tower_http::cors::{Any, CorsLayer};
+// use tower_http::cors::{Any, CorsLayer};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 
 use crate::{config::CONFIG, state::AppState};
 
 pub async fn create_router(state: AppState) -> Result<Router> {
-    let cors = CorsLayer::new()
-        .allow_methods([Method::GET, Method::POST])
-        .allow_origin(Any);
+    // TODO: Allow CORS? Probably not, since this should just interact with the local machine.
+    // let cors = CorsLayer::new()
+    //     .allow_methods([Method::GET, Method::POST])
+    //     .allow_origin(Any);
 
     let app = Router::new()
         .route("/", get(handle_readme))
         .nest("/fedimint/v2", fedimint_v2_router())
         .nest("/cashu/v1", cashu_v1_router())
         .with_state(state)
-        .layer(cors)
+        // .layer(cors)
         .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
 
     Ok(app)
