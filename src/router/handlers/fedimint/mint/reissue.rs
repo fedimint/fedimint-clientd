@@ -1,13 +1,21 @@
-use crate::{
-    error::AppError,
-    state::AppState,
-    types::fedimint::{ReissueRequest, ReissueResponse},
-};
+use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
-use fedimint_mint_client::MintClientModule;
+use fedimint_core::Amount;
+use fedimint_mint_client::{MintClientModule, OOBNotes};
 use futures::StreamExt;
+use serde::{Deserialize, Serialize};
 use tracing::info;
+
+#[derive(Debug, Deserialize)]
+pub struct ReissueRequest {
+    pub notes: OOBNotes,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ReissueResponse {
+    pub amount_msat: Amount,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_reissue(

@@ -1,18 +1,24 @@
 use anyhow::Context;
 use axum::{extract::State, Json};
+use fedimint_core::core::OperationId;
 use fedimint_ln_client::{LightningClientModule, PayType};
+use serde::Deserialize;
 
 use crate::{
     error::AppError,
+    router::handlers::fedimint::ln::{pay::LnPayResponse, wait_for_ln_payment},
     state::AppState,
-    types::fedimint::{AwaitInvoiceRequest, LnPayResponse},
-    utils::wait_for_ln_payment,
 };
+
+#[derive(Debug, Deserialize)]
+pub struct AwaitLnPayRequest {
+    pub operation_id: OperationId,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_await_pay(
     State(state): State<AppState>,
-    Json(req): Json<AwaitInvoiceRequest>,
+    Json(req): Json<AwaitLnPayRequest>,
 ) -> Result<Json<LnPayResponse>, AppError> {
     let lightning_module = state.fm.get_first_module::<LightningClientModule>();
     let ln_pay_details = lightning_module

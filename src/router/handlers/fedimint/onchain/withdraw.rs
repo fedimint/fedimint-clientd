@@ -1,15 +1,25 @@
-use crate::{
-    error::AppError,
-    state::AppState,
-    types::fedimint::{WithdrawRequest, WithdrawResponse},
-};
+use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
+use bitcoin::Address;
 use bitcoin_hashes::hex::ToHex;
 use fedimint_core::BitcoinAmountOrAll;
 use fedimint_wallet_client::{WalletClientModule, WithdrawState};
 use futures::StreamExt;
+use serde::{Deserialize, Serialize};
 use tracing::info;
+
+#[derive(Debug, Deserialize)]
+pub struct WithdrawRequest {
+    pub address: Address,
+    pub amount_msat: BitcoinAmountOrAll,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WithdrawResponse {
+    pub txid: String,
+    pub fees_sat: u64,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_withdraw(

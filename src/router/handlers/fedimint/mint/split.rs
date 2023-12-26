@@ -1,13 +1,21 @@
 use std::collections::BTreeMap;
 
 use axum::Json;
-use fedimint_core::TieredMulti;
+use fedimint_core::{Amount, TieredMulti};
 use fedimint_mint_client::OOBNotes;
+use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::AppError,
-    types::fedimint::{SplitRequest, SplitResponse},
-};
+use crate::error::AppError;
+
+#[derive(Debug, Deserialize)]
+pub struct SplitRequest {
+    pub notes: OOBNotes,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SplitResponse {
+    pub notes: BTreeMap<Amount, OOBNotes>,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_split(Json(req): Json<SplitRequest>) -> Result<Json<SplitResponse>, AppError> {

@@ -5,9 +5,8 @@ mod config;
 mod error;
 mod router;
 mod state;
-mod types;
-
 mod utils;
+
 use state::{load_fedimint_client, AppState};
 
 use crate::config::CONFIG;

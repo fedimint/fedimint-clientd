@@ -1,14 +1,31 @@
 use anyhow::Context;
 use axum::{extract::State, Json};
-use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment};
+use fedimint_core::{core::OperationId, Amount};
+use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment, PayType};
+use serde::{Deserialize, Serialize};
 use tracing::info;
 
 use crate::{
     error::AppError,
+    router::handlers::fedimint::ln::{get_invoice, wait_for_ln_payment},
     state::AppState,
-    types::fedimint::{LnPayRequest, LnPayResponse},
-    utils::{get_invoice, wait_for_ln_payment},
 };
+
+#[derive(Debug, Deserialize)]
+pub struct LnPayRequest {
+    pub payment_info: String,
+    pub amount_msat: Option<Amount>,
+    pub finish_in_background: bool,
+    pub lnurl_comment: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LnPayResponse {
+    pub operation_id: OperationId,
+    pub payment_type: PayType,
+    pub contract_id: String,
+    pub fee: Amount,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_pay(

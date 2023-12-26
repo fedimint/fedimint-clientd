@@ -1,7 +1,15 @@
+use std::collections::BTreeMap;
+
 use axum::{extract::State, Json};
 use fedimint_client::backup::Metadata;
+use serde::Deserialize;
 
-use crate::{error::AppError, state::AppState, types::fedimint::BackupRequest};
+use crate::{error::AppError, state::AppState};
+
+#[derive(Debug, Deserialize)]
+pub struct BackupRequest {
+    pub metadata: BTreeMap<String, String>,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_backup(

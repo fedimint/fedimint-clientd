@@ -1,11 +1,22 @@
 use axum::{extract::State, Json};
+use fedimint_core::{core::OperationId, Amount};
 use fedimint_ln_client::LightningClientModule;
+use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::AppError,
-    state::AppState,
-    types::fedimint::{LnInvoiceRequest, LnInvoiceResponse},
-};
+use crate::{error::AppError, state::AppState};
+
+#[derive(Debug, Deserialize)]
+pub struct LnInvoiceRequest {
+    pub amount_msat: Amount,
+    pub description: String,
+    pub expiry_time: Option<u64>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LnInvoiceResponse {
+    pub operation_id: OperationId,
+    pub invoice: String,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_invoice(

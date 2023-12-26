@@ -1,14 +1,23 @@
 use std::time::Duration;
 
 use axum::{extract::State, Json};
-use fedimint_core::time::now;
+use bitcoin::Address;
+use fedimint_core::{core::OperationId, time::now};
 use fedimint_wallet_client::WalletClientModule;
+use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::AppError,
-    state::AppState,
-    types::fedimint::{DepositAddressRequest, DepositAddressResponse},
-};
+use crate::{error::AppError, state::AppState};
+
+#[derive(Debug, Deserialize)]
+pub struct DepositAddressRequest {
+    pub timeout: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DepositAddressResponse {
+    pub operation_id: OperationId,
+    pub address: Address,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_deposit_address(

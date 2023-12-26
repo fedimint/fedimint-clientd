@@ -1,11 +1,19 @@
-use crate::{
-    error::AppError,
-    types::fedimint::{CombineRequest, CombineResponse},
-};
+use crate::error::AppError;
 use anyhow::anyhow;
 use axum::{http::StatusCode, Json};
 use fedimint_mint_client::OOBNotes;
 use itertools::Itertools;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize)]
+pub struct CombineRequest {
+    pub notes: Vec<OOBNotes>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CombineResponse {
+    pub notes: OOBNotes,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_combine(req: Json<CombineRequest>) -> Result<Json<CombineResponse>, AppError> {

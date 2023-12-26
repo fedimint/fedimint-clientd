@@ -1,12 +1,20 @@
-use crate::{
-    error::AppError,
-    state::AppState,
-    types::fedimint::{AwaitDepositRequest, AwaitDepositResponse},
-};
+use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
+use fedimint_core::core::OperationId;
 use fedimint_wallet_client::{DepositState, WalletClientModule};
 use futures::StreamExt;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize)]
+pub struct AwaitDepositRequest {
+    pub operation_id: OperationId,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AwaitDepositResponse {
+    pub status: DepositState,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_await_deposit(

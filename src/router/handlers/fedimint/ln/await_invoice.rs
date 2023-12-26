@@ -1,15 +1,21 @@
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
+use fedimint_core::core::OperationId;
 use fedimint_ln_client::{LightningClientModule, LnReceiveState};
 use futures::StreamExt;
+use serde::Deserialize;
 use tracing::info;
 
 use crate::{
     error::AppError,
+    router::handlers::fedimint::{admin::info::InfoResponse, get_note_summary},
     state::AppState,
-    types::fedimint::{AwaitInvoiceRequest, InfoResponse},
-    utils::get_note_summary,
 };
+
+#[derive(Debug, Deserialize)]
+pub struct AwaitInvoiceRequest {
+    pub operation_id: OperationId,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_await_invoice(

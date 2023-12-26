@@ -1,15 +1,27 @@
 use std::time::Duration;
 
 use axum::{extract::State, Json};
+use fedimint_core::core::OperationId;
 use fedimint_core::Amount;
+use fedimint_mint_client::OOBNotes;
 use fedimint_mint_client::{MintClientModule, SelectNotesWithAtleastAmount};
+use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
-use crate::{
-    error::AppError,
-    state::AppState,
-    types::fedimint::{SpendRequest, SpendResponse},
-};
+use crate::{error::AppError, state::AppState};
+
+#[derive(Debug, Deserialize)]
+pub struct SpendRequest {
+    pub amount_msat: Amount,
+    pub allow_overpay: bool,
+    pub timeout: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SpendResponse {
+    pub operation: OperationId,
+    pub notes: OOBNotes,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_spend(

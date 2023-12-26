@@ -1,14 +1,28 @@
 use std::time::UNIX_EPOCH;
 
 use axum::{extract::State, Json};
+use fedimint_core::core::OperationId;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use time::{format_description::well_known::iso8601, OffsetDateTime};
 
-use crate::{
-    error::AppError,
-    state::AppState,
-    types::fedimint::{ListOperationsRequest, OperationOutput},
-};
+use crate::{error::AppError, state::AppState};
+
+#[derive(Debug, Deserialize)]
+pub struct ListOperationsRequest {
+    pub limit: usize,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+pub struct OperationOutput {
+    pub id: OperationId,
+    pub creation_time: String,
+    pub operation_kind: String,
+    pub operation_meta: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub outcome: Option<serde_json::Value>,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_list_operations(

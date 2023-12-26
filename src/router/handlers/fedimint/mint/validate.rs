@@ -1,11 +1,19 @@
 use axum::{extract::State, Json};
-use fedimint_mint_client::MintClientModule;
+use fedimint_core::Amount;
+use fedimint_mint_client::{MintClientModule, OOBNotes};
+use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::AppError,
-    state::AppState,
-    types::fedimint::{ValidateRequest, ValidateResponse},
-};
+use crate::{error::AppError, state::AppState};
+
+#[derive(Debug, Deserialize)]
+pub struct ValidateRequest {
+    pub notes: OOBNotes,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ValidateResponse {
+    pub amount_msat: Amount,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_validate(

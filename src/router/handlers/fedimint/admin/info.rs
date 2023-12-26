@@ -1,8 +1,23 @@
+use std::collections::BTreeMap;
+
 use axum::{extract::State, Json};
+use fedimint_core::{config::FederationId, Amount, TieredSummary};
 use fedimint_mint_client::MintClientModule;
 use fedimint_wallet_client::WalletClientModule;
+use serde::Serialize;
 
-use crate::{error::AppError, state::AppState, types::fedimint::InfoResponse};
+use crate::{error::AppError, state::AppState};
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub struct InfoResponse {
+    pub federation_id: FederationId,
+    pub network: String,
+    pub meta: BTreeMap<String, String>,
+    pub total_amount_msat: Amount,
+    pub total_num_notes: usize,
+    pub denominations_msat: TieredSummary,
+}
 
 #[axum_macros::debug_handler]
 pub async fn handle_info(State(state): State<AppState>) -> Result<Json<InfoResponse>, AppError> {
