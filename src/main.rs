@@ -46,7 +46,7 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 
     let app = Router::new()
         .route("/", get(handle_readme))
-        .route("/fedimint/ws", get(websocket_handler))
+        .route("/fedimint/v2/ws", get(websocket_handler))
         .nest("/fedimint/v2", fedimint_v2_rest())
         .nest("/cashu/v1", cashu_v1_rest())
         .with_state(state)
