@@ -136,8 +136,10 @@ pub async fn wait_for_ln_payment(
                         info!("{gateway_error}");
                         Err(anyhow::anyhow!("Payment was refunded"))?;
                     }
+                    LnPayState::Canceled => {
+                        Err(anyhow::anyhow!("Payment was canceled"))?;
+                    }
                     LnPayState::Created
-                    | LnPayState::Canceled
                     | LnPayState::AwaitingChange
                     | LnPayState::WaitingForRefund { .. } => {}
                     LnPayState::Funded if return_on_funding => return Ok(None),
