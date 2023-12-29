@@ -1,44 +1,96 @@
 use std::collections::BTreeMap;
 
 use axum::{extract::State, Json};
-use fedimint_core::{config::FederationId, Amount, TieredSummary};
-use fedimint_mint_client::MintClientModule;
-use fedimint_wallet_client::WalletClientModule;
 use serde::Serialize;
 
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub struct InfoResponse {
-    pub federation_id: FederationId,
-    pub network: String,
-    pub meta: BTreeMap<String, String>,
-    pub total_amount_msat: Amount,
-    pub total_num_notes: usize,
-    pub denominations_msat: TieredSummary,
+pub struct Contact {
+    pub method: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct NutMethod {
+    pub method: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct Nut {
+    pub methods: Option<Vec<NutMethod>>,
+    pub disabled: Option<bool>,
+    pub supported: Option<bool>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct CashuNUT06InfoResponse {
+    pub name: String,
+    pub pubkey: String,
+    pub version: String,
+    pub description: String,
+    pub description_long: String,
+    pub contact: Vec<Contact>,
+    pub motd: String,
+    pub nuts: BTreeMap<String, Nut>,
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_info(State(state): State<AppState>) -> Result<Json<InfoResponse>, AppError> {
-    let mint_client = state.fm.get_first_module::<MintClientModule>();
-    let wallet_client = state.fm.get_first_module::<WalletClientModule>();
-    let summary = mint_client
-        .get_wallet_summary(
-            &mut state
-                .fm
-                .db()
-                .begin_transaction_nc()
-                .await
-                .to_ref_with_prefix_module_id(1),
-        )
-        .await;
-    Ok(Json(InfoResponse {
-        federation_id: state.fm.federation_id(),
-        network: wallet_client.get_network().to_string(),
-        meta: state.fm.get_config().global.meta.clone(),
-        total_amount_msat: summary.total_amount(),
-        total_num_notes: summary.count_items(),
-        denominations_msat: summary,
-    }))
+pub async fn handle_info(
+    State(state): State<AppState>,
+) -> Result<Json<CashuNUT06InfoResponse>, AppError> {
+    let config = state.fm.get_config();
+    let mut nuts = BTreeMap::new();
+
+    nuts.insert(
+        "4".to_string(),
+        Nut {
+            methods: Some(vec![NutMethod {
+                method: "bolt11".to_string(),
+                value: "sat".to_string(),
+            }]),
+            disabled: Some(false),
+            supported: None,
+        },
+    );
+
+    nuts.insert(
+        "5".to_string(),
+        Nut {
+            methods: Some(vec![NutMethod {
+                method: "bolt11".to_string(),
+                value: "sat".to_string(),
+            }]),
+            disabled: None,
+            supported: None,
+        },
+    );
+
+    for &i in &[7, 8, 9, 10, 12] {
+        nuts.insert(
+            i.to_string(),
+            Nut {
+                methods: None,
+                disabled: None,
+                supported: Some(true),
+            },
+        );
+    }
+
+    let response = CashuNUT06InfoResponse {
+        name: config.global.federation_name().unwrap().to_string(),
+        pubkey: config.global.federation_id().to_string(),
+        version: format!("{:?}", config.global.consensus_version),
+        description: "Cashu <-> Fedimint Soon (tm)".to_string(),
+        description_long: "Cashu <-> Fedimint Soon (tm)".to_string(),
+        contact: vec![Contact {
+            method: "xmpp".to_string(),
+            value: "local@localhost".to_string(),
+        }],
+        motd: "Cashu <-> Fedimint Soon (tm)".to_string(),
+        nuts,
+    };
+
+    Ok(Json(response))
 }
