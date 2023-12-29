@@ -46,9 +46,9 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 
     let app = Router::new()
         .route("/", get(handle_readme))
-        .route("/ws", get(websocket_handler))
-        .nest("/fedimint/v2", fedimint_v2_router())
-        .nest("/cashu/v1", cashu_v1_router())
+        .route("/fedimint/ws", get(websocket_handler))
+        .nest("/fedimint/v2", fedimint_v2_rest())
+        .nest("/cashu/v1", cashu_v1_rest())
         .with_state(state)
         // .layer(cors)
         .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
@@ -84,7 +84,7 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 /// - `/fedimint/v2/onchain/deposit-address`: Generate a new deposit address, funds sent to it can later be claimed.
 /// - `/fedimint/v2/onchain/await-deposit`: Wait for deposit on previously generated address.
 /// - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
-fn fedimint_v2_router() -> Router<AppState> {
+fn fedimint_v2_rest() -> Router<AppState> {
     let mint_router = Router::new()
         .route("/reissue", post(fedimint::mint::reissue::handle_rest))
         .route("/spend", post(fedimint::mint::spend::handle_rest))
@@ -175,7 +175,7 @@ fn fedimint_v2_router() -> Router<AppState> {
 /// - Fedimint already does this
 /// NUT-12 Offline Ecash Signature Validation
 /// - DLEQ in BlindedSignature for Mint to User
-fn cashu_v1_router() -> Router<AppState> {
+fn cashu_v1_rest() -> Router<AppState> {
     let cashu_router = Router::new()
         .route("/keys", get(cashu::keys::handle_keys))
         .route("/keys/:keyset_id", get(cashu::keys::handle_keys_keyset_id))

@@ -7,6 +7,7 @@ use axum::{
 };
 use futures_util::stream::StreamExt;
 use serde_json::Value;
+use tracing::info;
 
 use crate::state::AppState;
 
@@ -75,78 +76,127 @@ impl WsCommand {
 async fn handle_socket(mut socket: WebSocket, state: AppState) {
     while let Some(Ok(msg)) = socket.next().await {
         if let Message::Text(text) = msg {
+            info!("Received: {}", text);
             let v: Value = serde_json::from_str(&text).unwrap();
             let command = WsCommand::from_str(v["command"].as_str().unwrap());
             if let Some(command) = command {
-                let response =
-                    match command {
-                        WsCommand::AdminInfo => {
-                            handlers::fedimint::admin::info::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::AdminBackup => {
-                            handlers::fedimint::admin::backup::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::AdminConfig => {
-                            handlers::fedimint::admin::config::handle_ws(state.clone()).await
-                        }
-                        WsCommand::AdminDiscoverVersion => {
-                            handlers::fedimint::admin::discover_version::handle_ws(state.clone())
-                                .await
-                        }
-                        WsCommand::AdminModule => {
-                            handlers::fedimint::admin::module::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::AdminRestore => {
-                            handlers::fedimint::admin::restore::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::AdminListOperations => {
-                            handlers::fedimint::admin::list_operations::handle_ws(v, state.clone())
-                                .await
-                        }
-                        WsCommand::MintReissue => {
-                            handlers::fedimint::mint::reissue::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::MintSpend => {
-                            handlers::fedimint::mint::spend::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::MintValidate => {
-                            handlers::fedimint::mint::validate::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::MintSplit => handlers::fedimint::mint::split::handle_ws(v).await,
-                        WsCommand::MintCombine => {
-                            handlers::fedimint::mint::combine::handle_ws(v).await
-                        }
-                        WsCommand::LnInvoice => {
-                            handlers::fedimint::ln::invoice::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::LnAwaitInvoice => {
-                            handlers::fedimint::ln::await_invoice::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::LnPay => {
-                            handlers::fedimint::ln::pay::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::LnAwaitPay => {
-                            handlers::fedimint::ln::await_pay::handle_ws(v, state.clone()).await
-                        }
-                        WsCommand::LnListGateways => {
-                            handlers::fedimint::ln::list_gateways::handle_ws(state.clone()).await
-                        }
-                        WsCommand::LnSwitchGateway => {
-                            handlers::fedimint::ln::switch_gateway::handle_ws(v, state.clone())
-                                .await
-                        }
-                        WsCommand::WalletDepositAddress => {
-                            handlers::fedimint::wallet::deposit_address::handle_ws(v, state.clone())
-                                .await
-                        }
-                        WsCommand::WalletAwaitDeposit => {
-                            handlers::fedimint::wallet::await_deposit::handle_ws(v, state.clone())
-                                .await
-                        }
-                        WsCommand::WalletWithdraw => {
-                            handlers::fedimint::wallet::withdraw::handle_ws(v, state.clone()).await
-                        }
-                    };
+                let response = match command {
+                    WsCommand::AdminInfo => {
+                        handlers::fedimint::admin::info::handle_ws(v["body"].clone(), state.clone())
+                            .await
+                    }
+                    WsCommand::AdminBackup => {
+                        handlers::fedimint::admin::backup::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::AdminConfig => {
+                        handlers::fedimint::admin::config::handle_ws(state.clone()).await
+                    }
+                    WsCommand::AdminDiscoverVersion => {
+                        handlers::fedimint::admin::discover_version::handle_ws(state.clone()).await
+                    }
+                    WsCommand::AdminModule => {
+                        handlers::fedimint::admin::module::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::AdminRestore => {
+                        handlers::fedimint::admin::restore::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::AdminListOperations => {
+                        handlers::fedimint::admin::list_operations::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::MintReissue => {
+                        handlers::fedimint::mint::reissue::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::MintSpend => {
+                        handlers::fedimint::mint::spend::handle_ws(v["body"].clone(), state.clone())
+                            .await
+                    }
+                    WsCommand::MintValidate => {
+                        handlers::fedimint::mint::validate::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::MintSplit => {
+                        handlers::fedimint::mint::split::handle_ws(v["body"].clone()).await
+                    }
+                    WsCommand::MintCombine => {
+                        handlers::fedimint::mint::combine::handle_ws(v["body"].clone()).await
+                    }
+                    WsCommand::LnInvoice => {
+                        handlers::fedimint::ln::invoice::handle_ws(v["body"].clone(), state.clone())
+                            .await
+                    }
+                    WsCommand::LnAwaitInvoice => {
+                        handlers::fedimint::ln::await_invoice::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::LnPay => {
+                        handlers::fedimint::ln::pay::handle_ws(v["body"].clone(), state.clone())
+                            .await
+                    }
+                    WsCommand::LnAwaitPay => {
+                        handlers::fedimint::ln::await_pay::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::LnListGateways => {
+                        handlers::fedimint::ln::list_gateways::handle_ws(state.clone()).await
+                    }
+                    WsCommand::LnSwitchGateway => {
+                        handlers::fedimint::ln::switch_gateway::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::WalletDepositAddress => {
+                        handlers::fedimint::wallet::deposit_address::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::WalletAwaitDeposit => {
+                        handlers::fedimint::wallet::await_deposit::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                    WsCommand::WalletWithdraw => {
+                        handlers::fedimint::wallet::withdraw::handle_ws(
+                            v["body"].clone(),
+                            state.clone(),
+                        )
+                        .await
+                    }
+                };
                 match response {
                     Ok(res) => {
                         socket.send(res).await.unwrap();
