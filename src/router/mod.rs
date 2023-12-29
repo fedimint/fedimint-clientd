@@ -82,18 +82,18 @@ fn fedimint_v2_router() -> Router<AppState> {
             post(fedimint::ln::switch_gateway::handle_switch_gateway),
         );
 
-    let onchain_router = Router::new()
+    let wallet_router = Router::new()
         .route(
             "/deposit-address",
-            post(fedimint::onchain::deposit_address::handle_deposit_address),
+            post(fedimint::wallet::deposit_address::handle_deposit_address),
         )
         .route(
             "/await-deposit",
-            post(fedimint::onchain::await_deposit::handle_await_deposit),
+            post(fedimint::wallet::await_deposit::handle_await_deposit),
         )
         .route(
             "/withdraw",
-            post(fedimint::onchain::withdraw::handle_withdraw),
+            post(fedimint::wallet::withdraw::handle_withdraw),
         );
 
     let admin_router = Router::new()
@@ -107,7 +107,7 @@ fn fedimint_v2_router() -> Router<AppState> {
         // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this under admin?
         .route(
             "/list-operations",
-            get(fedimint::admin::list_operations::handle_list_operations),
+            post(fedimint::admin::list_operations::handle_list_operations),
         )
         .route("/module", post(fedimint::admin::module::handle_module))
         .route("/config", get(fedimint::admin::config::handle_config));
@@ -116,7 +116,7 @@ fn fedimint_v2_router() -> Router<AppState> {
         .nest("/admin", admin_router)
         .nest("/mint", mint_router)
         .nest("/ln", ln_router)
-        .nest("/onchain", onchain_router);
+        .nest("/wallet", wallet_router);
 
     base_router
 }
