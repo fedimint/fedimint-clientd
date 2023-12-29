@@ -1,9 +1,10 @@
 use crate::error::AppError;
 use anyhow::anyhow;
-use axum::{http::StatusCode, Json};
+use axum::{extract::ws::Message, http::StatusCode, Json};
 use fedimint_mint_client::OOBNotes;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 #[derive(Debug, Deserialize)]
 pub struct CombineRequest {
@@ -15,8 +16,7 @@ pub struct CombineResponse {
     pub notes: OOBNotes,
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_combine(req: Json<CombineRequest>) -> Result<Json<CombineResponse>, AppError> {
+async fn _combine(req: CombineRequest) -> Result<CombineResponse, AppError> {
     let federation_id_prefix = match req
         .notes
         .iter()
@@ -46,7 +46,22 @@ pub async fn handle_combine(req: Json<CombineRequest>) -> Result<Json<CombineRes
 
     let combined_oob_notes = OOBNotes::new(federation_id_prefix, combined_notes);
 
-    Ok(Json(CombineResponse {
+    Ok(CombineResponse {
         notes: combined_oob_notes,
-    }))
+    })
+}
+
+pub async fn handle_ws(v: Value) -> Result<Message, AppError> {
+    let v = serde_json::from_value(v).unwrap();
+    let combine = _combine(v).await?;
+    let combine_json = json!(combine);
+    Ok(Message::Text(combine_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(
+    Json(req): Json<CombineRequest>,
+) -> Result<Json<CombineResponse>, AppError> {
+    let combine = _combine(req).await?;
+    Ok(Json(combine))
 }

@@ -1,10 +1,21 @@
-use axum::{extract::State, Json};
-use serde_json::Value;
+use axum::{extract::ws::Message, extract::State, Json};
+use serde_json::{json, Value};
 
 use crate::{error::AppError, state::AppState};
 
-#[axum_macros::debug_handler]
-pub async fn handle_config(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
+async fn _config(state: AppState) -> Result<Value, AppError> {
     let config = state.fm.get_config_json();
-    Ok(Json(serde_json::to_value(config).expect("Client config is serializable")))
+    Ok(serde_json::to_value(config).expect("Client config is serializable"))
+}
+
+pub async fn handle_ws(state: AppState) -> Result<Message, AppError> {
+    let config = _config(state).await?;
+    let config_json = json!(config);
+    Ok(Message::Text(config_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
+    let config = _config(state).await?;
+    Ok(Json(config))
 }

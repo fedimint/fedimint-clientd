@@ -1,10 +1,11 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{extract::ws::Message, extract::State, http::StatusCode, Json};
 use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use tracing::info;
 
 #[derive(Debug, Deserialize)]
@@ -17,11 +18,7 @@ pub struct ReissueResponse {
     pub amount_msat: Amount,
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_reissue(
-    State(state): State<AppState>,
-    Json(req): Json<ReissueRequest>,
-) -> Result<Json<ReissueResponse>, AppError> {
+async fn _reissue(state: AppState, req: ReissueRequest) -> Result<ReissueResponse, AppError> {
     let amount_msat = req.notes.total_amount();
 
     let mint = state.fm.get_first_module::<MintClientModule>();
@@ -42,5 +39,21 @@ pub async fn handle_reissue(
         info!("Update: {update_clone:?}");
     }
 
-    Ok(Json(ReissueResponse { amount_msat }))
+    Ok(ReissueResponse { amount_msat })
+}
+
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+    let v = serde_json::from_value(v).unwrap();
+    let reissue = _reissue(state, v).await?;
+    let reissue_json = json!(reissue);
+    Ok(Message::Text(reissue_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(
+    State(state): State<AppState>,
+    Json(req): Json<ReissueRequest>,
+) -> Result<Json<ReissueResponse>, AppError> {
+    let reissue = _reissue(state, req).await?;
+    Ok(Json(reissue))
 }

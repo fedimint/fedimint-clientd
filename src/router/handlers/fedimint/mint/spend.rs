@@ -1,11 +1,12 @@
 use std::time::Duration;
 
-use axum::{extract::State, Json};
+use axum::{extract::ws::Message, extract::State, Json};
 use fedimint_core::core::OperationId;
 use fedimint_core::Amount;
 use fedimint_mint_client::OOBNotes;
 use fedimint_mint_client::{MintClientModule, SelectNotesWithAtleastAmount};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use tracing::{info, warn};
 
 use crate::{error::AppError, state::AppState};
@@ -23,16 +24,11 @@ pub struct SpendResponse {
     pub notes: OOBNotes,
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_spend(
-    State(state): State<AppState>,
-    Json(req): Json<SpendRequest>,
-) -> Result<Json<SpendResponse>, AppError> {
+async fn _spend(state: AppState, req: SpendRequest) -> Result<SpendResponse, AppError> {
     warn!("The client will try to double-spend these notes after the duration specified by the --timeout option to recover any unclaimed e-cash.");
 
     let mint_module = state.fm.get_first_module::<MintClientModule>();
     let timeout = Duration::from_secs(req.timeout);
-    // let (operation, notes) = if req.allow_overpay {  TODO: not backported yet
     let (operation, notes) = mint_module
         .spend_notes_with_selector(&SelectNotesWithAtleastAmount, req.amount_msat, timeout, ())
         .await?;
@@ -45,10 +41,21 @@ pub async fn handle_spend(
         );
     }
     info!("Spend e-cash operation: {operation}");
-    Ok(Json(SpendResponse { operation, notes }))
-    // } else {
-    // mint_module
-    //     .spend_notes_with_selector(&SelectNotesWithExactAmount, req.amount, timeout, ()) TODO: not backported yet
-    //     .await?
-    // };
+    Ok(SpendResponse { operation, notes })
+}
+
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+    let v = serde_json::from_value(v).unwrap();
+    let spend = _spend(state, v).await?;
+    let spend_json = json!(spend);
+    Ok(Message::Text(spend_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(
+    State(state): State<AppState>,
+    Json(req): Json<SpendRequest>,
+) -> Result<Json<SpendResponse>, AppError> {
+    let spend = _spend(state, req).await?;
+    Ok(Json(spend))
 }

@@ -1,12 +1,13 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{extract::ws::Message, extract::State, http::StatusCode, Json};
 use bitcoin::Address;
 use bitcoin_hashes::hex::ToHex;
 use fedimint_core::BitcoinAmountOrAll;
 use fedimint_wallet_client::{WalletClientModule, WithdrawState};
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use tracing::info;
 
 #[derive(Debug, Deserialize)]
@@ -21,11 +22,7 @@ pub struct WithdrawResponse {
     pub fees_sat: u64,
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_withdraw(
-    State(state): State<AppState>,
-    Json(req): Json<WithdrawRequest>,
-) -> Result<Json<WithdrawResponse>, AppError> {
+async fn _withdraw(state: AppState, req: WithdrawRequest) -> Result<WithdrawResponse, AppError> {
     let wallet_module = state.fm.get_first_module::<WalletClientModule>();
     let (amount, fees) = match req.amount_msat {
         // If the amount is "all", then we need to subtract the fees from
@@ -69,10 +66,10 @@ pub async fn handle_withdraw(
 
         match update {
             WithdrawState::Succeeded(txid) => {
-                return Ok(Json(WithdrawResponse {
+                return Ok(WithdrawResponse {
                     txid: txid.to_hex(),
                     fees_sat: absolute_fees.to_sat(),
-                }));
+                });
             }
             WithdrawState::Failed(e) => {
                 return Err(AppError::new(
@@ -88,4 +85,20 @@ pub async fn handle_withdraw(
         StatusCode::INTERNAL_SERVER_ERROR,
         anyhow!("Update stream ended without outcome"),
     ))
+}
+
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+    let v = serde_json::from_value(v).unwrap();
+    let withdraw = _withdraw(state, v).await?;
+    let withdraw_json = json!(withdraw);
+    Ok(Message::Text(withdraw_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(
+    State(state): State<AppState>,
+    Json(req): Json<WithdrawRequest>,
+) -> Result<Json<WithdrawResponse>, AppError> {
+    let withdraw = _withdraw(state, req).await?;
+    Ok(Json(withdraw))
 }

@@ -1,15 +1,14 @@
-use axum::{extract::State, Json};
+use axum::{extract::ws::Message, extract::State, Json};
 use fedimint_ln_client::LightningClientModule;
 use serde_json::{json, Value};
 
 use crate::{error::AppError, state::AppState};
 
-#[axum_macros::debug_handler]
-pub async fn handle_list_gateways(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
+async fn _list_gateways(state: AppState) -> Result<Value, AppError> {
     let lightning_module = state.fm.get_first_module::<LightningClientModule>();
     let gateways = lightning_module.fetch_registered_gateways().await?;
     if gateways.is_empty() {
-        return Ok(Json(serde_json::to_value(Vec::<String>::new()).unwrap()));
+        return Ok(serde_json::to_value(Vec::<String>::new()).unwrap());
     }
 
     let mut gateways_json = json!(&gateways);
@@ -26,5 +25,17 @@ pub async fn handle_list_gateways(State(state): State<AppState>) -> Result<Json<
                 gateway["active"] = json!(false);
             }
         });
-    Ok(Json(serde_json::to_value(gateways_json).unwrap()))
+    Ok(serde_json::to_value(gateways_json).unwrap())
+}
+
+pub async fn handle_ws(state: AppState) -> Result<Message, AppError> {
+    let gateways = _list_gateways(state).await?;
+    let gateways_json = json!(gateways);
+    Ok(Message::Text(gateways_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
+    let gateways = _list_gateways(state).await?;
+    Ok(Json(gateways))
 }

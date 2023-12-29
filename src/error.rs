@@ -1,7 +1,10 @@
+use std::fmt;
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
+use serde_json::json;
 
 pub struct AppError {
     pub error: anyhow::Error,
@@ -21,6 +24,17 @@ impl AppError {
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         (self.status, format!("Something went wrong: {}", self.error)).into_response()
+    }
+}
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let error_json = json!({
+            "error": self.error.to_string(),
+            "status": self.status.as_u16(),
+        });
+
+        write!(f, "{}", error_json.to_string())
     }
 }
 

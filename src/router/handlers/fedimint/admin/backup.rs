@@ -1,24 +1,35 @@
-use std::collections::BTreeMap;
-
-use axum::{extract::State, Json};
+use crate::{error::AppError, state::AppState};
+use axum::{extract::ws::Message, extract::State, http::StatusCode, Json};
 use fedimint_client::backup::Metadata;
 use serde::Deserialize;
-
-use crate::{error::AppError, state::AppState};
+use serde_json::{json, Value};
+use std::collections::BTreeMap;
 
 #[derive(Debug, Deserialize)]
 pub struct BackupRequest {
     pub metadata: BTreeMap<String, String>,
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_backup(
-    State(state): State<AppState>,
-    Json(req): Json<BackupRequest>,
-) -> Result<Json<()>, AppError> {
+async fn _backup(state: AppState, req: BackupRequest) -> Result<(), AppError> {
     state
         .fm
         .backup_to_federation(Metadata::from_json_serialized(req.metadata))
-        .await?;
-    Ok(Json(()))
+        .await
+        .map_err(|e| AppError::new(StatusCode::INTERNAL_SERVER_ERROR, e))
+}
+
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+    let v = serde_json::from_value(v).unwrap();
+    let backup = _backup(state, v).await?;
+    let backup_json = json!(backup);
+    Ok(Message::Text(backup_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(
+    State(state): State<AppState>,
+    Json(req): Json<BackupRequest>,
+) -> Result<Json<()>, AppError> {
+    let backup = _backup(state, req).await?;
+    Ok(Json(backup))
 }

@@ -1,9 +1,10 @@
 use std::collections::BTreeMap;
 
-use axum::Json;
+use axum::{extract::ws::Message, Json};
 use fedimint_core::{Amount, TieredMulti};
 use fedimint_mint_client::OOBNotes;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 use crate::error::AppError;
 
@@ -17,8 +18,7 @@ pub struct SplitResponse {
     pub notes: BTreeMap<Amount, OOBNotes>,
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_split(Json(req): Json<SplitRequest>) -> Result<Json<SplitResponse>, AppError> {
+async fn _split(req: SplitRequest) -> Result<SplitResponse, AppError> {
     let federation = req.notes.federation_id_prefix();
     let notes = req
         .notes
@@ -38,5 +38,18 @@ pub async fn handle_split(Json(req): Json<SplitRequest>) -> Result<Json<SplitRes
         })
         .collect::<BTreeMap<_, _>>();
 
-    Ok(Json(SplitResponse { notes }))
+    Ok(SplitResponse { notes })
+}
+
+pub async fn handle_ws(v: Value) -> Result<Message, AppError> {
+    let v = serde_json::from_value(v).unwrap();
+    let split = _split(v).await?;
+    let split_json = json!(split);
+    Ok(Message::Text(split_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(Json(req): Json<SplitRequest>) -> Result<Json<SplitResponse>, AppError> {
+    let split = _split(req).await?;
+    Ok(Json(split))
 }

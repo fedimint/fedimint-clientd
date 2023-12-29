@@ -1,4 +1,5 @@
 use anyhow::Result;
+use router::ws::websocket_handler;
 use tracing::info;
 
 mod config;
@@ -7,8 +8,8 @@ mod router;
 mod state;
 mod utils;
 
-use axum::routing::post;
-use axum::{routing::get, Router};
+use axum::routing::{get, post};
+use axum::Router;
 use state::{load_fedimint_client, AppState};
 
 use router::handlers::*;
@@ -45,6 +46,7 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 
     let app = Router::new()
         .route("/", get(handle_readme))
+        .route("/ws", get(websocket_handler))
         .nest("/fedimint/v2", fedimint_v2_router())
         .nest("/cashu/v1", cashu_v1_router())
         .with_state(state)
@@ -84,61 +86,55 @@ pub async fn create_router(state: AppState) -> Result<Router> {
 /// - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
 fn fedimint_v2_router() -> Router<AppState> {
     let mint_router = Router::new()
-        .route("/reissue", post(fedimint::mint::reissue::handle_reissue))
-        .route("/spend", post(fedimint::mint::spend::handle_spend))
-        .route("/validate", post(fedimint::mint::validate::handle_validate))
-        .route("/split", post(fedimint::mint::split::handle_split))
-        .route("/combine", post(fedimint::mint::combine::handle_combine));
+        .route("/reissue", post(fedimint::mint::reissue::handle_rest))
+        .route("/spend", post(fedimint::mint::spend::handle_rest))
+        .route("/validate", post(fedimint::mint::validate::handle_rest))
+        .route("/split", post(fedimint::mint::split::handle_rest))
+        .route("/combine", post(fedimint::mint::combine::handle_rest));
 
     let ln_router = Router::new()
-        .route("/invoice", post(fedimint::ln::invoice::handle_invoice))
+        .route("/invoice", post(fedimint::ln::invoice::handle_rest))
         .route(
             "/await-invoice",
-            post(fedimint::ln::await_invoice::handle_await_invoice),
+            post(fedimint::ln::await_invoice::handle_rest),
         )
-        .route("/pay", post(fedimint::ln::pay::handle_pay))
-        .route(
-            "/await-pay",
-            post(fedimint::ln::await_pay::handle_await_pay),
-        )
+        .route("/pay", post(fedimint::ln::pay::handle_rest))
+        .route("/await-pay", post(fedimint::ln::await_pay::handle_rest))
         .route(
             "/list-gateways",
-            get(fedimint::ln::list_gateways::handle_list_gateways),
+            get(fedimint::ln::list_gateways::handle_rest),
         )
         .route(
             "/switch-gateway",
-            post(fedimint::ln::switch_gateway::handle_switch_gateway),
+            post(fedimint::ln::switch_gateway::handle_rest),
         );
 
     let wallet_router = Router::new()
         .route(
             "/deposit-address",
-            post(fedimint::wallet::deposit_address::handle_deposit_address),
+            post(fedimint::wallet::deposit_address::handle_rest),
         )
         .route(
             "/await-deposit",
-            post(fedimint::wallet::await_deposit::handle_await_deposit),
+            post(fedimint::wallet::await_deposit::handle_rest),
         )
-        .route(
-            "/withdraw",
-            post(fedimint::wallet::withdraw::handle_withdraw),
-        );
+        .route("/withdraw", post(fedimint::wallet::withdraw::handle_rest));
 
     let admin_router = Router::new()
-        .route("/info", get(fedimint::admin::info::handle_info))
-        .route("/backup", post(fedimint::admin::backup::handle_backup))
+        .route("/info", get(fedimint::admin::info::handle_rest))
+        .route("/backup", post(fedimint::admin::backup::handle_rest))
         .route(
             "/discover-version",
-            get(fedimint::admin::discover_version::handle_discover_version),
+            get(fedimint::admin::discover_version::handle_rest),
         )
-        .route("/restore", post(fedimint::admin::restore::handle_restore))
+        .route("/restore", post(fedimint::admin::restore::handle_rest))
         // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this under admin?
         .route(
             "/list-operations",
-            post(fedimint::admin::list_operations::handle_list_operations),
+            post(fedimint::admin::list_operations::handle_rest),
         )
-        .route("/module", post(fedimint::admin::module::handle_module))
-        .route("/config", get(fedimint::admin::config::handle_config));
+        .route("/module", post(fedimint::admin::module::handle_rest))
+        .route("/config", get(fedimint::admin::config::handle_rest));
 
     let base_router = Router::new()
         .nest("/admin", admin_router)

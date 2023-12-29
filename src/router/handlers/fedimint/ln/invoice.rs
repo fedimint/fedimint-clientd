@@ -1,7 +1,8 @@
-use axum::{extract::State, Json};
+use axum::{extract::ws::Message, extract::State, Json};
 use fedimint_core::{core::OperationId, Amount};
 use fedimint_ln_client::LightningClientModule;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 use crate::{error::AppError, state::AppState};
 
@@ -18,19 +19,31 @@ pub struct LnInvoiceResponse {
     pub invoice: String,
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_invoice(
-    State(state): State<AppState>,
-    Json(req): Json<LnInvoiceRequest>,
-) -> Result<Json<LnInvoiceResponse>, AppError> {
+async fn _invoice(state: AppState, req: LnInvoiceRequest) -> Result<LnInvoiceResponse, AppError> {
     let lightning_module = state.fm.get_first_module::<LightningClientModule>();
     lightning_module.select_active_gateway().await?;
 
     let (operation_id, invoice) = lightning_module
         .create_bolt11_invoice(req.amount_msat, req.description, req.expiry_time, ())
         .await?;
-    Ok(Json(LnInvoiceResponse {
+    Ok(LnInvoiceResponse {
         operation_id,
         invoice: invoice.to_string(),
-    }))
+    })
+}
+
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+    let v = serde_json::from_value(v).unwrap();
+    let invoice = _invoice(state, v).await?;
+    let invoice_json = json!(invoice);
+    Ok(Message::Text(invoice_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(
+    State(state): State<AppState>,
+    Json(req): Json<LnInvoiceRequest>,
+) -> Result<Json<LnInvoiceResponse>, AppError> {
+    let invoice = _invoice(state, req).await?;
+    Ok(Json(invoice))
 }

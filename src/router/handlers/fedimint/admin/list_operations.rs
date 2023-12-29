@@ -1,9 +1,8 @@
-use std::time::UNIX_EPOCH;
-
-use axum::{extract::State, Json};
+use axum::{extract::ws::Message, extract::State, Json};
 use fedimint_core::core::OperationId;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::time::UNIX_EPOCH;
 use time::{format_description::well_known::iso8601, OffsetDateTime};
 
 use crate::{error::AppError, state::AppState};
@@ -24,11 +23,7 @@ pub struct OperationOutput {
     pub outcome: Option<serde_json::Value>,
 }
 
-#[axum_macros::debug_handler]
-pub async fn handle_list_operations(
-    State(state): State<AppState>,
-    Json(req): Json<ListOperationsRequest>,
-) -> Result<Json<Value>, AppError> {
+async fn _list_operations(state: AppState, req: ListOperationsRequest) -> Result<Value, AppError> {
     const ISO8601_CONFIG: iso8601::EncodedConfig = iso8601::Config::DEFAULT
         .set_formatted_components(iso8601::FormattedComponents::DateTime)
         .encode();
@@ -59,7 +54,23 @@ pub async fn handle_list_operations(
         })
         .collect::<Vec<_>>();
 
-    Ok(Json(json!({
+    Ok(json!({
         "operations": operations,
-    })))
+    }))
+}
+
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+    let v = serde_json::from_value(v).unwrap();
+    let operations = _list_operations(state, v).await?;
+    let operations_json = json!(operations);
+    Ok(Message::Text(operations_json.to_string()))
+}
+
+#[axum_macros::debug_handler]
+pub async fn handle_rest(
+    State(state): State<AppState>,
+    Json(req): Json<ListOperationsRequest>,
+) -> Result<Json<Value>, AppError> {
+    let operations = _list_operations(state, req).await?;
+    Ok(Json(operations))
 }
