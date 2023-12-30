@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use axum::{extract::ws::Message, Json};
+use axum::Json;
 use fedimint_core::{Amount, TieredMulti};
 use fedimint_mint_client::OOBNotes;
 use serde::{Deserialize, Serialize};
@@ -41,11 +41,11 @@ async fn _split(req: SplitRequest) -> Result<SplitResponse, AppError> {
     Ok(SplitResponse { notes })
 }
 
-pub async fn handle_ws(v: Value) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let split = _split(v).await?;
     let split_json = json!(split);
-    Ok(Message::Text(split_json.to_string()))
+    Ok(split_json)
 }
 
 #[axum_macros::debug_handler]

@@ -1,6 +1,6 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::ws::Message, extract::State, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode, Json};
 use fedimint_core::core::OperationId;
 use fedimint_wallet_client::{DepositState, WalletClientModule};
 use futures::StreamExt;
@@ -56,11 +56,11 @@ async fn _await_deposit(
     ))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let await_deposit = _await_deposit(state, v).await?;
     let await_deposit_json = json!(await_deposit);
-    Ok(Message::Text(await_deposit_json.to_string()))
+    Ok(await_deposit_json)
 }
 
 #[axum_macros::debug_handler]

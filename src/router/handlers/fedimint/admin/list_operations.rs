@@ -1,4 +1,4 @@
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use fedimint_core::core::OperationId;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -59,11 +59,11 @@ async fn _list_operations(state: AppState, req: ListOperationsRequest) -> Result
     }))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let operations = _list_operations(state, v).await?;
     let operations_json = json!(operations);
-    Ok(Message::Text(operations_json.to_string()))
+    Ok(operations_json)
 }
 
 #[axum_macros::debug_handler]

@@ -1,4 +1,4 @@
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use fedimint_core::{core::OperationId, Amount};
 use fedimint_ln_client::LightningClientModule;
 use serde::{Deserialize, Serialize};
@@ -32,11 +32,11 @@ async fn _invoice(state: AppState, req: LnInvoiceRequest) -> Result<LnInvoiceRes
     })
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let invoice = _invoice(state, v).await?;
     let invoice_json = json!(invoice);
-    Ok(Message::Text(invoice_json.to_string()))
+    Ok(invoice_json)
 }
 
 #[axum_macros::debug_handler]

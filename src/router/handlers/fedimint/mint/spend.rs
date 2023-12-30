@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use fedimint_core::core::OperationId;
 use fedimint_core::Amount;
 use fedimint_mint_client::OOBNotes;
@@ -44,11 +44,11 @@ async fn _spend(state: AppState, req: SpendRequest) -> Result<SpendResponse, App
     Ok(SpendResponse { operation, notes })
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let spend = _spend(state, v).await?;
     let spend_json = json!(spend);
-    Ok(Message::Text(spend_json.to_string()))
+    Ok(spend_json)
 }
 
 #[axum_macros::debug_handler]

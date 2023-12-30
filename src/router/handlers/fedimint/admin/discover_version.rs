@@ -1,4 +1,4 @@
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use serde_json::{json, Value};
 
 use crate::{error::AppError, state::AppState};
@@ -8,10 +8,10 @@ async fn _discover_version(state: AppState) -> Result<Value, AppError> {
     Ok(json!({ "version": version }))
 }
 
-pub async fn handle_ws(state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(state: AppState) -> Result<Value, AppError> {
     let version = _discover_version(state).await?;
     let version_json = json!(version);
-    Ok(Message::Text(version_json.to_string()))
+    Ok(version_json)
 }
 
 #[axum_macros::debug_handler]

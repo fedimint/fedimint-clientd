@@ -1,4 +1,4 @@
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use serde::{Deserialize, Serialize};
@@ -27,11 +27,11 @@ async fn _validate(state: AppState, req: ValidateRequest) -> Result<ValidateResp
     Ok(ValidateResponse { amount_msat })
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let validate = _validate(state, v).await?;
     let validate_json = json!(validate);
-    Ok(Message::Text(validate_json.to_string()))
+    Ok(validate_json)
 }
 
 #[axum_macros::debug_handler]

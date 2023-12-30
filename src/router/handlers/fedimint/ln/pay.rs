@@ -1,5 +1,5 @@
 use anyhow::Context;
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use fedimint_core::{core::OperationId, Amount};
 use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment, PayType};
 use serde::{Deserialize, Serialize};
@@ -59,11 +59,11 @@ async fn _pay(state: AppState, req: LnPayRequest) -> Result<LnPayResponse, AppEr
     }
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let pay = _pay(state, v).await?;
     let pay_json = json!(pay);
-    Ok(Message::Text(pay_json.to_string()))
+    Ok(pay_json)
 }
 
 #[axum_macros::debug_handler]

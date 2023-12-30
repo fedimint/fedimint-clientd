@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use axum::{extract::ws::Message, extract::State, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode, Json};
 use fedimint_core::core::{ModuleInstanceId, ModuleKind};
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -26,11 +26,11 @@ async fn _module(_state: AppState, _req: ModuleRequest) -> Result<(), AppError> 
     ))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let module = _module(state, v).await?;
     let module_json = json!(module);
-    Ok(Message::Text(module_json.to_string()))
+    Ok(module_json)
 }
 
 #[axum_macros::debug_handler]

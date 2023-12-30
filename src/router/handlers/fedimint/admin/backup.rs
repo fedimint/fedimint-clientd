@@ -1,5 +1,6 @@
 use crate::{error::AppError, state::AppState};
-use axum::{extract::ws::Message, extract::State, http::StatusCode, Json};
+use anyhow::anyhow;
+use axum::{extract::State, http::StatusCode, Json};
 use fedimint_client::backup::Metadata;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -18,11 +19,12 @@ async fn _backup(state: AppState, req: BackupRequest) -> Result<(), AppError> {
         .map_err(|e| AppError::new(StatusCode::INTERNAL_SERVER_ERROR, e))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
-    let v = serde_json::from_value(v).unwrap();
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
+    let v = serde_json::from_value::<BackupRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let backup = _backup(state, v).await?;
     let backup_json = json!(backup);
-    Ok(Message::Text(backup_json.to_string()))
+    Ok(backup_json)
 }
 
 #[axum_macros::debug_handler]

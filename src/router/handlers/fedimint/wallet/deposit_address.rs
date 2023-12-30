@@ -1,6 +1,6 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::ws::Message, extract::State, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode, Json};
 use bitcoin::Address;
 use bitcoin_hashes::hex::ToHex;
 use fedimint_core::BitcoinAmountOrAll;
@@ -87,11 +87,11 @@ async fn _withdraw(state: AppState, req: WithdrawRequest) -> Result<WithdrawResp
     ))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let withdraw = _withdraw(state, v).await?;
     let withdraw_json = json!(withdraw);
-    Ok(Message::Text(withdraw_json.to_string()))
+    Ok(withdraw_json)
 }
 
 #[axum_macros::debug_handler]

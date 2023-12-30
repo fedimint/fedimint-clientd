@@ -1,6 +1,6 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::ws::Message, extract::State, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode, Json};
 use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use futures::StreamExt;
@@ -42,11 +42,11 @@ async fn _reissue(state: AppState, req: ReissueRequest) -> Result<ReissueRespons
     Ok(ReissueResponse { amount_msat })
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let reissue = _reissue(state, v).await?;
     let reissue_json = json!(reissue);
-    Ok(Message::Text(reissue_json.to_string()))
+    Ok(reissue_json)
 }
 
 #[axum_macros::debug_handler]

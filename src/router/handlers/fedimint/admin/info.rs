@@ -1,10 +1,7 @@
 use std::collections::BTreeMap;
 
 use anyhow::Error;
-use axum::{
-    extract::{ws::Message, State},
-    Json,
-};
+use axum::{extract::State, Json};
 use fedimint_core::{config::FederationId, Amount, TieredSummary};
 use fedimint_mint_client::MintClientModule;
 use fedimint_wallet_client::WalletClientModule;
@@ -47,10 +44,10 @@ async fn _info(state: AppState) -> Result<InfoResponse, Error> {
     })
 }
 
-pub async fn handle_ws(_v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(_v: Value, state: AppState) -> Result<Value, AppError> {
     let info = _info(state).await?;
     let info_json = json!(info);
-    Ok(Message::Text(info_json.to_string()))
+    Ok(info_json)
 }
 
 #[axum_macros::debug_handler]

@@ -1,6 +1,6 @@
 use crate::error::AppError;
 use anyhow::anyhow;
-use axum::{extract::ws::Message, http::StatusCode, Json};
+use axum::{http::StatusCode, Json};
 use fedimint_mint_client::OOBNotes;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -51,11 +51,11 @@ async fn _combine(req: CombineRequest) -> Result<CombineResponse, AppError> {
     })
 }
 
-pub async fn handle_ws(v: Value) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let combine = _combine(v).await?;
     let combine_json = json!(combine);
-    Ok(Message::Text(combine_json.to_string()))
+    Ok(combine_json)
 }
 
 #[axum_macros::debug_handler]

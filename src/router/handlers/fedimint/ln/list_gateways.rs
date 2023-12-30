@@ -1,4 +1,4 @@
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use fedimint_ln_client::LightningClientModule;
 use serde_json::{json, Value};
 
@@ -28,10 +28,10 @@ async fn _list_gateways(state: AppState) -> Result<Value, AppError> {
     Ok(serde_json::to_value(gateways_json).unwrap())
 }
 
-pub async fn handle_ws(state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(state: AppState) -> Result<Value, AppError> {
     let gateways = _list_gateways(state).await?;
     let gateways_json = json!(gateways);
-    Ok(Message::Text(gateways_json.to_string()))
+    Ok(gateways_json)
 }
 
 #[axum_macros::debug_handler]

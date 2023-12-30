@@ -1,4 +1,4 @@
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use bitcoin::secp256k1::PublicKey;
 use fedimint_ln_client::LightningClientModule;
 use serde::Deserialize;
@@ -22,11 +22,11 @@ async fn _switch_gateway(state: AppState, req: SwitchGatewayRequest) -> Result<V
     Ok(serde_json::to_value(gateway_json).unwrap())
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value(v).unwrap();
     let gateway = _switch_gateway(state, v).await?;
     let gateway_json = json!(gateway);
-    Ok(Message::Text(gateway_json.to_string()))
+    Ok(gateway_json)
 }
 
 #[axum_macros::debug_handler]

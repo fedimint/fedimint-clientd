@@ -1,7 +1,7 @@
 use crate::error::AppError;
 use anyhow::anyhow;
 use axum::http::StatusCode;
-use axum::{extract::ws::Message, extract::State, Json};
+use axum::{extract::State, Json};
 use serde_json::{json, Value};
 
 use crate::state::AppState;
@@ -14,10 +14,10 @@ async fn _restore(_v: Value, _state: AppState) -> Result<(), AppError> {
     ))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Message, AppError> {
+pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let restore = _restore(v, state).await?;
     let restore_json = json!(restore);
-    Ok(Message::Text(restore_json.to_string()))
+    Ok(restore_json)
 }
 
 #[axum_macros::debug_handler]
