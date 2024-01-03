@@ -2,6 +2,7 @@
 name = "fedimint-http"
 version = "0.1.0"
 edition = "2021"
+description = "HTTP server for Fedimint Client, exposing REST and Websocket APIs for default modules."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
