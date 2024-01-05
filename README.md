@@ -41,7 +41,7 @@ The Fedimint client supports the following endpoints:
 - `/fedimint/v2/onchain/await-deposit`: Wait for deposit on previously generated address.
 - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
 
-Soon(TM): maps [Cashu NUT](https://github.com/cashubts/nuts) endpoints to fedimint client.
+Soon(TM): maps [Cashu NUT](https://github.com/cashubtc/nuts) endpoints to fedimint client.
 
 # Supported Cashu NUTs: (Notation, Utilization, and Terminology)
 
