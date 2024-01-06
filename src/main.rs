@@ -18,15 +18,90 @@ use tower_http::validate_request::ValidateRequestHeaderLayer;
 
 use crate::config::CONFIG;
 
+#[derive(Parser)]
+#[clap(version = "1.0", author = "Your Name")]
+struct Cli {
+    /// Federation invite code
+    #[clap(long, env = "FEDERATION_INVITE_CODE")]
+    federation_invite_code: String,
+
+    /// Secret key
+    #[clap(long, env = "SECRET_KEY")]
+    secret_key: String,
+
+    /// Path to FM database
+    #[clap(long, env = "FM_DB_PATH")]
+    fm_db_path: String,
+
+    /// Password
+    #[clap(long, env = "PASSWORD")]
+    password: String,
+
+    /// Domain
+    #[clap(long, env = "DOMAIN", default_value = "localhost")]
+    domain: String,
+
+    /// Port
+    #[clap(long, env = "PORT", default_value_t = 5000)]
+    port: u16,
+
+    /// Mode of operation
+    #[clap(long, arg_enum)]
+    mode: Mode,
+}
+
+#[derive(ArgEnum, Clone, Debug)]
+enum Mode {
+    Fedimint,
+    Cashu,
+    Ws,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Start,
+    Stop,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
+    let cli: Cli = Cli::parse();
+
     let state = AppState {
-        fm: load_fedimint_client().await?,
+        fm: load_fedimint_client(cli.federation_invite_code, cli.fm_db_path, cli.secret_key)
+            .await?,
     };
 
-    let app = create_router(state).await?;
+    let app = match cli.mode {
+        Mode::Fedimint => {
+            Router::new()
+                .route("/", get(handle_readme))
+                .nest("/fedimint/v2", fedimint_v2_rest())
+                .with_state(state)
+                // .layer(cors)
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password));
+        }
+        Mode::Cashu => {
+            Router::new()
+                .route("/", get(handle_readme))
+                .nest("/cashu/v1", cashu_v1_rest())
+                .with_state(state)
+                // .layer(cors)
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password));
+        }
+        Mode::Ws => {
+            Router::new()
+                .route("/fedimint/v2/ws", get(websocket_handler))
+                .with_state(state)
+                // .layer(cors)
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password));
+        }
+        _ => {
+            create_default_router(state, &cli.password).await?;
+        }
+    };
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", CONFIG.host, CONFIG.port))
         .await
@@ -37,7 +112,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-pub async fn create_router(state: AppState) -> Result<Router> {
+pub async fn create_default_router(state: AppState, password: &str) -> Result<Router> {
     // TODO: Allow CORS? Probably not, since this should just interact with the local machine.
     // let cors = CorsLayer::new()
     //     .allow_methods([Method::GET, Method::POST])
@@ -50,7 +125,7 @@ pub async fn create_router(state: AppState) -> Result<Router> {
         .nest("/cashu/v1", cashu_v1_rest())
         .with_state(state)
         // .layer(cors)
-        .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
+        .layer(ValidateRequestHeaderLayer::bearer(password));
 
     Ok(app)
 }
