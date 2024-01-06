@@ -22,10 +22,9 @@ use crate::config::CONFIG;
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
-    let state =
-        AppState {
-            fm: load_fedimint_client().await?,
-        };
+    let state = AppState {
+        fm: load_fedimint_client().await?,
+    };
 
     let app = create_router(state).await?;
 
