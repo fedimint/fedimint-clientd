@@ -1,4 +1,8 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
+use fedimint_client::derivable_secret::DerivableSecret;
+use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
 use tracing::info;
 
@@ -10,6 +14,7 @@ mod utils;
 
 use axum::routing::{get, post};
 use axum::Router;
+use clap::{Parser, Subcommand};
 use state::{load_fedimint_client, AppState};
 
 use router::handlers::*;
@@ -30,8 +35,8 @@ struct Cli {
     secret_key: String,
 
     /// Path to FM database
-    #[clap(long, env = "FM_DB_PATH")]
-    fm_db_path: String,
+    #[clap(long, env = "FM_DB_PATH", default_value = "/.fedimint/fm_db")]
+    fm_db_path: PathBuf,
 
     /// Password
     #[clap(long, env = "PASSWORD")]
@@ -46,7 +51,7 @@ struct Cli {
     port: u16,
 
     /// Mode of operation
-    #[clap(long, arg_enum)]
+    #[clap(long, arg_enum, default_value = "default")]
     mode: Mode,
 }
 
@@ -55,6 +60,7 @@ enum Mode {
     Fedimint,
     Cashu,
     Ws,
+    Default,
 }
 
 #[derive(Subcommand)]
@@ -66,12 +72,13 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
+    dotenv::dotenv().ok();
 
     let cli: Cli = Cli::parse();
-
+    let invite_code = InviteCode::from_str(&cli.federation_invite_code).unwrap();
+    let secret = DerivableSecret::from_root(&cli.secret_key).unwrap();
     let state = AppState {
-        fm: load_fedimint_client(cli.federation_invite_code, cli.fm_db_path, cli.secret_key)
-            .await?,
+        fm: load_fedimint_client(invite_code, cli.fm_db_path, secret).await?,
     };
 
     let app = match cli.mode {
@@ -81,7 +88,7 @@ async fn main() -> Result<()> {
                 .nest("/fedimint/v2", fedimint_v2_rest())
                 .with_state(state)
                 // .layer(cors)
-                .layer(ValidateRequestHeaderLayer::bearer(&cli.password));
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
         }
         Mode::Cashu => {
             Router::new()
@@ -89,18 +96,16 @@ async fn main() -> Result<()> {
                 .nest("/cashu/v1", cashu_v1_rest())
                 .with_state(state)
                 // .layer(cors)
-                .layer(ValidateRequestHeaderLayer::bearer(&cli.password));
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
         }
         Mode::Ws => {
             Router::new()
                 .route("/fedimint/v2/ws", get(websocket_handler))
                 .with_state(state)
                 // .layer(cors)
-                .layer(ValidateRequestHeaderLayer::bearer(&cli.password));
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
         }
-        _ => {
-            create_default_router(state, &cli.password).await?;
-        }
+        Mode::Default => create_default_router(state, &cli.password).await?,
     };
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", CONFIG.host, CONFIG.port))
