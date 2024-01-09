@@ -8,7 +8,7 @@ Set the variables in `.env` by copying `example.env`, then run `cargo run`. It's
 
 ## Fedimint Client Endpoints
 
-The Fedimint client supports the following endpoints:
+The Fedimint client supports the following endpoints (and has naive websocket support at `/fedimint/v2/ws`, see code for details until I improve the interface. PRs welcome!)
 
 ### Admin related commands:
 
