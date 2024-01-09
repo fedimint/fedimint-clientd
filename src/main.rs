@@ -6,6 +6,8 @@ use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
 use tracing::info;
 
+use std::str::FromStr;
+
 mod config;
 mod error;
 mod router;
@@ -14,48 +16,14 @@ mod utils;
 
 use axum::routing::{get, post};
 use axum::Router;
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use state::{load_fedimint_client, AppState};
 
 use router::handlers::*;
 // use tower_http::cors::{Any, CorsLayer};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 
-use crate::config::CONFIG;
-
-#[derive(Parser)]
-#[clap(version = "1.0", author = "Your Name")]
-struct Cli {
-    /// Federation invite code
-    #[clap(long, env = "FEDERATION_INVITE_CODE")]
-    federation_invite_code: String,
-
-    /// Secret key
-    #[clap(long, env = "SECRET_KEY")]
-    secret_key: String,
-
-    /// Path to FM database
-    #[clap(long, env = "FM_DB_PATH", default_value = "/.fedimint/fm_db")]
-    fm_db_path: PathBuf,
-
-    /// Password
-    #[clap(long, env = "PASSWORD")]
-    password: String,
-
-    /// Domain
-    #[clap(long, env = "DOMAIN", default_value = "localhost")]
-    domain: String,
-
-    /// Port
-    #[clap(long, env = "PORT", default_value_t = 5000)]
-    port: u16,
-
-    /// Mode of operation
-    #[clap(long, arg_enum, default_value = "default")]
-    mode: Mode,
-}
-
-#[derive(ArgEnum, Clone, Debug)]
+#[derive(Clone, Debug, ValueEnum)]
 enum Mode {
     Fedimint,
     Cashu,
@@ -69,6 +37,41 @@ enum Commands {
     Stop,
 }
 
+#[derive(Parser)]
+#[clap(version = "1.0", author = "Kody Low")]
+struct Cli {
+    /// Federation invite code
+    #[clap(long, env = "FEDERATION_INVITE_CODE", required = true)]
+    federation_invite_code: String,
+
+    /// Secret key
+    #[clap(long, env = "SECRET_KEY", required = true)]
+    secret_key: String,
+
+    /// Path to FM database
+    #[clap(long, env = "FM_DB_PATH", required = true)]
+    fm_db_path: PathBuf,
+
+    /// Password
+    #[clap(long, env = "PASSWORD", required = true)]
+    password: String,
+
+    /// Domain
+    #[clap(long, env = "DOMAIN", required = true)]
+    domain: String,
+
+    /// Port
+    #[clap(long, env = "PORT", default_value_t = 5000)]
+    port: u16,
+
+    /// Mode of operation
+    #[clap(long, default_value = "default")]
+    mode: Mode,
+}
+
+const SALT: &[u8] = b"fedimint-http";
+// const PID_FILE: &str = "/tmp/fedimint_http.pid";
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
@@ -76,7 +79,8 @@ async fn main() -> Result<()> {
 
     let cli: Cli = Cli::parse();
     let invite_code = InviteCode::from_str(&cli.federation_invite_code).unwrap();
-    let secret = DerivableSecret::from_root(&cli.secret_key).unwrap();
+    let secret_key = &cli.secret_key.into_bytes();
+    let secret = DerivableSecret::new_root(secret_key, &SALT);
     let state = AppState {
         fm: load_fedimint_client(invite_code, cli.fm_db_path, secret).await?,
     };
@@ -108,10 +112,10 @@ async fn main() -> Result<()> {
         Mode::Default => create_default_router(state, &cli.password).await?,
     };
 
-    let listener = tokio::net::TcpListener::bind(format!("{}:{}", CONFIG.host, CONFIG.port))
+    let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
         .await
         .unwrap();
-    info!("fedimint-http Listening on {}", CONFIG.port);
+    info!("fedimint-http Listening on {}", &cli.port);
     axum::serve(listener, app).await.unwrap();
 
     Ok(())
