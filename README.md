@@ -4,6 +4,8 @@
 
 fedimint-http exposes a REST API to interact with the Fedimint client.
 
+Set the variables in `.env` by copying `example.env`, then run `cargo run`. It's also set up as a clap app so you can start the server with command line args as well.
+
 ## Fedimint Client Endpoints
 
 The Fedimint client supports the following endpoints:
