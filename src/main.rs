@@ -1,6 +1,12 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
+use fedimint_client::derivable_secret::DerivableSecret;
+use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
 use tracing::info;
+
+use std::str::FromStr;
 
 mod config;
 mod error;
@@ -10,34 +16,112 @@ mod utils;
 
 use axum::routing::{get, post};
 use axum::Router;
+use clap::{Parser, Subcommand, ValueEnum};
 use state::{load_fedimint_client, AppState};
 
 use router::handlers::*;
 // use tower_http::cors::{Any, CorsLayer};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 
-use crate::config::CONFIG;
+#[derive(Clone, Debug, ValueEnum)]
+enum Mode {
+    Fedimint,
+    Cashu,
+    Ws,
+    Default,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    Start,
+    Stop,
+}
+
+#[derive(Parser)]
+#[clap(version = "1.0", author = "Kody Low")]
+struct Cli {
+    /// Federation invite code
+    #[clap(long, env = "FEDERATION_INVITE_CODE", required = true)]
+    federation_invite_code: String,
+
+    /// Secret key
+    #[clap(long, env = "SECRET_KEY", required = true)]
+    secret_key: String,
+
+    /// Path to FM database
+    #[clap(long, env = "FM_DB_PATH", required = true)]
+    fm_db_path: PathBuf,
+
+    /// Password
+    #[clap(long, env = "PASSWORD", required = true)]
+    password: String,
+
+    /// Domain
+    #[clap(long, env = "DOMAIN", required = true)]
+    domain: String,
+
+    /// Port
+    #[clap(long, env = "PORT", default_value_t = 5000)]
+    port: u16,
+
+    /// Mode of operation
+    #[clap(long, default_value = "default")]
+    mode: Mode,
+}
+
+const SALT: &[u8] = b"fedimint-http";
+// const PID_FILE: &str = "/tmp/fedimint_http.pid";
 
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
+    dotenv::dotenv().ok();
 
+    let cli: Cli = Cli::parse();
+    let invite_code = InviteCode::from_str(&cli.federation_invite_code).unwrap();
+    let secret_key = &cli.secret_key.into_bytes();
+    let secret = DerivableSecret::new_root(secret_key, &SALT);
     let state = AppState {
-        fm: load_fedimint_client().await?,
+        fm: load_fedimint_client(invite_code, cli.fm_db_path, secret).await?,
     };
 
-    let app = create_router(state).await?;
+    let app = match cli.mode {
+        Mode::Fedimint => {
+            Router::new()
+                .route("/", get(handle_readme))
+                .nest("/fedimint/v2", fedimint_v2_rest())
+                .with_state(state)
+                // .layer(cors)
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
+        }
+        Mode::Cashu => {
+            Router::new()
+                .route("/", get(handle_readme))
+                .nest("/cashu/v1", cashu_v1_rest())
+                .with_state(state)
+                // .layer(cors)
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
+        }
+        Mode::Ws => {
+            Router::new()
+                .route("/fedimint/v2/ws", get(websocket_handler))
+                .with_state(state)
+                // .layer(cors)
+                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
+        }
+        Mode::Default => create_default_router(state, &cli.password).await?,
+    };
 
-    let listener = tokio::net::TcpListener::bind(format!("{}:{}", CONFIG.host, CONFIG.port))
+    let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
         .await
         .unwrap();
-    info!("fedimint-http Listening on {}", CONFIG.port);
+    info!("fedimint-http Listening on {}", &cli.port);
     axum::serve(listener, app).await.unwrap();
 
     Ok(())
 }
 
-pub async fn create_router(state: AppState) -> Result<Router> {
+pub async fn create_default_router(state: AppState, password: &str) -> Result<Router> {
     // TODO: Allow CORS? Probably not, since this should just interact with the local machine.
     // let cors = CorsLayer::new()
     //     .allow_methods([Method::GET, Method::POST])
@@ -50,7 +134,7 @@ pub async fn create_router(state: AppState) -> Result<Router> {
         .nest("/cashu/v1", cashu_v1_rest())
         .with_state(state)
         // .layer(cors)
-        .layer(ValidateRequestHeaderLayer::bearer(&CONFIG.password));
+        .layer(ValidateRequestHeaderLayer::bearer(password));
 
     Ok(app)
 }
