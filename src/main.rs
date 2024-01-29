@@ -17,7 +17,7 @@ mod utils;
 use axum::routing::{get, post};
 use axum::Router;
 use clap::{Parser, Subcommand, ValueEnum};
-use state::{load_fedimint_client, AppState};
+use state::AppState;
 
 use router::handlers::*;
 // use tower_http::cors::{Any, CorsLayer};
@@ -81,9 +81,7 @@ async fn main() -> Result<()> {
     let invite_code = InviteCode::from_str(&cli.federation_invite_code).unwrap();
     let secret_key = &cli.secret_key.into_bytes();
     let secret = DerivableSecret::new_root(secret_key, &SALT);
-    let state = AppState {
-        fm: load_fedimint_client(invite_code, cli.fm_db_path, secret).await?,
-    };
+    let state = AppState::new(cli.fm_db_path).await?;
 
     let app = match cli.mode {
         Mode::Fedimint => {
