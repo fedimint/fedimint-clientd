@@ -1,7 +1,8 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
-use fedimint_client::backup::Metadata;
+use fedimint_client::{backup::Metadata, ClientArc};
+use fedimint_core::config::FederationId;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
@@ -9,11 +10,11 @@ use std::collections::BTreeMap;
 #[derive(Debug, Deserialize)]
 pub struct BackupRequest {
     pub metadata: BTreeMap<String, String>,
+    pub federation_id: Option<FederationId>,
 }
 
-async fn _backup(state: AppState, req: BackupRequest) -> Result<(), AppError> {
-    state
-        .fm
+async fn _backup(client: ClientArc, req: BackupRequest) -> Result<(), AppError> {
+    client
         .backup_to_federation(Metadata::from_json_serialized(req.metadata))
         .await
         .map_err(|e| AppError::new(StatusCode::INTERNAL_SERVER_ERROR, e))
@@ -22,7 +23,8 @@ async fn _backup(state: AppState, req: BackupRequest) -> Result<(), AppError> {
 pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
     let v = serde_json::from_value::<BackupRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
-    let backup = _backup(state, v).await?;
+    let client = state.get_client(v.federation_id).await?;
+    let backup = _backup(client, v).await?;
     let backup_json = json!(backup);
     Ok(backup_json)
 }
@@ -32,6 +34,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<BackupRequest>,
 ) -> Result<Json<()>, AppError> {
-    let backup = _backup(state, req).await?;
+    let client = state.get_client(req.federation_id).await?;
+    let backup = _backup(client, req).await?;
     Ok(Json(backup))
 }
