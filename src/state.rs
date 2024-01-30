@@ -8,20 +8,20 @@ use multimint::MultiMint;
 use crate::error::AppError;
 #[derive(Debug, Clone)]
 pub struct AppState {
-    pub clients: MultiMint,
+    pub multimint: MultiMint,
 }
 
 impl AppState {
     pub async fn new(fm_db_path: PathBuf) -> Result<Self> {
         let clients = MultiMint::new(fm_db_path).await?;
-        Ok(Self { clients })
+        Ok(Self { multimint: clients })
     }
 
     // Helper function to get a specific client from the state or default
     pub async fn get_client(&self, federation_id: Option<FederationId>) -> Result<ClientArc, AppError> {
         let client = match federation_id {
-            Some(federation_id) => self.clients.get(&federation_id).await,
-            None => self.clients.get_default().await,
+            Some(federation_id) => self.multimint.get(&federation_id).await,
+            None => self.multimint.get_default().await,
         };
 
         match client {
@@ -34,7 +34,7 @@ impl AppState {
     }
 
     pub async fn get_client_by_prefix(&self, federation_id_prefix: &FederationIdPrefix) -> Result<ClientArc, AppError> {
-        let client = self.clients.get_by_prefix(federation_id_prefix).await;
+        let client = self.multimint.get_by_prefix(federation_id_prefix).await;
 
         match client {
             Some(client) => Ok(client),

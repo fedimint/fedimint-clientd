@@ -40,7 +40,7 @@ pub struct CashuNUT06InfoResponse {
 pub async fn handle_info(
     State(state): State<AppState>,
 ) -> Result<Json<CashuNUT06InfoResponse>, AppError> {
-    let client = match state.clients.get_default().await {
+    let client = match state.multimint.get_default().await {
         Some(client) => client,
         None => {
             return Err(AppError::new(

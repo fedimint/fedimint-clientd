@@ -30,7 +30,7 @@ async fn _join(mut multimint: MultiMint, req: JoinRequest) -> Result<JoinRespons
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<JoinRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
-    let info = _join(state.clients, v).await?;
+    let info = _join(state.multimint, v).await?;
     let info_json = json!(info);
     Ok(info_json)
 }
@@ -40,6 +40,6 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<JoinRequest>,
 ) -> Result<Json<JoinResponse>, AppError> {
-    let info = _join(state.clients, req).await?;
+    let info = _join(state.multimint, req).await?;
     Ok(Json(info))
 }

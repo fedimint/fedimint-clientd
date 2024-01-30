@@ -74,7 +74,7 @@ async fn main() -> Result<()> {
     let mut state = AppState::new(cli.fm_db_path).await?;
     match InviteCode::from_str(&cli.federation_invite_code) {
         Ok(invite_code) => {
-            let federation_id = state.clients.register_new(invite_code, true).await?;
+            let federation_id = state.multimint.register_new(invite_code, true).await?;
             info!("Created client for federation id: {:?}", federation_id);
         }
         Err(e) => {
