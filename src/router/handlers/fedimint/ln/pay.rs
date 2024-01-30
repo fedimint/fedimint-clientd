@@ -1,6 +1,7 @@
-use anyhow::Context;
-use axum::{extract::State, Json};
-use fedimint_core::{core::OperationId, Amount};
+use anyhow::{anyhow, Context};
+use axum::{extract::State, http::StatusCode, Json};
+use fedimint_client::ClientArc;
+use fedimint_core::{config::FederationId, core::OperationId, Amount};
 use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment, PayType};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -18,6 +19,7 @@ pub struct LnPayRequest {
     pub amount_msat: Option<Amount>,
     pub finish_in_background: bool,
     pub lnurl_comment: Option<String>,
+    pub federeation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
@@ -28,10 +30,10 @@ pub struct LnPayResponse {
     pub fee: Amount,
 }
 
-async fn _pay(state: AppState, req: LnPayRequest) -> Result<LnPayResponse, AppError> {
+async fn _pay(client: ClientArc, req: LnPayRequest) -> Result<LnPayResponse, AppError> {
     let bolt11 = get_invoice(&req).await?;
     info!("Paying invoice: {bolt11}");
-    let lightning_module = state.fm.get_first_module::<LightningClientModule>();
+    let lightning_module = client.get_first_module::<LightningClientModule>();
     lightning_module.select_active_gateway().await?;
 
     let OutgoingLightningPayment {
@@ -42,7 +44,7 @@ async fn _pay(state: AppState, req: LnPayRequest) -> Result<LnPayResponse, AppEr
     let operation_id = payment_type.operation_id();
     info!("Gateway fee: {fee}, payment operation id: {operation_id}");
     if req.finish_in_background {
-        wait_for_ln_payment(&state.fm, payment_type, contract_id.to_string(), true).await?;
+        wait_for_ln_payment(&client, payment_type, contract_id.to_string(), true).await?;
         info!("Payment will finish in background, use await-ln-pay to get the result");
         Ok(LnPayResponse {
             operation_id,
@@ -52,7 +54,7 @@ async fn _pay(state: AppState, req: LnPayRequest) -> Result<LnPayResponse, AppEr
         })
     } else {
         Ok(
-            wait_for_ln_payment(&state.fm, payment_type, contract_id.to_string(), false)
+            wait_for_ln_payment(&client, payment_type, contract_id.to_string(), false)
                 .await?
                 .context("expected a response")?,
         )
@@ -60,8 +62,14 @@ async fn _pay(state: AppState, req: LnPayRequest) -> Result<LnPayResponse, AppEr
 }
 
 pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
-    let pay = _pay(state, v).await?;
+    let v = serde_json::from_value::<LnPayRequest>(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow!("Invalid request: {}", e),
+        )
+    })?;
+    let client = state.get_client(v.federeation_id).await?;
+    let pay = _pay(client, v).await?;
     let pay_json = json!(pay);
     Ok(pay_json)
 }
@@ -71,6 +79,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<LnPayRequest>,
 ) -> Result<Json<LnPayResponse>, AppError> {
-    let pay = _pay(state, req).await?;
+    let client = state.get_client(req.federeation_id).await?;
+    let pay = _pay(client, req).await?;
     Ok(Json(pay))
 }

@@ -1,20 +1,24 @@
-use axum::{extract::State, Json};
+use axum::{extract::State, http::StatusCode, Json};
 use bitcoin::secp256k1::PublicKey;
+use fedimint_client::ClientArc;
+use fedimint_core::config::FederationId;
 use fedimint_ln_client::LightningClientModule;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::str::FromStr;
+use anyhow::anyhow;
 
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
 pub struct SwitchGatewayRequest {
     pub gateway_id: String,
+    pub federation_id: Option<FederationId>,
 }
 
-async fn _switch_gateway(state: AppState, req: SwitchGatewayRequest) -> Result<Value, AppError> {
+async fn _switch_gateway(client: ClientArc, req: SwitchGatewayRequest) -> Result<Value, AppError> {
     let public_key = PublicKey::from_str(&req.gateway_id)?;
-    let lightning_module = state.fm.get_first_module::<LightningClientModule>();
+    let lightning_module = client.get_first_module::<LightningClientModule>();
     lightning_module.set_active_gateway(&public_key).await?;
     let gateway = lightning_module.select_active_gateway().await?;
     let mut gateway_json = json!(&gateway);
@@ -23,8 +27,14 @@ async fn _switch_gateway(state: AppState, req: SwitchGatewayRequest) -> Result<V
 }
 
 pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
-    let gateway = _switch_gateway(state, v).await?;
+    let v = serde_json::from_value::<SwitchGatewayRequest>(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow!("Invalid request: {}", e),
+        )
+    })?;
+    let client = state.get_client(None).await?;
+    let gateway = _switch_gateway(client, v).await?;
     let gateway_json = json!(gateway);
     Ok(gateway_json)
 }
@@ -34,6 +44,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<SwitchGatewayRequest>,
 ) -> Result<Json<Value>, AppError> {
-    let gateway = _switch_gateway(state, req).await?;
+    let client = state.get_client(req.federation_id).await?;
+    let gateway = _switch_gateway(client, req).await?;
     Ok(Json(gateway))
 }

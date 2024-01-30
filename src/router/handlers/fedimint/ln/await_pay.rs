@@ -1,6 +1,7 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use axum::{extract::State, http::StatusCode, Json};
-use fedimint_core::core::OperationId;
+use fedimint_client::ClientArc;
+use fedimint_core::{config::FederationId, core::OperationId};
 use fedimint_ln_client::{LightningClientModule, PayType};
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -11,10 +12,11 @@ use crate::{error::AppError, state::AppState};
 #[derive(Debug, Deserialize)]
 pub struct AwaitLnPayRequest {
     pub operation_id: OperationId,
+    pub federation_id: Option<FederationId>,
 }
 
-async fn _await_pay(state: AppState, req: AwaitLnPayRequest) -> Result<LnPayResponse, AppError> {
-    let lightning_module = state.fm.get_first_module::<LightningClientModule>();
+async fn _await_pay(client: ClientArc, req: AwaitLnPayRequest) -> Result<LnPayResponse, AppError> {
+    let lightning_module = client.get_first_module::<LightningClientModule>();
     let ln_pay_details = lightning_module
         .get_ln_pay_details_for(req.operation_id)
         .await?;
@@ -24,7 +26,7 @@ async fn _await_pay(state: AppState, req: AwaitLnPayRequest) -> Result<LnPayResp
         PayType::Lightning(req.operation_id)
     };
     wait_for_ln_payment(
-        &state.fm,
+        &client,
         payment_type,
         ln_pay_details.contract_id.to_string(),
         false,
@@ -35,8 +37,14 @@ async fn _await_pay(state: AppState, req: AwaitLnPayRequest) -> Result<LnPayResp
 }
 
 pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
-    let pay = _await_pay(state, v).await?;
+    let v = serde_json::from_value::<AwaitLnPayRequest>(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow!("Invalid request: {}", e),
+        )
+    })?;
+    let client = state.get_client(v.federation_id).await?;
+    let pay = _await_pay(client, v).await?;
     let pay_json = json!(pay);
     Ok(pay_json)
 }
@@ -46,6 +54,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<AwaitLnPayRequest>,
 ) -> Result<Json<LnPayResponse>, AppError> {
-    let pay = _await_pay(state, req).await?;
+    let client = state.get_client(req.federation_id).await?;
+    let pay = _await_pay(client, req).await?;
     Ok(Json(pay))
 }
