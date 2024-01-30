@@ -61,13 +61,13 @@ async fn _list_operations(client: ClientArc, req: ListOperationsRequest) -> Resu
 }
 
 pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let client = state.get_client(None).await?;
-    let v = serde_json::from_value(v).map_err(|e| {
+    let v = serde_json::from_value::<ListOperationsRequest>(v).map_err(|e| {
         AppError::new(
             StatusCode::BAD_REQUEST,
             anyhow::anyhow!("Invalid request: {}", e),
         )
     })?;
+    let client = state.get_client(v.federation_id).await?;
     let operations = _list_operations(client, v).await?;
     let operations_json = json!(operations);
     Ok(operations_json)

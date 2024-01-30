@@ -1029,7 +1029,6 @@ dependencies = [
  "fedimint-mint-client",
  "fedimint-rocksdb",
  "fedimint-wallet-client",
- "futures",
  "futures-util",
  "itertools 0.12.0",
  "lazy_static",
