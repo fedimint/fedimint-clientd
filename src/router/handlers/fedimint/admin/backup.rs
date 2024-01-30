@@ -24,9 +24,8 @@ pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<BackupRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federation_id).await?;
-    let backup = _backup(client, v).await?;
-    let backup_json = json!(backup);
-    Ok(backup_json)
+    _backup(client, v).await?;
+    Ok(json!(()))
 }
 
 #[axum_macros::debug_handler]
@@ -35,6 +34,6 @@ pub async fn handle_rest(
     Json(req): Json<BackupRequest>,
 ) -> Result<Json<()>, AppError> {
     let client = state.get_client(req.federation_id).await?;
-    let backup = _backup(client, req).await?;
-    Ok(Json(backup))
+    _backup(client, req).await?;
+    Ok(Json(()))
 }

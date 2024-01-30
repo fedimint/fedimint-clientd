@@ -17,9 +17,8 @@ async fn _restore(_client: ClientArc, _v: Value) -> Result<(), AppError> {
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let client = state.get_client(None).await?;
-    let restore = _restore(client, v).await?;
-    let restore_json = json!(restore);
-    Ok(restore_json)
+    _restore(client, v).await?;
+    Ok(json!(()))
 }
 
 #[axum_macros::debug_handler]
@@ -28,6 +27,6 @@ pub async fn handle_rest(
     Json(req): Json<Value>,
 ) -> Result<Json<()>, AppError> {
     let client = state.get_client(None).await?;
-    let restore = _restore(client, req).await?;
-    Ok(Json(restore))
+    _restore(client, req).await?;
+    Ok(Json(()))
 }

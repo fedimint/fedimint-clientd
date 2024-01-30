@@ -34,9 +34,8 @@ async fn _module(_client: ClientArc, _req: ModuleRequest) -> Result<(), AppError
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<ModuleRequest>(v).unwrap();
     let client = state.get_client(v.federation_id).await?;
-    let module = _module(client, v).await?;
-    let module_json = json!(module);
-    Ok(module_json)
+    _module(client, v).await?;
+    Ok(json!(()))
 }
 
 #[axum_macros::debug_handler]
@@ -45,6 +44,6 @@ pub async fn handle_rest(
     Json(req): Json<ModuleRequest>,
 ) -> Result<Json<()>, AppError> {
     let client = state.get_client(req.federation_id).await?;
-    let module = _module(client, req).await?;
-    Ok(Json(module))
+    _module(client, req).await?;
+    Ok(Json(()))
 }
