@@ -15,16 +15,15 @@ use info::InfoResponse;
 pub async fn get_note_summary(client: &ClientArc) -> anyhow::Result<InfoResponse> {
     let mint_client = client.get_first_module::<MintClientModule>();
     let wallet_client = client.get_first_module::<WalletClientModule>();
-    let summary =
-        mint_client
-            .get_wallet_summary(
-                &mut client
-                    .db()
-                    .begin_transaction_nc()
-                    .await
-                    .to_ref_with_prefix_module_id(1),
-            )
-            .await;
+    let summary = mint_client
+        .get_wallet_summary(
+            &mut client
+                .db()
+                .begin_transaction_nc()
+                .await
+                .to_ref_with_prefix_module_id(1),
+        )
+        .await;
     Ok(InfoResponse {
         federation_id: client.federation_id(),
         network: wallet_client.get_network().to_string(),

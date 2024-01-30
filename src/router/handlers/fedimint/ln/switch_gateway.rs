@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
 use bitcoin::secp256k1::PublicKey;
 use fedimint_client::ClientArc;
@@ -6,7 +7,6 @@ use fedimint_ln_client::LightningClientModule;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::str::FromStr;
-use anyhow::anyhow;
 
 use crate::{error::AppError, state::AppState};
 
@@ -27,12 +27,8 @@ async fn _switch_gateway(client: ClientArc, req: SwitchGatewayRequest) -> Result
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<SwitchGatewayRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
+    let v = serde_json::from_value::<SwitchGatewayRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(None).await?;
     let gateway = _switch_gateway(client, v).await?;
     let gateway_json = json!(gateway);

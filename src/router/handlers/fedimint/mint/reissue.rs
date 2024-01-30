@@ -44,13 +44,11 @@ async fn _reissue(client: ClientArc, req: ReissueRequest) -> Result<ReissueRespo
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<ReissueRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
-    let client = state.get_client_by_prefix(&v.notes.federation_id_prefix()).await?;
+    let v = serde_json::from_value::<ReissueRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
+    let client = state
+        .get_client_by_prefix(&v.notes.federation_id_prefix())
+        .await?;
     let reissue = _reissue(client, v).await?;
     let reissue_json = json!(reissue);
     Ok(reissue_json)
@@ -61,7 +59,9 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<ReissueRequest>,
 ) -> Result<Json<ReissueResponse>, AppError> {
-    let client = state.get_client_by_prefix(&req.notes.federation_id_prefix()).await?;
+    let client = state
+        .get_client_by_prefix(&req.notes.federation_id_prefix())
+        .await?;
     let reissue = _reissue(client, req).await?;
     Ok(Json(reissue))
 }

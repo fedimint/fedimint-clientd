@@ -90,12 +90,8 @@ async fn _withdraw(client: ClientArc, req: WithdrawRequest) -> Result<WithdrawRe
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<WithdrawRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
+    let v = serde_json::from_value::<WithdrawRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federation_id).await?;
     let withdraw = _withdraw(client, v).await?;
     let withdraw_json = json!(withdraw);

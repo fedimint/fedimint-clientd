@@ -70,21 +70,20 @@ pub async fn mint_bolt11(
     let valid_until = now() + Duration::from_secs(DEFAULT_MINT_EXPIRY_OFFSET);
     let expiry_time = crate::utils::system_time_to_u64(valid_until)?;
 
-    let (operation_id, invoice) =
-        lightning_module
-            .create_bolt11_invoice(
-                amount_msat,
-                format!("{}, method={:?}", DEFAULT_MINT_DESCRIPTION, Method::Bolt11),
-                Some(expiry_time),
-                (),
-            )
-            .await?;
+    let (operation_id, invoice) = lightning_module
+        .create_bolt11_invoice(
+            amount_msat,
+            format!("{}, method={:?}", DEFAULT_MINT_DESCRIPTION, Method::Bolt11),
+            Some(expiry_time),
+            (),
+        )
+        .await?;
 
     Ok(PostMintQuoteMethodResponse {
         quote: operation_id.to_string(),
         request: invoice.to_string(),
         paid: false,
-        expiry: expiry_time.try_into()?,
+        expiry: expiry_time,
     })
 }
 
@@ -102,6 +101,6 @@ async fn mint_onchain(
         quote: operation_id.to_string(),
         request: address.to_string(),
         paid: false,
-        expiry: expiry_time.try_into()?,
+        expiry: expiry_time,
     })
 }

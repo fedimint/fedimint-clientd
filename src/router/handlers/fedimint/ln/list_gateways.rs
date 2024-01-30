@@ -1,16 +1,16 @@
+use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
 use fedimint_client::ClientArc;
 use fedimint_core::config::FederationId;
 use fedimint_ln_client::LightningClientModule;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use anyhow::anyhow;
 
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
 pub struct ListGatewaysRequest {
-    pub federation_id: Option<FederationId>
+    pub federation_id: Option<FederationId>,
 }
 
 async fn _list_gateways(client: ClientArc) -> Result<Value, AppError> {
@@ -38,12 +38,8 @@ async fn _list_gateways(client: ClientArc) -> Result<Value, AppError> {
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<ListGatewaysRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
+    let v = serde_json::from_value::<ListGatewaysRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federation_id).await?;
     let gateways = _list_gateways(client).await?;
     let gateways_json = json!(gateways);

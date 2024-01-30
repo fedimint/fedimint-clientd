@@ -1,8 +1,8 @@
 use std::time::Duration;
 
+use anyhow::anyhow;
 use axum::http::StatusCode;
 use axum::{extract::State, Json};
-use anyhow::anyhow;
 use fedimint_client::ClientArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
@@ -50,12 +50,8 @@ async fn _spend(client: ClientArc, req: SpendRequest) -> Result<SpendResponse, A
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<SpendRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
+    let v = serde_json::from_value::<SpendRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federation_id).await?;
     let spend = _spend(client, v).await?;
     let spend_json = json!(spend);

@@ -21,8 +21,9 @@ pub struct JoinResponse {
 }
 
 async fn _join(mut multimint: MultiMint, req: JoinRequest) -> Result<JoinResponse, Error> {
-    multimint.register_new(req.invite_code.clone(), req.default).await?;
-    let federation_id = req.invite_code.federation_id();
+    let federation_id = multimint
+        .register_new(req.invite_code.clone(), req.default)
+        .await?;
 
     Ok(JoinResponse { federation_id })
 }
@@ -30,9 +31,9 @@ async fn _join(mut multimint: MultiMint, req: JoinRequest) -> Result<JoinRespons
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<JoinRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
-    let info = _join(state.multimint, v).await?;
-    let info_json = json!(info);
-    Ok(info_json)
+    let join = _join(state.multimint, v).await?;
+    let join_json = json!(join);
+    Ok(join_json)
 }
 
 #[axum_macros::debug_handler]
@@ -40,6 +41,6 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<JoinRequest>,
 ) -> Result<Json<JoinResponse>, AppError> {
-    let info = _join(state.multimint, req).await?;
-    Ok(Json(info))
+    let join = _join(state.multimint, req).await?;
+    Ok(Json(join))
 }

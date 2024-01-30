@@ -37,4 +37,4 @@ time = { version = "0.3.25", features = ["formatting"] }
 chrono = "0.4.31"
 futures-util = "0.3.30"
 clap = { version = "4.4.13", features = ["derive", "env"] }
-multimint = "0.1.4"
+multimint = "0.1.5"

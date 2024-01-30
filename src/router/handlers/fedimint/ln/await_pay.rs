@@ -37,12 +37,8 @@ async fn _await_pay(client: ClientArc, req: AwaitLnPayRequest) -> Result<LnPayRe
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<AwaitLnPayRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
+    let v = serde_json::from_value::<AwaitLnPayRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federation_id).await?;
     let pay = _await_pay(client, v).await?;
     let pay_json = json!(pay);

@@ -1,7 +1,10 @@
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
 use fedimint_client::ClientArc;
-use fedimint_core::{config::FederationId, core::{ModuleInstanceId, ModuleKind}};
+use fedimint_core::{
+    config::FederationId,
+    core::{ModuleInstanceId, ModuleKind},
+};
 use serde::Deserialize;
 use serde_json::{json, Value};
 

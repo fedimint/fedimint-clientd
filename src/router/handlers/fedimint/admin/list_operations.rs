@@ -25,7 +25,10 @@ pub struct OperationOutput {
     pub outcome: Option<serde_json::Value>,
 }
 
-async fn _list_operations(client: ClientArc, req: ListOperationsRequest) -> Result<Value, AppError> {
+async fn _list_operations(
+    client: ClientArc,
+    req: ListOperationsRequest,
+) -> Result<Value, AppError> {
     const ISO8601_CONFIG: iso8601::EncodedConfig = iso8601::Config::DEFAULT
         .set_formatted_components(iso8601::FormattedComponents::DateTime)
         .encode();

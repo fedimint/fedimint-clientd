@@ -49,19 +49,17 @@ pub async fn handle_method(
             Unit::Msat => melt_bolt11(client, req.request, req.amount).await,
             Unit::Sat => melt_bolt11(client, req.request, req.amount * 1000).await,
         },
-        Method::Onchain => {
-            match req.unit {
-                Unit::Msat => {
-                    let amount_sat = bitcoin::Amount::from_sat(req.amount.try_into_sats()?);
-                    melt_onchain(client, req.request, amount_sat).await
-                }
-                Unit::Sat => {
-                    let amount_sat = req.amount * 1000;
-                    let amount_sat = bitcoin::Amount::from_sat(amount_sat.try_into_sats()?);
-                    melt_onchain(client, req.request, amount_sat).await
-                }
+        Method::Onchain => match req.unit {
+            Unit::Msat => {
+                let amount_sat = bitcoin::Amount::from_sat(req.amount.try_into_sats()?);
+                melt_onchain(client, req.request, amount_sat).await
             }
-        }
+            Unit::Sat => {
+                let amount_sat = req.amount * 1000;
+                let amount_sat = bitcoin::Amount::from_sat(amount_sat.try_into_sats()?);
+                melt_onchain(client, req.request, amount_sat).await
+            }
+        },
     }?;
 
     Ok(Json(res))

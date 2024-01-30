@@ -75,11 +75,10 @@ pub async fn wait_for_ln_payment(
 
     match payment_type {
         PayType::Internal(operation_id) => {
-            let mut updates =
-                lightning_module
-                    .subscribe_internal_pay(operation_id)
-                    .await?
-                    .into_stream();
+            let mut updates = lightning_module
+                .subscribe_internal_pay(operation_id)
+                .await?
+                .into_stream();
 
             while let Some(update) = updates.next().await {
                 match update {
@@ -115,11 +114,10 @@ pub async fn wait_for_ln_payment(
             }
         }
         PayType::Lightning(operation_id) => {
-            let mut updates =
-                lightning_module
-                    .subscribe_ln_pay(operation_id)
-                    .await?
-                    .into_stream();
+            let mut updates = lightning_module
+                .subscribe_ln_pay(operation_id)
+                .await?
+                .into_stream();
 
             while let Some(update) = updates.next().await {
                 let update_clone = update.clone();

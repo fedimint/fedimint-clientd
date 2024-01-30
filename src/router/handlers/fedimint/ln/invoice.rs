@@ -1,10 +1,10 @@
+use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
 use fedimint_client::ClientArc;
 use fedimint_core::{config::FederationId, core::OperationId, Amount};
 use fedimint_ln_client::LightningClientModule;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use anyhow::anyhow;
 
 use crate::{error::AppError, state::AppState};
 
@@ -36,12 +36,8 @@ async fn _invoice(client: ClientArc, req: LnInvoiceRequest) -> Result<LnInvoiceR
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<LnInvoiceRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
+    let v = serde_json::from_value::<LnInvoiceRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federation_id).await?;
     let invoice = _invoice(client, v).await?;
     let invoice_json = json!(invoice);

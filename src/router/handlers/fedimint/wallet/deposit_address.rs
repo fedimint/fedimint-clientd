@@ -1,4 +1,5 @@
 use crate::{error::AppError, state::AppState};
+use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
 use bitcoin::Address;
 use fedimint_client::ClientArc;
@@ -7,7 +8,6 @@ use fedimint_wallet_client::WalletClientModule;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::time::Duration;
-use anyhow::anyhow;
 
 #[derive(Debug, Deserialize)]
 pub struct DepositAddressRequest {

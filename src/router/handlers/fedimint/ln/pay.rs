@@ -48,7 +48,7 @@ async fn _pay(client: ClientArc, req: LnPayRequest) -> Result<LnPayResponse, App
         info!("Payment will finish in background, use await-ln-pay to get the result");
         Ok(LnPayResponse {
             operation_id,
-            payment_type: payment_type,
+            payment_type,
             contract_id: contract_id.to_string(),
             fee,
         })
@@ -62,12 +62,8 @@ async fn _pay(client: ClientArc, req: LnPayRequest) -> Result<LnPayResponse, App
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<LnPayRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
+    let v = serde_json::from_value::<LnPayRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federeation_id).await?;
     let pay = _pay(client, v).await?;
     let pay_json = json!(pay);

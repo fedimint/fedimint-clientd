@@ -34,7 +34,7 @@ impl fmt::Display for AppError {
             "status": self.status.as_u16(),
         });
 
-        write!(f, "{}", error_json.to_string())
+        write!(f, "{}", error_json)
     }
 }
 

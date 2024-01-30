@@ -1,13 +1,13 @@
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
 use fedimint_client::ClientArc;
+use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use fedimint_ln_client::{LightningClientModule, LnReceiveState};
+use futures_util::StreamExt;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::info;
-use fedimint_core::config::FederationId;
-use futures_util::StreamExt;
 
 use crate::{
     error::AppError,
@@ -54,12 +54,8 @@ async fn _await_invoice(
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<AwaitInvoiceRequest>(v).map_err(|e| {
-        AppError::new(
-            StatusCode::BAD_REQUEST,
-            anyhow!("Invalid request: {}", e),
-        )
-    })?;
+    let v = serde_json::from_value::<AwaitInvoiceRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federation_id).await?;
     let invoice = _await_invoice(client, v).await?;
     let invoice_json = json!(invoice);

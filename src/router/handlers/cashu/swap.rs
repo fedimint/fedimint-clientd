@@ -24,7 +24,7 @@ pub async fn handle_swap(
     Json(req): Json<SwapRequest>,
 ) -> Result<Json<SwapResponse>, AppError> {
     let amount_msat = req.notes.total_amount();
-    
+
     let client = state.get_client(req.federation_id).await?;
     let mint = client.get_first_module::<MintClientModule>();
 

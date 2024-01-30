@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use anyhow::Result;
 use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
-use tracing::info;
 use std::str::FromStr;
+use tracing::info;
 
 mod config;
 mod error;
@@ -55,7 +55,7 @@ struct Cli {
     domain: String,
 
     /// Port
-    #[clap(long, env = "PORT", default_value_t = 5000)]
+    #[clap(long, env = "PORT", default_value_t = 3001)]
     port: u16,
 
     /// Mode of operation
@@ -78,7 +78,10 @@ async fn main() -> Result<()> {
             info!("Created client for federation id: {:?}", federation_id);
         }
         Err(e) => {
-            info!("No federation invite code provided, skipping client creation: {}", e);
+            info!(
+                "No federation invite code provided, skipping client creation: {}",
+                e
+            );
         }
     }
 
@@ -218,13 +221,11 @@ fn fedimint_v2_rest() -> Router<AppState> {
         .route("/module", post(fedimint::admin::module::handle_rest))
         .route("/config", get(fedimint::admin::config::handle_rest));
 
-    let base_router = Router::new()
+    Router::new()
         .nest("/admin", admin_router)
         .nest("/mint", mint_router)
         .nest("/ln", ln_router)
-        .nest("/wallet", wallet_router);
-
-    base_router
+        .nest("/wallet", wallet_router)
 }
 
 /// Implements Cashu V1 API Routes:
@@ -258,7 +259,7 @@ fn fedimint_v2_rest() -> Router<AppState> {
 /// NUT-12 Offline Ecash Signature Validation
 /// - DLEQ in BlindedSignature for Mint to User
 fn cashu_v1_rest() -> Router<AppState> {
-    let cashu_router = Router::new()
+    Router::new()
         .route("/keys", get(cashu::keys::handle_keys))
         .route("/keys/:keyset_id", get(cashu::keys::handle_keys_keyset_id))
         .route("/keysets", get(cashu::keysets::handle_keysets))
@@ -282,6 +283,5 @@ fn cashu_v1_rest() -> Router<AppState> {
         )
         .route("/melt/:method", post(cashu::melt::method::handle_method))
         .route("/info", get(cashu::info::handle_info))
-        .route("/check", post(cashu::check::handle_check));
-    cashu_router
+        .route("/check", post(cashu::check::handle_check))
 }

@@ -2272,9 +2272,9 @@ dependencies = [
 
 [[package]]
 name = "multimint"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d2393e2e7a1a0867dbc4014b0375fa50843f3eb8153fd680bd4c46de212ce8b"
+checksum = "e9a5f58dd2d3646bfe9d92e1ec36fba983400ee67bec5e9127631b2bd7759019"
 dependencies = [
  "anyhow",
  "fedimint",
