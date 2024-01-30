@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use anyhow::{Result, anyhow};
 use axum::http::StatusCode;
 use fedimint_client::ClientArc;
-use fedimint_core::config::FederationId;
+use fedimint_core::config::{FederationId, FederationIdPrefix};
 use multimint::MultiMint;
 
 use crate::error::AppError;
@@ -29,6 +29,18 @@ impl AppState {
             None => Err(AppError::new(
                 StatusCode::BAD_REQUEST,
                 anyhow!("No client found for federation id"),
+            )),
+        }
+    }
+
+    pub async fn get_client_by_prefix(&self, federation_id_prefix: &FederationIdPrefix) -> Result<ClientArc, AppError> {
+        let client = self.clients.get_by_prefix(federation_id_prefix).await;
+
+        match client {
+            Some(client) => Ok(client),
+            None => Err(AppError::new(
+                StatusCode::BAD_REQUEST,
+                anyhow!("No client found for federation id prefix"),
             )),
         }
     }
