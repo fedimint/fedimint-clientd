@@ -1,7 +1,7 @@
 use std::fmt;
 
 use axum::{
-    http::StatusCode::BAD_REQUEST,
+    http::StatusCode,
     response::{IntoResponse, Response},
 };
 use serde_json::json;

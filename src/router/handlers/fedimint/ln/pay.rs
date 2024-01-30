@@ -61,7 +61,7 @@ async fn _pay(client: ClientArc, req: LnPayRequest) -> Result<LnPayResponse, App
     }
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<LnPayRequest>(v).map_err(|e| {
         AppError::new(
             StatusCode::BAD_REQUEST,

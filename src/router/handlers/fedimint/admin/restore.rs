@@ -15,7 +15,7 @@ async fn _restore(_client: ClientArc, _v: Value) -> Result<(), AppError> {
     ))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let client = state.get_client(None).await?;
     let restore = _restore(client, v).await?;
     let restore_json = json!(restore);

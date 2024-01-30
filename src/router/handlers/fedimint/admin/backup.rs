@@ -20,7 +20,7 @@ async fn _backup(client: ClientArc, req: BackupRequest) -> Result<(), AppError> 
         .map_err(|e| AppError::new(StatusCode::INTERNAL_SERVER_ERROR, e))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<BackupRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let client = state.get_client(v.federation_id).await?;

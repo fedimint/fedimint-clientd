@@ -3,9 +3,10 @@ use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
 use bitcoin::Address;
 use bitcoin_hashes::hex::ToHex;
-use fedimint_core::BitcoinAmountOrAll;
+use fedimint_client::ClientArc;
+use fedimint_core::{config::FederationId, BitcoinAmountOrAll};
 use fedimint_wallet_client::{WalletClientModule, WithdrawState};
-use futures::StreamExt;
+use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::info;
@@ -14,6 +15,7 @@ use tracing::info;
 pub struct WithdrawRequest {
     pub address: Address,
     pub amount_msat: BitcoinAmountOrAll,
+    pub federation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
@@ -22,13 +24,13 @@ pub struct WithdrawResponse {
     pub fees_sat: u64,
 }
 
-async fn _withdraw(state: AppState, req: WithdrawRequest) -> Result<WithdrawResponse, AppError> {
-    let wallet_module = state.fm.get_first_module::<WalletClientModule>();
+async fn _withdraw(client: ClientArc, req: WithdrawRequest) -> Result<WithdrawResponse, AppError> {
+    let wallet_module = client.get_first_module::<WalletClientModule>();
     let (amount, fees) = match req.amount_msat {
         // If the amount is "all", then we need to subtract the fees from
         // the amount we are withdrawing
         BitcoinAmountOrAll::All => {
-            let balance = bitcoin::Amount::from_sat(state.fm.get_balance().await.msats / 1000);
+            let balance = bitcoin::Amount::from_sat(client.get_balance().await.msats / 1000);
             let fees = wallet_module
                 .get_withdraw_fees(req.address.clone(), balance)
                 .await?;
@@ -87,9 +89,15 @@ async fn _withdraw(state: AppState, req: WithdrawRequest) -> Result<WithdrawResp
     ))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
-    let withdraw = _withdraw(state, v).await?;
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
+    let v = serde_json::from_value::<WithdrawRequest>(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow!("Invalid request: {}", e),
+        )
+    })?;
+    let client = state.get_client(v.federation_id).await?;
+    let withdraw = _withdraw(client, v).await?;
     let withdraw_json = json!(withdraw);
     Ok(withdraw_json)
 }
@@ -99,6 +107,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<WithdrawRequest>,
 ) -> Result<Json<WithdrawResponse>, AppError> {
-    let withdraw = _withdraw(state, req).await?;
+    let client = state.get_client(req.federation_id).await?;
+    let withdraw = _withdraw(client, req).await?;
     Ok(Json(withdraw))
 }

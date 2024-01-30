@@ -28,7 +28,7 @@ async fn _module(_client: ClientArc, _req: ModuleRequest) -> Result<(), AppError
     ))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<ModuleRequest>(v).unwrap();
     let client = state.get_client(v.federation_id).await?;
     let module = _module(client, v).await?;

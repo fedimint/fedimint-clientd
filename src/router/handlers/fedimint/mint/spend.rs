@@ -49,7 +49,7 @@ async fn _spend(client: ClientArc, req: SpendRequest) -> Result<SpendResponse, A
     Ok(SpendResponse { operation, notes })
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<SpendRequest>(v).map_err(|e| {
         AppError::new(
             StatusCode::BAD_REQUEST,

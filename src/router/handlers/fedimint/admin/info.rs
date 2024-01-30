@@ -44,7 +44,7 @@ async fn _info(client: ClientArc) -> Result<InfoResponse, Error> {
     })
 }
 
-pub async fn handle_ws(_v: Value, state: AppState) -> Result<Value, AppError> {
+pub async fn handle_ws(state: AppState, _v: Value) -> Result<Value, AppError> {
     let client = state.get_client(None).await?;
     let info = _info(client).await?;
     let info_json = json!(info);

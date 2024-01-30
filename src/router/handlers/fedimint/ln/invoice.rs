@@ -35,7 +35,7 @@ async fn _invoice(client: ClientArc, req: LnInvoiceRequest) -> Result<LnInvoiceR
     })
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<LnInvoiceRequest>(v).map_err(|e| {
         AppError::new(
             StatusCode::BAD_REQUEST,

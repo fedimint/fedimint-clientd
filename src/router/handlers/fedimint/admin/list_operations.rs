@@ -60,7 +60,7 @@ async fn _list_operations(client: ClientArc, req: ListOperationsRequest) -> Resu
     }))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<ListOperationsRequest>(v).map_err(|e| {
         AppError::new(
             StatusCode::BAD_REQUEST,

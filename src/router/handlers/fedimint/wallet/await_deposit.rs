@@ -1,15 +1,17 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode::BAD_REQUEST, Json};
-use fedimint_core::core::OperationId;
+use axum::{extract::State, http::StatusCode, Json};
+use fedimint_client::ClientArc;
+use fedimint_core::{config::FederationId, core::OperationId};
 use fedimint_wallet_client::{DepositState, WalletClientModule};
-use futures::StreamExt;
+use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 #[derive(Debug, Deserialize)]
 pub struct AwaitDepositRequest {
     pub operation_id: OperationId,
+    pub federation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
@@ -18,11 +20,10 @@ pub struct AwaitDepositResponse {
 }
 
 async fn _await_deposit(
-    state: AppState,
+    client: ClientArc,
     req: AwaitDepositRequest,
 ) -> Result<AwaitDepositResponse, AppError> {
-    let mut updates = state
-        .fm
+    let mut updates = client
         .get_first_module::<WalletClientModule>()
         .subscribe_deposit_updates(req.operation_id)
         .await?
@@ -56,9 +57,11 @@ async fn _await_deposit(
     ))
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
-    let await_deposit = _await_deposit(state, v).await?;
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
+    let v = serde_json::from_value::<AwaitDepositRequest>(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
+    let client = state.get_client(v.federation_id).await?;
+    let await_deposit = _await_deposit(client, v).await?;
     let await_deposit_json = json!(await_deposit);
     Ok(await_deposit_json)
 }
@@ -68,6 +71,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<AwaitDepositRequest>,
 ) -> Result<Json<AwaitDepositResponse>, AppError> {
-    let await_deposit = _await_deposit(state, req).await?;
+    let client = state.get_client(req.federation_id).await?;
+    let await_deposit = _await_deposit(client, req).await?;
     Ok(Json(await_deposit))
 }
