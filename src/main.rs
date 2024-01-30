@@ -1,11 +1,9 @@
 use std::path::PathBuf;
 
 use anyhow::Result;
-use fedimint_client::derivable_secret::DerivableSecret;
 use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
 use tracing::info;
-
 use std::str::FromStr;
 
 mod config;
@@ -41,12 +39,8 @@ enum Commands {
 #[clap(version = "1.0", author = "Kody Low")]
 struct Cli {
     /// Federation invite code
-    #[clap(long, env = "FEDERATION_INVITE_CODE", required = true)]
+    #[clap(long, env = "FEDERATION_INVITE_CODE", required = false)]
     federation_invite_code: String,
-
-    /// Secret key
-    #[clap(long, env = "SECRET_KEY", required = true)]
-    secret_key: String,
 
     /// Path to FM database
     #[clap(long, env = "FM_DB_PATH", required = true)]
@@ -69,7 +63,6 @@ struct Cli {
     mode: Mode,
 }
 
-const SALT: &[u8] = b"fedimint-http";
 // const PID_FILE: &str = "/tmp/fedimint_http.pid";
 
 #[tokio::main]
@@ -78,11 +71,17 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
     let cli: Cli = Cli::parse();
-    let invite_code = InviteCode::from_str(&cli.federation_invite_code).unwrap();
-    let secret_key = &cli.secret_key.into_bytes();
-    let secret = DerivableSecret::new_root(secret_key, &SALT);
-    let state = AppState::new(cli.fm_db_path).await?;
-
+    let mut state = AppState::new(cli.fm_db_path).await?;
+    match InviteCode::from_str(&cli.federation_invite_code) {
+        Ok(invite_code) => {
+            let federation_id = state.clients.register_new(invite_code, true).await?;
+            info!("Created client for federation id: {:?}", federation_id);
+        }
+        Err(e) => {
+            info!("No federation invite code provided, skipping client creation: {}", e);
+        }
+    }
+    
     let app = match cli.mode {
         Mode::Fedimint => {
             Router::new()
