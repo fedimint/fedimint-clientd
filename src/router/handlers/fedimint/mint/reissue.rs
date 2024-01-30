@@ -1,6 +1,6 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode::BAD_REQUEST, Json};
 use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use futures::StreamExt;

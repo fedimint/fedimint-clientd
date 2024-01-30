@@ -1,6 +1,6 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode::BAD_REQUEST, Json};
 use fedimint_core::core::OperationId;
 use fedimint_wallet_client::{DepositState, WalletClientModule};
 use futures::StreamExt;
