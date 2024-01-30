@@ -1,5 +1,6 @@
-use axum::{extract::State, Json};
-use fedimint_core::core::OperationId;
+use axum::{extract::State, http::StatusCode, Json};
+use fedimint_client::ClientArc;
+use fedimint_core::{config::FederationId, core::OperationId};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::time::UNIX_EPOCH;
@@ -10,6 +11,7 @@ use crate::{error::AppError, state::AppState};
 #[derive(Debug, Deserialize)]
 pub struct ListOperationsRequest {
     pub limit: usize,
+    pub federation_id: Option<FederationId>,
 }
 
 #[derive(Serialize)]
@@ -23,12 +25,11 @@ pub struct OperationOutput {
     pub outcome: Option<serde_json::Value>,
 }
 
-async fn _list_operations(state: AppState, req: ListOperationsRequest) -> Result<Value, AppError> {
+async fn _list_operations(client: ClientArc, req: ListOperationsRequest) -> Result<Value, AppError> {
     const ISO8601_CONFIG: iso8601::EncodedConfig = iso8601::Config::DEFAULT
         .set_formatted_components(iso8601::FormattedComponents::DateTime)
         .encode();
-    let operations = state
-        .fm
+    let operations = client
         .operation_log()
         .list_operations(req.limit, None)
         .await
@@ -60,8 +61,14 @@ async fn _list_operations(state: AppState, req: ListOperationsRequest) -> Result
 }
 
 pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
-    let operations = _list_operations(state, v).await?;
+    let client = state.get_client(None).await?;
+    let v = serde_json::from_value(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow::anyhow!("Invalid request: {}", e),
+        )
+    })?;
+    let operations = _list_operations(client, v).await?;
     let operations_json = json!(operations);
     Ok(operations_json)
 }
@@ -71,6 +78,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<ListOperationsRequest>,
 ) -> Result<Json<Value>, AppError> {
-    let operations = _list_operations(state, req).await?;
+    let client = state.get_client(None).await?;
+    let operations = _list_operations(client, req).await?;
     Ok(Json(operations))
 }
