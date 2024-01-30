@@ -1,6 +1,10 @@
 use std::time::Duration;
 
+use axum::http::StatusCode;
 use axum::{extract::State, Json};
+use anyhow::anyhow;
+use fedimint_client::ClientArc;
+use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use fedimint_core::Amount;
 use fedimint_mint_client::OOBNotes;
@@ -16,6 +20,7 @@ pub struct SpendRequest {
     pub amount_msat: Amount,
     pub allow_overpay: bool,
     pub timeout: u64,
+    pub federation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
@@ -24,10 +29,10 @@ pub struct SpendResponse {
     pub notes: OOBNotes,
 }
 
-async fn _spend(state: AppState, req: SpendRequest) -> Result<SpendResponse, AppError> {
+async fn _spend(client: ClientArc, req: SpendRequest) -> Result<SpendResponse, AppError> {
     warn!("The client will try to double-spend these notes after the duration specified by the --timeout option to recover any unclaimed e-cash.");
 
-    let mint_module = state.fm.get_first_module::<MintClientModule>();
+    let mint_module = client.get_first_module::<MintClientModule>();
     let timeout = Duration::from_secs(req.timeout);
     let (operation, notes) = mint_module
         .spend_notes_with_selector(&SelectNotesWithAtleastAmount, req.amount_msat, timeout, ())
@@ -44,9 +49,15 @@ async fn _spend(state: AppState, req: SpendRequest) -> Result<SpendResponse, App
     Ok(SpendResponse { operation, notes })
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
-    let spend = _spend(state, v).await?;
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
+    let v = serde_json::from_value::<SpendRequest>(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow!("Invalid request: {}", e),
+        )
+    })?;
+    let client = state.get_client(v.federation_id).await?;
+    let spend = _spend(client, v).await?;
     let spend_json = json!(spend);
     Ok(spend_json)
 }
@@ -56,6 +67,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<SpendRequest>,
 ) -> Result<Json<SpendResponse>, AppError> {
-    let spend = _spend(state, req).await?;
+    let client = state.get_client(req.federation_id).await?;
+    let spend = _spend(client, req).await?;
     Ok(Json(spend))
 }

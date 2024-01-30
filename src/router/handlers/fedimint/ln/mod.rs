@@ -4,7 +4,7 @@ use anyhow::{bail, Context};
 use fedimint_client::ClientArc;
 use fedimint_core::Amount;
 use fedimint_ln_client::{InternalPayState, LightningClientModule, LnPayState, PayType};
-use futures::StreamExt;
+use futures_util::StreamExt;
 use lightning_invoice::Bolt11Invoice;
 use tracing::{debug, info};
 

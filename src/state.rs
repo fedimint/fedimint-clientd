@@ -1,39 +1,47 @@
 use std::path::PathBuf;
+use anyhow::{Result, anyhow};
+use axum::http::StatusCode;
+use fedimint_client::ClientArc;
+use fedimint_core::config::{FederationId, FederationIdPrefix};
+use multimint::MultiMint;
 
-use fedimint_client::{derivable_secret::DerivableSecret, ClientArc};
-
-use anyhow::Result;
-use fedimint_client::{get_config_from_db, FederationInfo};
-use fedimint_core::{api::InviteCode, db::Database};
-use fedimint_ln_client::LightningClientInit;
-use fedimint_mint_client::MintClientInit;
-use fedimint_wallet_client::WalletClientInit;
-
+use crate::error::AppError;
 #[derive(Debug, Clone)]
 pub struct AppState {
-    pub fm: ClientArc,
+    pub multimint: MultiMint,
 }
 
-pub async fn load_fedimint_client(
-    invite_code: InviteCode,
-    fm_db_path: PathBuf,
-    root_secret: DerivableSecret,
-) -> Result<ClientArc> {
-    let db = Database::new(
-        fedimint_rocksdb::RocksDb::open(fm_db_path.clone())?,
-        Default::default(),
-    );
-    let mut client_builder = fedimint_client::Client::builder();
-    if get_config_from_db(&db).await.is_none() {
-        let federation_info = FederationInfo::from_invite_code(invite_code).await?;
-        client_builder.with_federation_info(federation_info);
-    };
-    client_builder.with_database(db);
-    client_builder.with_module(WalletClientInit(None));
-    client_builder.with_module(MintClientInit);
-    client_builder.with_module(LightningClientInit);
-    client_builder.with_primary_module(1);
-    let client_res = client_builder.build(root_secret.clone()).await?;
+impl AppState {
+    pub async fn new(fm_db_path: PathBuf) -> Result<Self> {
+        let clients = MultiMint::new(fm_db_path).await?;
+        Ok(Self { multimint: clients })
+    }
 
-    Ok(client_res)
+    // Helper function to get a specific client from the state or default
+    pub async fn get_client(&self, federation_id: Option<FederationId>) -> Result<ClientArc, AppError> {
+        let client = match federation_id {
+            Some(federation_id) => self.multimint.get(&federation_id).await,
+            None => self.multimint.get_default().await,
+        };
+
+        match client {
+            Some(client) => Ok(client),
+            None => Err(AppError::new(
+                StatusCode::BAD_REQUEST,
+                anyhow!("No client found for federation id"),
+            )),
+        }
+    }
+
+    pub async fn get_client_by_prefix(&self, federation_id_prefix: &FederationIdPrefix) -> Result<ClientArc, AppError> {
+        let client = self.multimint.get_by_prefix(federation_id_prefix).await;
+
+        match client {
+            Some(client) => Ok(client),
+            None => Err(AppError::new(
+                StatusCode::BAD_REQUEST,
+                anyhow!("No client found for federation id prefix"),
+            )),
+        }
+    }
 }

@@ -1,15 +1,16 @@
 use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
 use axum::{extract::State, http::StatusCode, Json};
-use fedimint_core::Amount;
+use fedimint_core::{config::FederationId, Amount};
 use fedimint_mint_client::{MintClientModule, OOBNotes};
-use futures::StreamExt;
+use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
 #[derive(Debug, Deserialize)]
 pub struct SwapRequest {
     pub notes: OOBNotes,
+    pub federation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
@@ -23,8 +24,9 @@ pub async fn handle_swap(
     Json(req): Json<SwapRequest>,
 ) -> Result<Json<SwapResponse>, AppError> {
     let amount_msat = req.notes.total_amount();
-
-    let mint = state.fm.get_first_module::<MintClientModule>();
+    
+    let client = state.get_client(req.federation_id).await?;
+    let mint = client.get_first_module::<MintClientModule>();
 
     let operation_id = mint.reissue_external_notes(req.notes, ()).await?;
     let mut updates = mint

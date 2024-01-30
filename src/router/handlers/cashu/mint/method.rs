@@ -12,15 +12,17 @@ use axum::{
     Json,
 };
 use fedimint_client::ClientArc;
-use fedimint_core::{time::now, Amount};
+use fedimint_core::{config::FederationId, time::now, Amount};
 use fedimint_ln_client::LightningClientModule;
 use fedimint_wallet_client::WalletClientModule;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PostMintQuoteMethodRequest {
     pub amount: Amount,
     pub unit: Unit,
+    pub federation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
@@ -37,17 +39,18 @@ pub async fn handle_method(
     State(state): State<AppState>,
     Json(req): Json<PostMintQuoteMethodRequest>,
 ) -> Result<Json<PostMintQuoteMethodResponse>, AppError> {
+    let client = state.get_client(req.federation_id).await?;
     let res = match method {
         Method::Bolt11 => match req.unit {
-            Unit::Msat => mint_bolt11(state.fm, req.amount).await,
-            Unit::Sat => mint_bolt11(state.fm, req.amount * 1000).await,
+            Unit::Msat => mint_bolt11(client, req.amount).await,
+            Unit::Sat => mint_bolt11(client, req.amount * 1000).await,
         },
         Method::Onchain => match req.unit {
             Unit::Msat => Err(AppError::new(
                 StatusCode::BAD_REQUEST,
                 anyhow!("Unsupported unit for onchain mint, use sat instead"),
             )),
-            Unit::Sat => mint_onchain(state.fm, req.amount * 1000).await,
+            Unit::Sat => mint_onchain(client, req.amount * 1000).await,
         },
     }?;
 

@@ -1,8 +1,10 @@
-use axum::{extract::State, Json};
+use axum::{extract::State, http::StatusCode, Json};
+use fedimint_client::ClientArc;
 use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use anyhow::anyhow;
 
 use crate::{error::AppError, state::AppState};
 
@@ -16,10 +18,9 @@ pub struct ValidateResponse {
     pub amount_msat: Amount,
 }
 
-async fn _validate(state: AppState, req: ValidateRequest) -> Result<ValidateResponse, AppError> {
+async fn _validate(client: ClientArc, req: ValidateRequest) -> Result<ValidateResponse, AppError> {
     let amount_msat =
-        state
-            .fm
+        client
             .get_first_module::<MintClientModule>()
             .validate_notes(req.notes)
             .await?;
@@ -27,9 +28,15 @@ async fn _validate(state: AppState, req: ValidateRequest) -> Result<ValidateResp
     Ok(ValidateResponse { amount_msat })
 }
 
-pub async fn handle_ws(v: Value, state: AppState) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
-    let validate = _validate(state, v).await?;
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
+    let v = serde_json::from_value::<ValidateRequest>(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow!("Invalid request: {}", e),
+        )
+    })?;
+    let client = state.get_client_by_prefix(&v.notes.federation_id_prefix()).await?;
+    let validate = _validate(client, v).await?;
     let validate_json = json!(validate);
     Ok(validate_json)
 }
@@ -39,6 +46,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<ValidateRequest>,
 ) -> Result<Json<ValidateResponse>, AppError> {
-    let validate = _validate(state, req).await?;
+    let client = state.get_client_by_prefix(&req.notes.federation_id_prefix()).await?;
+    let validate = _validate(client, req).await?;
     Ok(Json(validate))
 }

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use axum::{extract::State, Json};
+use axum::{extract::State, http::StatusCode, Json};
 use serde::Serialize;
 
 use crate::{error::AppError, state::AppState};
@@ -40,7 +40,17 @@ pub struct CashuNUT06InfoResponse {
 pub async fn handle_info(
     State(state): State<AppState>,
 ) -> Result<Json<CashuNUT06InfoResponse>, AppError> {
-    let config = state.fm.get_config();
+    let client = match state.multimint.get_default().await {
+        Some(client) => client,
+        None => {
+            return Err(AppError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                anyhow::anyhow!("No default client"),
+            ))
+        }
+    };
+
+    let config = client.get_config();
     let mut nuts = BTreeMap::new();
 
     nuts.insert(

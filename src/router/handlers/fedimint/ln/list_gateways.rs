@@ -1,11 +1,20 @@
-use axum::{extract::State, Json};
+use axum::{extract::State, http::StatusCode, Json};
+use fedimint_client::ClientArc;
+use fedimint_core::config::FederationId;
 use fedimint_ln_client::LightningClientModule;
+use serde::Deserialize;
 use serde_json::{json, Value};
+use anyhow::anyhow;
 
 use crate::{error::AppError, state::AppState};
 
-async fn _list_gateways(state: AppState) -> Result<Value, AppError> {
-    let lightning_module = state.fm.get_first_module::<LightningClientModule>();
+#[derive(Debug, Deserialize)]
+pub struct ListGatewaysRequest {
+    pub federation_id: Option<FederationId>
+}
+
+async fn _list_gateways(client: ClientArc) -> Result<Value, AppError> {
+    let lightning_module = client.get_first_module::<LightningClientModule>();
     let gateways = lightning_module.fetch_registered_gateways().await?;
     if gateways.is_empty() {
         return Ok(serde_json::to_value(Vec::<String>::new()).unwrap());
@@ -28,14 +37,25 @@ async fn _list_gateways(state: AppState) -> Result<Value, AppError> {
     Ok(serde_json::to_value(gateways_json).unwrap())
 }
 
-pub async fn handle_ws(state: AppState) -> Result<Value, AppError> {
-    let gateways = _list_gateways(state).await?;
+pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
+    let v = serde_json::from_value::<ListGatewaysRequest>(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow!("Invalid request: {}", e),
+        )
+    })?;
+    let client = state.get_client(v.federation_id).await?;
+    let gateways = _list_gateways(client).await?;
     let gateways_json = json!(gateways);
     Ok(gateways_json)
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_rest(State(state): State<AppState>) -> Result<Json<Value>, AppError> {
-    let gateways = _list_gateways(state).await?;
+pub async fn handle_rest(
+    State(state): State<AppState>,
+    Json(req): Json<ListGatewaysRequest>,
+) -> Result<Json<Value>, AppError> {
+    let client = state.get_client(req.federation_id).await?;
+    let gateways = _list_gateways(client).await?;
     Ok(Json(gateways))
 }

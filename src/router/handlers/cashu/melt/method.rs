@@ -12,10 +12,10 @@ use axum::{
     Json,
 };
 use fedimint_client::ClientArc;
-use fedimint_core::Amount;
+use fedimint_core::{config::FederationId, Amount};
 use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment};
 use fedimint_wallet_client::{WalletClientModule, WithdrawState};
-use futures::StreamExt;
+use futures_util::StreamExt;
 use lightning_invoice::Bolt11Invoice;
 use serde::{Deserialize, Serialize};
 use tracing::info;
@@ -25,6 +25,7 @@ pub struct PostMeltQuoteMethodRequest {
     pub request: String,
     pub amount: Amount,
     pub unit: Unit,
+    pub federation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
@@ -42,21 +43,22 @@ pub async fn handle_method(
     State(state): State<AppState>,
     Json(req): Json<PostMeltQuoteMethodRequest>,
 ) -> Result<Json<PostMeltQuoteMethodResponse>, AppError> {
+    let client = state.get_client(req.federation_id).await?;
     let res = match method {
         Method::Bolt11 => match req.unit {
-            Unit::Msat => melt_bolt11(state.fm, req.request, req.amount).await,
-            Unit::Sat => melt_bolt11(state.fm, req.request, req.amount * 1000).await,
+            Unit::Msat => melt_bolt11(client, req.request, req.amount).await,
+            Unit::Sat => melt_bolt11(client, req.request, req.amount * 1000).await,
         },
         Method::Onchain => {
             match req.unit {
                 Unit::Msat => {
                     let amount_sat = bitcoin::Amount::from_sat(req.amount.try_into_sats()?);
-                    melt_onchain(state.fm, req.request, amount_sat).await
+                    melt_onchain(client, req.request, amount_sat).await
                 }
                 Unit::Sat => {
                     let amount_sat = req.amount * 1000;
                     let amount_sat = bitcoin::Amount::from_sat(amount_sat.try_into_sats()?);
-                    melt_onchain(state.fm, req.request, amount_sat).await
+                    melt_onchain(client, req.request, amount_sat).await
                 }
             }
         }
