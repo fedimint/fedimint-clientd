@@ -81,7 +81,7 @@ async fn main() -> Result<()> {
             info!("No federation invite code provided, skipping client creation: {}", e);
         }
     }
-    
+
     let app = match cli.mode {
         Mode::Fedimint => {
             Router::new()
@@ -137,9 +137,10 @@ pub async fn create_default_router(state: AppState, password: &str) -> Result<Ro
 }
 
 /// Implements Fedimint V0.2 API Route matching against CLI commands:
-/// - `/fedimint/v2/admin/info`: Display wallet info (holdings, tiers).
 /// - `/fedimint/v2/admin/backup`: Upload the (encrypted) snapshot of mint notes to federation.
 /// - `/fedimint/v2/admin/discover-version`: Discover the common api version to use to communicate with the federation.
+/// - `/fedimint/v2/admin/info`: Display wallet info (holdings, tiers).
+/// - `/fedimint/v2/admin/join`: Join a federation with an invite code.
 /// - `/fedimint/v2/admin/restore`: Restore the previously created backup of mint notes (with `backup` command).
 /// - `/fedimint/v2/admin/list-operations`: List operations.
 /// - `/fedimint/v2/admin/module`: Call a module subcommand.
@@ -201,12 +202,13 @@ fn fedimint_v2_rest() -> Router<AppState> {
         .route("/withdraw", post(fedimint::wallet::withdraw::handle_rest));
 
     let admin_router = Router::new()
-        .route("/info", get(fedimint::admin::info::handle_rest))
         .route("/backup", post(fedimint::admin::backup::handle_rest))
         .route(
             "/discover-version",
             get(fedimint::admin::discover_version::handle_rest),
         )
+        .route("/info", get(fedimint::admin::info::handle_rest))
+        .route("/join", get(fedimint::admin::join::handle_rest))
         .route("/restore", post(fedimint::admin::restore::handle_rest))
         // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this under admin?
         .route(

@@ -49,10 +49,11 @@ pub struct JsonRpcError {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub enum JsonRpcMethod {
-    AdminInfo,
     AdminBackup,
     AdminConfig,
     AdminDiscoverVersion,
+    AdminInfo,
+    AdminJoin,
     AdminModule,
     AdminRestore,
     AdminListOperations,
@@ -143,9 +144,6 @@ async fn send_err_invalid_req(socket: &mut WebSocket, err: serde_json::Error, te
 
 async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, AppError> {
     match req.method {
-        JsonRpcMethod::AdminInfo => {
-            handlers::fedimint::admin::info::handle_ws(state.clone(), req.params).await
-        }
         JsonRpcMethod::AdminBackup => {
             handlers::fedimint::admin::backup::handle_ws(state.clone(), req.params).await
         }
@@ -154,6 +152,12 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
         }
         JsonRpcMethod::AdminDiscoverVersion => {
             handlers::fedimint::admin::discover_version::handle_ws(state.clone()).await
+        }
+        JsonRpcMethod::AdminInfo => {
+            handlers::fedimint::admin::info::handle_ws(state.clone(), req.params).await
+        }
+        JsonRpcMethod::AdminJoin => {
+            handlers::fedimint::admin::join::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminModule => {
             handlers::fedimint::admin::module::handle_ws(state.clone(), req.params).await
