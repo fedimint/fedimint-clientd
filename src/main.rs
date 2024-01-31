@@ -186,7 +186,7 @@ fn fedimint_v2_rest() -> Router<AppState> {
         .route("/await-pay", post(fedimint::ln::await_pay::handle_rest))
         .route(
             "/list-gateways",
-            get(fedimint::ln::list_gateways::handle_rest),
+            post(fedimint::ln::list_gateways::handle_rest),
         )
         .route(
             "/switch-gateway",
