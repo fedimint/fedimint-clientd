@@ -14,7 +14,6 @@ use crate::{error::AppError, state::AppState};
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub struct InfoResponse {
-    pub federation_id: FederationId,
     pub network: String,
     pub meta: BTreeMap<String, String>,
     pub total_amount_msat: Amount,
@@ -41,7 +40,6 @@ async fn _info(multimint: MultiMint) -> Result<HashMap<FederationId, InfoRespons
         info.insert(
             *id,
             InfoResponse {
-                federation_id: client.federation_id(),
                 network: wallet_client.get_network().to_string(),
                 meta: client.get_config().global.meta.clone(),
                 total_amount_msat: summary.total_amount(),

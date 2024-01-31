@@ -26,7 +26,6 @@ pub async fn get_note_summary(client: &ClientArc) -> anyhow::Result<InfoResponse
         )
         .await;
     Ok(InfoResponse {
-        federation_id: client.federation_id(),
         network: wallet_client.get_network().to_string(),
         meta: client.get_config().global.meta.clone(),
         total_amount_msat: summary.total_amount(),
