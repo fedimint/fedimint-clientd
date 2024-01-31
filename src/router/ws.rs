@@ -52,6 +52,7 @@ pub enum JsonRpcMethod {
     AdminBackup,
     AdminConfig,
     AdminDiscoverVersion,
+    AdminFederationIds,
     AdminInfo,
     AdminJoin,
     AdminModule,
@@ -152,6 +153,9 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
         }
         JsonRpcMethod::AdminDiscoverVersion => {
             handlers::fedimint::admin::discover_version::handle_ws(state.clone()).await
+        }
+        JsonRpcMethod::AdminFederationIds => {
+            handlers::fedimint::admin::federation_ids::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminInfo => {
             handlers::fedimint::admin::info::handle_ws(state.clone(), req.params).await
