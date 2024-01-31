@@ -17,15 +17,17 @@ pub struct JoinRequest {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JoinResponse {
-    pub federation_id: FederationId,
+    pub federation_ids: Vec<FederationId>,
 }
 
 async fn _join(mut multimint: MultiMint, req: JoinRequest) -> Result<JoinResponse, Error> {
-    let federation_id = multimint
+    let _ = multimint
         .register_new(req.invite_code.clone(), req.default)
         .await?;
 
-    Ok(JoinResponse { federation_id })
+    let federation_ids = multimint.ids().await.into_iter().collect::<Vec<_>>();
+
+    Ok(JoinResponse { federation_ids })
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
