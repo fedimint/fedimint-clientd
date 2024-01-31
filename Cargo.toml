@@ -1,6 +1,6 @@
 [package]
 name = "fedimint-http"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "HTTP server for Fedimint Client, exposing REST and Websocket APIs for default modules."
 license = "MIT"
