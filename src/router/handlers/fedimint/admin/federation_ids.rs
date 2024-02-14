@@ -8,7 +8,7 @@ use serde_json::{json, Value};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "camelCase")]
 pub struct FederationIdsResponse {
     pub federation_ids: Vec<FederationId>,
 }

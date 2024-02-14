@@ -9,12 +9,14 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AwaitDepositRequest {
     pub operation_id: OperationId,
     pub federation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AwaitDepositResponse {
     pub status: DepositState,
 }

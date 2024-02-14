@@ -11,6 +11,7 @@ use std::str::FromStr;
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SwitchGatewayRequest {
     pub gateway_id: String,
     pub federation_id: Option<FederationId>,

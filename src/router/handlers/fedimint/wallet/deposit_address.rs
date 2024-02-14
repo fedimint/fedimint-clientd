@@ -10,12 +10,14 @@ use serde_json::{json, Value};
 use std::time::Duration;
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DepositAddressRequest {
     pub timeout: u64,
     pub federation_id: Option<FederationId>,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DepositAddressResponse {
     pub address: Address,
     pub operation_id: OperationId,

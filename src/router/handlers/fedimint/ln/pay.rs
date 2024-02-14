@@ -14,6 +14,7 @@ use crate::{
 };
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LnPayRequest {
     pub payment_info: String,
     pub amount_msat: Option<Amount>,
@@ -23,6 +24,7 @@ pub struct LnPayRequest {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LnPayResponse {
     pub operation_id: OperationId,
     pub payment_type: PayType,

@@ -16,6 +16,7 @@ use crate::{
 };
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AwaitInvoiceRequest {
     pub operation_id: OperationId,
     pub federation_id: Option<FederationId>,
@@ -31,6 +32,7 @@ async fn _await_invoice(
         .await?
         .into_stream();
     while let Some(update) = updates.next().await {
+        info!("Update: {update:?}");
         match update {
             LnReceiveState::Claimed => {
                 return Ok(get_note_summary(&client).await?);

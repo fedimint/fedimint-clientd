@@ -9,11 +9,13 @@ use serde_json::{json, Value};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ValidateRequest {
     pub notes: OOBNotes,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ValidateResponse {
     pub amount_msat: Amount,
 }

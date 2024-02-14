@@ -7,11 +7,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CombineRequest {
     pub notes: Vec<OOBNotes>,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CombineResponse {
     pub notes: OOBNotes,
 }

@@ -9,6 +9,7 @@ use serde_json::{json, Value};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LnInvoiceRequest {
     pub amount_msat: Amount,
     pub description: String,
@@ -17,6 +18,7 @@ pub struct LnInvoiceRequest {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LnInvoiceResponse {
     pub operation_id: OperationId,
     pub invoice: String,

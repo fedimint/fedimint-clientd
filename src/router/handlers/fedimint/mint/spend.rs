@@ -16,6 +16,7 @@ use tracing::{info, warn};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SpendRequest {
     pub amount_msat: Amount,
     pub allow_overpay: bool,
@@ -24,6 +25,7 @@ pub struct SpendRequest {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SpendResponse {
     pub operation: OperationId,
     pub notes: OOBNotes,

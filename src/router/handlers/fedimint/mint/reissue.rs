@@ -10,11 +10,13 @@ use serde_json::{json, Value};
 use tracing::info;
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ReissueRequest {
     pub notes: OOBNotes,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ReissueResponse {
     pub amount_msat: Amount,
 }

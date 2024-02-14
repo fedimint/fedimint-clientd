@@ -9,11 +9,13 @@ use serde_json::{json, Value};
 use crate::error::AppError;
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SplitRequest {
     pub notes: OOBNotes,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SplitResponse {
     pub notes: BTreeMap<Amount, OOBNotes>,
 }

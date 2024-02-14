@@ -10,6 +10,7 @@ use super::{pay::LnPayResponse, wait_for_ln_payment};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AwaitLnPayRequest {
     pub operation_id: OperationId,
     pub federation_id: Option<FederationId>,

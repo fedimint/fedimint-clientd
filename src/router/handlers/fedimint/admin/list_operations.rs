@@ -9,13 +9,14 @@ use time::{format_description::well_known::iso8601, OffsetDateTime};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ListOperationsRequest {
     pub limit: usize,
     pub federation_id: Option<FederationId>,
 }
 
 #[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "camelCase")]
 pub struct OperationOutput {
     pub id: OperationId,
     pub creation_time: String,
