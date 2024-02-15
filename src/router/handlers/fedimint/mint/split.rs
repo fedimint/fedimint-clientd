@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 use crate::error::AppError;
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "snake_case")]
 pub struct SplitRequest {
     pub notes: OOBNotes,
 }

@@ -12,7 +12,7 @@ use serde_json::{json, Value};
 use tracing::info;
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "snake_case")]
 pub struct WithdrawRequest {
     pub address: Address,
     pub amount_msat: BitcoinAmountOrAll,

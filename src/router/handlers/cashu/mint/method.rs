@@ -18,7 +18,7 @@ use fedimint_wallet_client::WalletClientModule;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "snake_case")]
 pub struct PostMintQuoteMethodRequest {
     pub amount: Amount,
     pub unit: Unit,
