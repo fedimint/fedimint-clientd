@@ -215,7 +215,7 @@ fn fedimint_v2_rest() -> Router<AppState> {
             get(fedimint::admin::federation_ids::handle_rest),
         )
         .route("/info", get(fedimint::admin::info::handle_rest))
-        .route("/join", get(fedimint::admin::join::handle_rest))
+        .route("/join", post(fedimint::admin::join::handle_rest))
         .route("/restore", post(fedimint::admin::restore::handle_rest))
         // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this under admin?
         .route(
