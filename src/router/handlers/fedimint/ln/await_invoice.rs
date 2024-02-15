@@ -16,7 +16,7 @@ use crate::{
 };
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "CamelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct AwaitInvoiceRequest {
     pub operation_id: OperationId,
     pub federation_id: Option<FederationId>,

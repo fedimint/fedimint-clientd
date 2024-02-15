@@ -8,7 +8,7 @@ use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "CamelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct BackupRequest {
     pub metadata: BTreeMap<String, String>,
     pub federation_id: Option<FederationId>,
