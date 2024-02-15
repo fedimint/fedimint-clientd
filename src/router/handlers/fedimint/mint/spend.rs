@@ -16,7 +16,7 @@ use tracing::{info, warn};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "CamelCase")]
 pub struct SpendRequest {
     pub amount_msat: Amount,
     pub allow_overpay: bool,

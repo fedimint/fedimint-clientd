@@ -17,7 +17,7 @@ pub enum ModuleSelector {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "CamelCase")]
 pub struct ModuleRequest {
     pub module: ModuleSelector,
     pub args: Vec<String>,

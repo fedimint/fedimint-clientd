@@ -9,7 +9,7 @@ use serde_json::{json, Value};
 use crate::{error::AppError, state::AppState};
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "CamelCase")]
 pub struct ListGatewaysRequest {
     pub federation_id: Option<FederationId>,
 }
