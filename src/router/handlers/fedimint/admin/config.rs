@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 
-use axum::{extract::State, Json};
+use axum::extract::State;
+use axum::Json;
 use multimint::MultiMint;
 use serde_json::{json, Value};
 
-use crate::{error::AppError, state::AppState};
+use crate::error::AppError;
+use crate::state::AppState;
 
 async fn _config(multimint: MultiMint) -> Result<Value, AppError> {
     let mut config = HashMap::new();

@@ -17,6 +17,7 @@
       let
         pkgs = import nixpkgs { inherit system; };
         flakeboxLib = flakebox.lib.${system} { };
+        toolchainsStd = flakeboxLib.mkStdFenixToolchains;
         rustSrc = flakeboxLib.filterSubPaths {
           root = builtins.path {
             name = "fedimint-http";
@@ -35,7 +36,6 @@
             workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
             workspaceBuild =
               craneLib.buildWorkspace { cargoArtifacts = workspaceDeps; };
-            bullpen = craneLib.buildPackage { };
           });
       in {
         legacyPackages = outputs;
@@ -49,6 +49,7 @@
           ];
           shellHook = ''
             eval "$(starship init bash)"
+            export RUSTFLAGS="--cfg tokio_unstable"
           '';
         };
       });

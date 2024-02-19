@@ -1,15 +1,18 @@
 use std::collections::{BTreeMap, HashMap};
 
 use anyhow::Error;
-use axum::{extract::State, Json};
-use fedimint_core::{config::FederationId, Amount, TieredSummary};
+use axum::extract::State;
+use axum::Json;
+use fedimint_core::config::FederationId;
+use fedimint_core::{Amount, TieredSummary};
 use fedimint_mint_client::MintClientModule;
 use fedimint_wallet_client::WalletClientModule;
 use multimint::MultiMint;
 use serde::Serialize;
 use serde_json::{json, Value};
 
-use crate::{error::AppError, state::AppState};
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -59,7 +62,9 @@ pub async fn handle_ws(state: AppState, _v: Value) -> Result<Value, AppError> {
 }
 
 #[axum_macros::debug_handler]
-pub async fn handle_rest(State(state): State<AppState>) -> Result<Json<HashMap<FederationId, InfoResponse>>, AppError> {
+pub async fn handle_rest(
+    State(state): State<AppState>,
+) -> Result<Json<HashMap<FederationId, InfoResponse>>, AppError> {
     let info = _info(state.multimint).await?;
     Ok(Json(info))
 }

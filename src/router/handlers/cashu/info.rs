@@ -1,9 +1,12 @@
 use std::collections::BTreeMap;
 
-use axum::{extract::State, http::StatusCode, Json};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use serde::Serialize;
 
-use crate::{error::AppError, state::AppState};
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Serialize)]
 pub struct Contact {

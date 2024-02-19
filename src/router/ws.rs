@@ -1,18 +1,14 @@
-use axum::{
-    extract::{
-        ws::{Message, WebSocket, WebSocketUpgrade},
-        State,
-    },
-    response::IntoResponse,
-};
+use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
+use axum::extract::State;
+use axum::response::IntoResponse;
 use futures_util::stream::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tracing::info;
 
-use crate::{error::AppError, state::AppState};
-
 use super::handlers;
+use crate::error::AppError;
+use crate::state::AppState;
 
 const JSONRPC_VERSION: &str = "2.0";
 const JSONRPC_ERROR_INVALID_REQUEST: i16 = -32600;

@@ -1,12 +1,18 @@
-use axum::{extract::State, http::StatusCode, Json};
+use std::time::UNIX_EPOCH;
+
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use fedimint_client::ClientArc;
-use fedimint_core::{config::FederationId, core::OperationId};
+use fedimint_core::config::FederationId;
+use fedimint_core::core::OperationId;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::time::UNIX_EPOCH;
-use time::{format_description::well_known::iso8601, OffsetDateTime};
+use time::format_description::well_known::iso8601;
+use time::OffsetDateTime;
 
-use crate::{error::AppError, state::AppState};
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,15 +1,20 @@
 use std::collections::HashMap;
 
-use axum::{extract::State, Json};
+use axum::extract::State;
+use axum::Json;
 use multimint::MultiMint;
 use serde_json::{json, Value};
 
-use crate::{error::AppError, state::AppState};
+use crate::error::AppError;
+use crate::state::AppState;
 
 async fn _discover_version(multimint: MultiMint) -> Result<Value, AppError> {
     let mut api_versions = HashMap::new();
     for (id, client) in multimint.clients.lock().await.iter() {
-        api_versions.insert(*id, json!({"version" : client.discover_common_api_version().await?}));
+        api_versions.insert(
+            *id,
+            json!({"version" : client.discover_common_api_version().await?}),
+        );
     }
     Ok(json!(api_versions))
 }

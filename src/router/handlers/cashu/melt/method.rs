@@ -1,24 +1,22 @@
 use std::str::FromStr;
 
-use crate::{
-    error::AppError,
-    router::handlers::cashu::{Method, Unit},
-    state::AppState,
-};
 use anyhow::anyhow;
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    Json,
-};
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::Json;
 use fedimint_client::ClientArc;
-use fedimint_core::{config::FederationId, Amount};
+use fedimint_core::config::FederationId;
+use fedimint_core::Amount;
 use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment};
 use fedimint_wallet_client::{WalletClientModule, WithdrawState};
 use futures_util::StreamExt;
 use lightning_invoice::Bolt11Invoice;
 use serde::{Deserialize, Serialize};
 use tracing::info;
+
+use crate::error::AppError;
+use crate::router::handlers::cashu::{Method, Unit};
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct PostMeltQuoteMethodRequest {

@@ -1,11 +1,16 @@
-use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
-use fedimint_core::{config::FederationId, Amount};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
+use fedimint_core::config::FederationId;
+use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use tracing::info;
+
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct SwapRequest {

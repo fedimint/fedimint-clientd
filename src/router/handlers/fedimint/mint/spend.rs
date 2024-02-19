@@ -1,19 +1,20 @@
 use std::time::Duration;
 
 use anyhow::anyhow;
+use axum::extract::State;
 use axum::http::StatusCode;
-use axum::{extract::State, Json};
+use axum::Json;
 use fedimint_client::ClientArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use fedimint_core::Amount;
-use fedimint_mint_client::OOBNotes;
-use fedimint_mint_client::{MintClientModule, SelectNotesWithAtleastAmount};
+use fedimint_mint_client::{MintClientModule, OOBNotes, SelectNotesWithAtleastAmount};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{info, warn};
 
-use crate::{error::AppError, state::AppState};
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,17 +1,19 @@
 use anyhow::{anyhow, Context};
-use axum::{extract::State, http::StatusCode, Json};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use fedimint_client::ClientArc;
-use fedimint_core::{config::FederationId, core::OperationId, Amount};
+use fedimint_core::config::FederationId;
+use fedimint_core::core::OperationId;
+use fedimint_core::Amount;
 use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment, PayType};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::info;
 
-use crate::{
-    error::AppError,
-    router::handlers::fedimint::ln::{get_invoice, wait_for_ln_payment},
-    state::AppState,
-};
+use crate::error::AppError;
+use crate::router::handlers::fedimint::ln::{get_invoice, wait_for_ln_payment};
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -29,12 +29,14 @@
 //         let port = env::var("PORT").unwrap_or("3000".to_string());
 //         let port = u16::from_str(&port).expect("Invalid port");
 
-//         let fm_db_path = env::var("FM_DB_PATH").expect("FM_DB_PATH must be set");
-//         let fm_db_path = PathBuf::from_str(&fm_db_path).expect("Invalid fm db path");
+//         let fm_db_path = env::var("FM_DB_PATH").expect("FM_DB_PATH must be
+// set");         let fm_db_path =
+// PathBuf::from_str(&fm_db_path).expect("Invalid fm db path");
 
 //         let invite_code =
-//             env::var("FEDERATION_INVITE_CODE").expect("FEDERATION_INVITE_CODE must be set");
-//         let invite_code = InviteCode::from_str(&invite_code).expect("Invalid invite code");
+//             env::var("FEDERATION_INVITE_CODE").expect("FEDERATION_INVITE_CODE
+// must be set");         let invite_code =
+// InviteCode::from_str(&invite_code).expect("Invalid invite code");
 
 //         let secret = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
 //         let root_secret = create_root_secret(secret);

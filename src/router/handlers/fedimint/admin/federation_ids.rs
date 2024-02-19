@@ -1,11 +1,13 @@
 use anyhow::Error;
-use axum::{extract::State, Json};
+use axum::extract::State;
+use axum::Json;
 use fedimint_core::config::FederationId;
 use multimint::MultiMint;
 use serde::Serialize;
 use serde_json::{json, Value};
 
-use crate::{error::AppError, state::AppState};
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

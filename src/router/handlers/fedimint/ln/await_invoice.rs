@@ -1,5 +1,7 @@
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use fedimint_client::ClientArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
@@ -9,11 +11,10 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use tracing::info;
 
-use crate::{
-    error::AppError,
-    router::handlers::fedimint::admin::{get_note_summary, info::InfoResponse},
-    state::AppState,
-};
+use crate::error::AppError;
+use crate::router::handlers::fedimint::admin::get_note_summary;
+use crate::router::handlers::fedimint::admin::info::InfoResponse;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

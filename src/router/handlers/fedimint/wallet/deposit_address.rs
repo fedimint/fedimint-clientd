@@ -1,13 +1,20 @@
-use crate::{error::AppError, state::AppState};
+use std::time::Duration;
+
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use bitcoin::Address;
 use fedimint_client::ClientArc;
-use fedimint_core::{config::FederationId, core::OperationId, time::now};
+use fedimint_core::config::FederationId;
+use fedimint_core::core::OperationId;
+use fedimint_core::time::now;
 use fedimint_wallet_client::WalletClientModule;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::time::Duration;
+
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

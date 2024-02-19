@@ -1,9 +1,9 @@
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use anyhow::Result;
 use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
-use std::str::FromStr;
 use tracing::info;
 
 mod config;
@@ -15,9 +15,8 @@ mod utils;
 use axum::routing::{get, post};
 use axum::Router;
 use clap::{Parser, Subcommand, ValueEnum};
-use state::AppState;
-
 use router::handlers::*;
+use state::AppState;
 // use tower_http::cors::{Any, CorsLayer};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 
@@ -122,8 +121,8 @@ async fn main() -> Result<()> {
 }
 
 pub async fn create_default_router(state: AppState, password: &str) -> Result<Router> {
-    // TODO: Allow CORS? Probably not, since this should just interact with the local machine.
-    // let cors = CorsLayer::new()
+    // TODO: Allow CORS? Probably not, since this should just interact with the
+    // local machine. let cors = CorsLayer::new()
     //     .allow_methods([Method::GET, Method::POST])
     //     .allow_origin(Any);
 
@@ -140,24 +139,33 @@ pub async fn create_default_router(state: AppState, password: &str) -> Result<Ro
 }
 
 /// Implements Fedimint V0.2 API Route matching against CLI commands:
-/// - `/fedimint/v2/admin/backup`: Upload the (encrypted) snapshot of mint notes to federation.
-/// - `/fedimint/v2/admin/discover-version`: Discover the common api version to use to communicate with the federation.
+/// - `/fedimint/v2/admin/backup`: Upload the (encrypted) snapshot of mint notes
+///   to federation.
+/// - `/fedimint/v2/admin/discover-version`: Discover the common api version to
+///   use to communicate with the federation.
 /// - `/fedimint/v2/admin/info`: Display wallet info (holdings, tiers).
 /// - `/fedimint/v2/admin/join`: Join a federation with an invite code.
-/// - `/fedimint/v2/admin/restore`: Restore the previously created backup of mint notes (with `backup` command).
+/// - `/fedimint/v2/admin/restore`: Restore the previously created backup of
+///   mint notes (with `backup` command).
 /// - `/fedimint/v2/admin/list-operations`: List operations.
 /// - `/fedimint/v2/admin/module`: Call a module subcommand.
 /// - `/fedimint/v2/admin/config`: Returns the client config.
 ///
 /// Mint related commands:
-/// - `/fedimint/v2/mint/reissue`: Reissue notes received from a third party to avoid double spends.
-/// - `/fedimint/v2/mint/spend`: Prepare notes to send to a third party as a payment.
-/// - `/fedimint/v2/mint/validate`: Verifies the signatures of e-cash notes, but *not* if they have been spent already.
-/// - `/fedimint/v2/mint/split`: Splits a string containing multiple e-cash notes (e.g. from the `spend` command) into ones that contain exactly one.
-/// - `/fedimint/v2/mint/combine`: Combines two or more serialized e-cash notes strings.
+/// - `/fedimint/v2/mint/reissue`: Reissue notes received from a third party to
+///   avoid double spends.
+/// - `/fedimint/v2/mint/spend`: Prepare notes to send to a third party as a
+///   payment.
+/// - `/fedimint/v2/mint/validate`: Verifies the signatures of e-cash notes, but
+///   *not* if they have been spent already.
+/// - `/fedimint/v2/mint/split`: Splits a string containing multiple e-cash
+///   notes (e.g. from the `spend` command) into ones that contain exactly one.
+/// - `/fedimint/v2/mint/combine`: Combines two or more serialized e-cash notes
+///   strings.
 ///
 /// Lightning network related commands:
-/// - `/fedimint/v2/ln/invoice`: Create a lightning invoice to receive payment via gateway.
+/// - `/fedimint/v2/ln/invoice`: Create a lightning invoice to receive payment
+///   via gateway.
 /// - `/fedimint/v2/ln/await-invoice`: Wait for incoming invoice to be paid.
 /// - `/fedimint/v2/ln/pay`: Pay a lightning invoice or lnurl via a gateway.
 /// - `/fedimint/v2/ln/await-pay`: Wait for a lightning payment to complete.
@@ -165,8 +173,10 @@ pub async fn create_default_router(state: AppState, password: &str) -> Result<Ro
 /// - `/fedimint/v2/ln/switch-gateway`: Switch active gateway.
 ///
 /// Onchain related commands:
-/// - `/fedimint/v2/onchain/deposit-address`: Generate a new deposit address, funds sent to it can later be claimed.
-/// - `/fedimint/v2/onchain/await-deposit`: Wait for deposit on previously generated address.
+/// - `/fedimint/v2/onchain/deposit-address`: Generate a new deposit address,
+///   funds sent to it can later be claimed.
+/// - `/fedimint/v2/onchain/await-deposit`: Wait for deposit on previously
+///   generated address.
 /// - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
 fn fedimint_v2_rest() -> Router<AppState> {
     let mint_router = Router::new()
@@ -217,7 +227,8 @@ fn fedimint_v2_rest() -> Router<AppState> {
         .route("/info", get(fedimint::admin::info::handle_rest))
         .route("/join", post(fedimint::admin::join::handle_rest))
         .route("/restore", post(fedimint::admin::restore::handle_rest))
-        // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this under admin?
+        // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this
+        // under admin?
         .route(
             "/list-operations",
             post(fedimint::admin::list_operations::handle_rest),

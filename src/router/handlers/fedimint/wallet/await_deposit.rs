@@ -1,12 +1,17 @@
-use crate::{error::AppError, state::AppState};
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
 use fedimint_client::ClientArc;
-use fedimint_core::{config::FederationId, core::OperationId};
+use fedimint_core::config::FederationId;
+use fedimint_core::core::OperationId;
 use fedimint_wallet_client::{DepositState, WalletClientModule};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

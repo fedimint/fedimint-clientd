@@ -1,10 +1,11 @@
-use crate::error::AppError;
 use anyhow::anyhow;
+use axum::extract::State;
 use axum::http::StatusCode;
-use axum::{extract::State, Json};
+use axum::Json;
 use fedimint_client::ClientArc;
 use serde_json::{json, Value};
 
+use crate::error::AppError;
 use crate::state::AppState;
 
 async fn _restore(_client: ClientArc, _v: Value) -> Result<(), AppError> {

@@ -1,9 +1,11 @@
-use axum::{extract::State, Json};
+use axum::extract::State;
+use axum::Json;
 use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::AppError, state::AppState};
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 pub struct CheckRequest {

@@ -1,11 +1,17 @@
-use crate::{error::AppError, state::AppState};
+use std::collections::BTreeMap;
+
 use anyhow::anyhow;
-use axum::{extract::State, http::StatusCode, Json};
-use fedimint_client::{backup::Metadata, ClientArc};
+use axum::extract::State;
+use axum::http::StatusCode;
+use axum::Json;
+use fedimint_client::backup::Metadata;
+use fedimint_client::ClientArc;
 use fedimint_core::config::FederationId;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use std::collections::BTreeMap;
+
+use crate::error::AppError;
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,21 +1,20 @@
 use std::time::Duration;
 
-use crate::{
-    error::AppError,
-    router::handlers::cashu::{Method, Unit},
-    state::AppState,
-};
 use anyhow::anyhow;
-use axum::{
-    extract::{Path, State},
-    http::StatusCode,
-    Json,
-};
+use axum::extract::{Path, State};
+use axum::http::StatusCode;
+use axum::Json;
 use fedimint_client::ClientArc;
-use fedimint_core::{config::FederationId, time::now, Amount};
+use fedimint_core::config::FederationId;
+use fedimint_core::time::now;
+use fedimint_core::Amount;
 use fedimint_ln_client::LightningClientModule;
 use fedimint_wallet_client::WalletClientModule;
 use serde::{Deserialize, Serialize};
+
+use crate::error::AppError;
+use crate::router::handlers::cashu::{Method, Unit};
+use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

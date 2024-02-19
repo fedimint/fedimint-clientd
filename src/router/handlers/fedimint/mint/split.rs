@@ -36,7 +36,8 @@ async fn _split(req: SplitRequest) -> Result<SplitResponse, AppError> {
                     )
                 })
                 .collect::<Vec<_>>();
-            (*amount, notes[0].clone()) // clone the amount and return a single OOBNotes
+            (*amount, notes[0].clone()) // clone the amount and return a single
+                                        // OOBNotes
         })
         .collect::<BTreeMap<_, _>>();
 
