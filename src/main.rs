@@ -87,7 +87,6 @@ async fn main() -> Result<()> {
     let app = match cli.mode {
         Mode::Fedimint => {
             Router::new()
-                .route("/", get(handle_readme))
                 .nest("/fedimint/v2", fedimint_v2_rest())
                 .with_state(state)
                 // .layer(cors)
@@ -95,7 +94,6 @@ async fn main() -> Result<()> {
         }
         Mode::Cashu => {
             Router::new()
-                .route("/", get(handle_readme))
                 .nest("/cashu/v1", cashu_v1_rest())
                 .with_state(state)
                 // .layer(cors)
@@ -110,6 +108,11 @@ async fn main() -> Result<()> {
         }
         Mode::Default => create_default_router(state, &cli.password).await?,
     };
+
+    // add routes for the readme and status
+    let app = app
+        .route("/", get(handle_readme))
+        .route("/state", get(handle_status));
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
         .await
@@ -127,7 +130,6 @@ pub async fn create_default_router(state: AppState, password: &str) -> Result<Ro
     //     .allow_origin(Any);
 
     let app = Router::new()
-        .route("/", get(handle_readme))
         .route("/fedimint/v2/ws", get(websocket_handler))
         .nest("/fedimint/v2", fedimint_v2_rest())
         .nest("/cashu/v1", cashu_v1_rest())
