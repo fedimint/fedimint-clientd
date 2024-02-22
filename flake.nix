@@ -16,8 +16,8 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        lib = pkgs.lib;
         flakeboxLib = flakebox.lib.${system} { };
-        toolchainsStd = flakeboxLib.mkStdFenixToolchains;
         rustSrc = flakeboxLib.filterSubPaths {
           root = builtins.path {
             name = "fedimint-http";
@@ -26,31 +26,61 @@
           paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
         };
 
-        outputs = (flakeboxLib.craneMultiBuild { }) (craneLib':
+        toolchainArgs = {
+          extraRustFlags = "--cfg tokio_unstable";
+        } // lib.optionalAttrs pkgs.stdenv.isDarwin {
+          # on Darwin newest stdenv doesn't seem to work
+          # linking rocksdb
+          stdenv = pkgs.clang11Stdenv;
+        };
+
+        # all standard toolchains provided by flakebox
+        toolchainsStd =
+          flakeboxLib.mkStdFenixToolchains toolchainArgs;
+
+        toolchainsNative = (pkgs.lib.getAttrs
+          [
+            "default"
+          ]
+          toolchainsStd
+        );
+
+        toolchainNative = flakeboxLib.mkFenixMultiToolchain {
+          toolchains = toolchainsNative;
+        };
+
+        commonArgs = {
+          buildInputs = [
+            pkgs.openssl
+          ] ++ lib.optionals pkgs.stdenv.isDarwin [
+            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
+          ];
+          nativeBuildInputs = [
+            pkgs.pkg-config
+          ];
+        };
+        outputs = (flakeboxLib.craneMultiBuild { toolchains = toolchainsStd; }) (craneLib':
           let
             craneLib = (craneLib'.overrideArgs {
               pname = "flexbox-multibuild";
               src = rustSrc;
-            });
-          in rec {
+            }).overrideArgs commonArgs;
+          in
+          rec {
             workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
             workspaceBuild =
               craneLib.buildWorkspace { cargoArtifacts = workspaceDeps; };
+            fedimint-http = craneLib.buildPackageGroup
+              { pname = "fedimnt-http"; packages = [ "fedimint-http" ]; mainProgram = "fedimint-http"; };
           });
-      in {
+      in
+      {
         legacyPackages = outputs;
-        devShells = flakeboxLib.mkShells {
-          packages = [ ];
-          buildInputs = [
-            pkgs.just
-            pkgs.starship
-            pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-            pkgs.pkg-config
-          ];
-          shellHook = ''
-            eval "$(starship init bash)"
-            export RUSTFLAGS="--cfg tokio_unstable"
-          '';
+        packages = {
+          default = outputs.fedimint-http;
         };
+        devShells = flakeboxLib.mkShells (commonArgs // {
+          toolchain = toolchainNative;
+        });
       });
 }
