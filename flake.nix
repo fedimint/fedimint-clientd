@@ -71,7 +71,7 @@
             workspaceBuild =
               craneLib.buildWorkspace { cargoArtifacts = workspaceDeps; };
             fedimint-http = craneLib.buildPackageGroup
-              { pname = "fedimnt-http"; packages = [ "fedimint-http" ]; mainProgram = "fedimint-http"; };
+              { pname = "fedimint-http"; packages = [ "fedimint-http" ]; mainProgram = "fedimint-http"; };
           });
       in
       {

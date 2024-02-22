@@ -2,8 +2,10 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::Result;
+use axum::http::Method;
 use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
+use tower_http::cors::{Any, CorsLayer};
 use tracing::info;
 
 mod config;
@@ -85,34 +87,32 @@ async fn main() -> Result<()> {
     }
 
     let app = match cli.mode {
-        Mode::Fedimint => {
-            Router::new()
-                .nest("/fedimint/v2", fedimint_v2_rest())
-                .with_state(state)
-                // .layer(cors)
-                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
-        }
-        Mode::Cashu => {
-            Router::new()
-                .nest("/cashu/v1", cashu_v1_rest())
-                .with_state(state)
-                // .layer(cors)
-                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
-        }
-        Mode::Ws => {
-            Router::new()
-                .route("/fedimint/v2/ws", get(websocket_handler))
-                .with_state(state)
-                // .layer(cors)
-                .layer(ValidateRequestHeaderLayer::bearer(&cli.password))
-        }
+        Mode::Fedimint => Router::new()
+            .nest("/fedimint/v2", fedimint_v2_rest())
+            .with_state(state)
+            .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
+        Mode::Cashu => Router::new()
+            .nest("/cashu/v1", cashu_v1_rest())
+            .with_state(state)
+            .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
+        Mode::Ws => Router::new()
+            .route("/fedimint/v2/ws", get(websocket_handler))
+            .with_state(state)
+            .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
         Mode::Default => create_default_router(state, &cli.password).await?,
     };
+
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any);
 
     // add routes for the readme and status
     let app = app
         .route("/", get(handle_readme))
-        .route("/state", get(handle_status));
+        .route("/state", get(handle_status))
+        .layer(cors);
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
         .await
