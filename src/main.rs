@@ -111,7 +111,7 @@ async fn main() -> Result<()> {
     // add routes for the readme and status
     let app = app
         .route("/", get(handle_readme))
-        .route("/state", get(handle_status))
+        .route("/health", get(handle_status))
         .layer(cors);
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
