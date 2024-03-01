@@ -16,6 +16,7 @@ mod utils;
 
 use axum::routing::{get, post};
 use axum::Router;
+use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::{Parser, Subcommand, ValueEnum};
 use router::handlers::*;
 use state::AppState;
@@ -108,10 +109,16 @@ async fn main() -> Result<()> {
         // allow requests from any origin
         .allow_origin(Any);
 
+    let metrics = HttpMetricsLayerBuilder::new()
+        .with_service_name("fedimint-http".to_string())
+        .build();
+
     // add routes for the readme and status
     let app = app
         .route("/", get(handle_readme))
         .route("/health", get(handle_status))
+        .merge(metrics.routes())
+        .layer(metrics)
         .layer(cors);
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
