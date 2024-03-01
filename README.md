@@ -43,6 +43,12 @@ The Fedimint client supports the following endpoints (and has naive websocket su
 - `/fedimint/v2/onchain/await-deposit`: Wait for deposit on previously generated address.
 - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
 
+### Extra endpoints:
+
+- `/health`: health check endpoint.
+- `/metrics`: exports API metrics using opentelemetry with prometheus exporter (num requests, latency, high-level metrics only)
+
+
 Soon(TM): maps [Cashu NUT](https://github.com/cashubtc/nuts) endpoints to fedimint client.
 
 # Supported Cashu NUTs: (Notation, Utilization, and Terminology)
