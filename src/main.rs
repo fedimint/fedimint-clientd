@@ -117,11 +117,11 @@ async fn main() -> Result<()> {
     // add routes for the readme and status
     let app = app
         .route("/", get(handle_readme))
-        .route("/health", get(handle_status))
         .merge(metrics.routes())
         .layer(metrics)
         .layer(TraceLayer::new_for_http())
-        .layer(cors);
+        .layer(cors)
+        .route("/health", get(handle_status)); // health check should not be traced, adding it after the trace layer
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
         .await
