@@ -6,6 +6,7 @@ use axum::http::Method;
 use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::trace::TraceLayer;
 use tracing::info;
 
 mod config;
@@ -119,6 +120,7 @@ async fn main() -> Result<()> {
         .route("/health", get(handle_status))
         .merge(metrics.routes())
         .layer(metrics)
+        .layer(TraceLayer::new_for_http())
         .layer(cors);
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
