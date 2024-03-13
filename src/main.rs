@@ -114,14 +114,14 @@ async fn main() -> Result<()> {
         .with_service_name("fedimint-http".to_string())
         .build();
 
-    // add routes for the readme and status
     let app = app
-        .route("/", get(handle_readme))
-        .merge(metrics.routes())
-        .layer(metrics)
-        .layer(TraceLayer::new_for_http())
         .layer(cors)
-        .route("/health", get(handle_status)); // health check should not be traced, adding it after the trace layer
+        .layer(TraceLayer::new_for_http()) // tracing requests
+        // no traces for routes bellow
+        .route("/health", get(|| async { "Server is up and running!" })) // for health check
+        // metrics for all routes above
+        .merge(metrics.routes())
+        .layer(metrics);
 
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
         .await
