@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::Result;
-use axum::http::{header, Method};
+use axum::http::Method;
 use fedimint_core::api::InviteCode;
 use router::ws::websocket_handler;
 use tower_http::cors::{Any, CorsLayer};
@@ -110,7 +110,7 @@ async fn main() -> Result<()> {
         // allow requests from any origin
         .allow_origin(Any)
         // allow auth header
-        .allow_headers(vec![header::AUTHORIZATION]);
+        .allow_headers(Any);
 
     let metrics = HttpMetricsLayerBuilder::new()
         .with_service_name("fedimint-http".to_string())
