@@ -58,7 +58,7 @@ struct Cli {
     domain: String,
 
     /// Port
-    #[clap(long, env = "PORT", default_value_t = 3001)]
+    #[clap(long, env = "PORT", default_value_t = 3333)]
     port: u16,
 
     /// Mode of operation
