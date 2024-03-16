@@ -1,0 +1,10 @@
+procs:
+  user:
+    shell: zsh
+    stop: SIGKILL
+  fedimint-http:
+    shell: cargo run
+    stop: SIGTERM
+  ngrok:
+    shell: ngrok http http://localhost:3333
+    stop: SIGTERM
