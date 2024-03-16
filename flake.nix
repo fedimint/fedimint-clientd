@@ -9,13 +9,21 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    fedimint = {
+      url =
+        "github:fedimint/fedimint?rev=9d552fdf82f4af429165a1fd409615809ada4058";
+    };
+
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flakebox, flake-utils }:
+  outputs = { self, nixpkgs, flakebox, flake-utils, fedimint }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs { 
+          inherit system; 
+          overlays = fedimint.overlays.fedimint;
+        };
         lib = pkgs.lib;
         flakeboxLib = flakebox.lib.${system} { };
         rustSrc = flakeboxLib.filterSubPaths {
@@ -81,6 +89,12 @@
         };
         devShells = flakeboxLib.mkShells (commonArgs // {
           toolchain = toolchainNative;
+          nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+            pkgs.mprocs
+            fedimint.packages.${system}.devimint
+            fedimint.packages.${system}.gateway-pkgs
+            fedimint.packages.${system}.fedimint-pkgs
+          ];
         });
       });
 }
