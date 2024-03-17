@@ -299,14 +299,11 @@ fn cashu_v1_rest() -> Router<AppState> {
             get(cashu::mint::quote::handle_method_quote_id),
         )
         .route("/mint/:method", post(cashu::mint::method::handle_method))
-        .route(
-            "/melt/quote/:method",
-            get(cashu::melt::quote::handle_method),
-        )
-        .route(
-            "/melt/quote/:method/:quote_id",
-            get(cashu::melt::quote::handle_method_quote_id),
-        )
+        .route("/melt/quote/:method", post(cashu::melt::quote::handle_rest))
+        // .route(
+        //     "/melt/quote/:method/:quote_id",
+        //     get(cashu::melt::quote_id::handle_method_quote_id),
+        // )
         .route("/melt/:method", post(cashu::melt::method::handle_method))
         .route("/info", get(cashu::info::handle_info))
         .route("/check", post(cashu::check::handle_check))
