@@ -1,9 +1,9 @@
 [package]
-name = "fedimint-http"
+name = "fedimint-clientd"
 version = "0.1.5"
 edition = "2021"
-description = "HTTP server for Fedimint Client, exposing REST and Websocket APIs for default modules."
-repository = "https://github.com/Kodylow/fedimint-http/"
+description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin"
+repository = "https://github.com/fedimint/fedimint-clientd"
 keywords = ["fedimint", "fedimint-cli"]
 license = "MIT"
 

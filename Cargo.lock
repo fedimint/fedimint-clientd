@@ -957,6 +957,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "fedimint-clientd"
+version = "0.1.5"
+dependencies = [
+ "anyhow",
+ "async-utility",
+ "axum",
+ "axum-macros",
+ "axum-otel-metrics",
+ "bitcoin 0.29.2",
+ "bitcoin_hashes 0.11.0",
+ "chrono",
+ "clap",
+ "dotenv",
+ "fedimint",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-ln-client",
+ "fedimint-mint-client",
+ "fedimint-rocksdb",
+ "fedimint-wallet-client",
+ "futures-util",
+ "itertools 0.12.0",
+ "lazy_static",
+ "lightning-invoice",
+ "lnurl-rs",
+ "multimint",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "time",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
 name = "fedimint-core"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1041,44 +1079,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da421d229333ce5c80bf6403165a1afe831556145a3983ac3eecbce4f1a79132"
 dependencies = [
  "bitcoin_hashes 0.11.0",
-]
-
-[[package]]
-name = "fedimint-http"
-version = "0.1.5"
-dependencies = [
- "anyhow",
- "async-utility",
- "axum",
- "axum-macros",
- "axum-otel-metrics",
- "bitcoin 0.29.2",
- "bitcoin_hashes 0.11.0",
- "chrono",
- "clap",
- "dotenv",
- "fedimint",
- "fedimint-client",
- "fedimint-core",
- "fedimint-ln-client",
- "fedimint-mint-client",
- "fedimint-rocksdb",
- "fedimint-wallet-client",
- "futures-util",
- "itertools 0.12.0",
- "lazy_static",
- "lightning-invoice",
- "lnurl-rs",
- "multimint",
- "reqwest",
- "serde",
- "serde_json",
- "time",
- "tokio",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "url",
 ]
 
 [[package]]
