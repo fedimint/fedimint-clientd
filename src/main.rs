@@ -42,24 +42,20 @@ enum Commands {
 #[clap(version = "1.0", author = "Kody Low")]
 struct Cli {
     /// Federation invite code
-    #[clap(long, env = "FEDERATION_INVITE_CODE", required = false)]
+    #[clap(long, env = "FEDIMINT_CLIENTD_INVITE_CODE", required = false)]
     federation_invite_code: String,
 
     /// Path to FM database
-    #[clap(long, env = "FM_DB_PATH", required = true)]
+    #[clap(long, env = "FEDIMINT_CLIENTD_DB_PATH", required = true)]
     fm_db_path: PathBuf,
 
     /// Password
-    #[clap(long, env = "PASSWORD", required = true)]
+    #[clap(long, env = "FEDIMINT_CLIENTD_PASSWORD", required = true)]
     password: String,
 
-    /// Domain
-    #[clap(long, env = "DOMAIN", required = true)]
-    domain: String,
-
-    /// Port
-    #[clap(long, env = "PORT", default_value_t = 3333)]
-    port: u16,
+    /// Addr
+    #[clap(long, env = "FEDIMINT_CLIENTD_ADDR", required = true)]
+    addr: String,
 
     /// Mode of operation
     #[clap(long, default_value = "default")]
@@ -113,7 +109,7 @@ async fn main() -> Result<()> {
         .allow_headers(Any);
 
     let metrics = HttpMetricsLayerBuilder::new()
-        .with_service_name("fedimint-http".to_string())
+        .with_service_name("fedimint-clientd".to_string())
         .build();
 
     let app = app
@@ -125,10 +121,12 @@ async fn main() -> Result<()> {
         .merge(metrics.routes())
         .layer(metrics);
 
-    let listener = tokio::net::TcpListener::bind(format!("{}:{}", &cli.domain, &cli.port))
+    let listener = tokio::net::TcpListener::bind(format!("{}", &cli.addr))
         .await
-        .unwrap();
-    info!("fedimint-http Listening on {}", &cli.port);
+        .expect(
+            "Failed to bind to address, should be a valid address and port like 127.0.0.1:3333",
+        );
+    info!("fedimint-clientd Listening on {}", &cli.addr);
     axum::serve(listener, app).await.unwrap();
 
     Ok(())

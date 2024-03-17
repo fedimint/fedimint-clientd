@@ -1,5 +1,5 @@
 {
-  description = "A fedimint http client";
+  description = "description = A fedimint client daemon for server side applications to hold, use, and manage Bitcoin";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
@@ -28,7 +28,7 @@
         flakeboxLib = flakebox.lib.${system} { };
         rustSrc = flakeboxLib.filterSubPaths {
           root = builtins.path {
-            name = "fedimint-http";
+            name = "fedimint-clientd";
             path = ./.;
           };
           paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
@@ -78,14 +78,14 @@
             workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
             workspaceBuild =
               craneLib.buildWorkspace { cargoArtifacts = workspaceDeps; };
-            fedimint-http = craneLib.buildPackageGroup
-              { pname = "fedimint-http"; packages = [ "fedimint-http" ]; mainProgram = "fedimint-http"; };
+            fedimint-clientd = craneLib.buildPackageGroup
+              { pname = "fedimint-clientd"; packages = [ "fedimint-clientd" ]; mainProgram = "fedimint-clientd"; };
           });
       in
       {
         legacyPackages = outputs;
         packages = {
-          default = outputs.fedimint-http;
+          default = outputs.fedimint-clientd;
         };
         devShells = flakeboxLib.mkShells (commonArgs // {
           toolchain = toolchainNative;

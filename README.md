@@ -1,14 +1,33 @@
-<img src="assets/federated-cashu.jpg" width="500">
+ # fedimint-clientd: A Fedimint Client for Server Side Applications
 
-# fedimint-http: A Fedimint HTTP Client (and Cashu Proxy)
+fedimint-clientd runs a fedimint client with Ecash, Lightning, and Onchain modules to let a server side application hold and use Bitcoin with Fedimint. It exposes a REST API & provides wrappers in typescript, python, and golang.
 
-fedimint-http exposes a REST API to interact with the Fedimint client.
+This project is intended to be an easy-to-use starting point for those interested in adding Fedimint client support to their applications. Fedimint-clientd only exposes Fedimint's default modules, and any more complex Fedimint integration will require custom implementation using [Fedimint's rust crates](https://github.com/fedimint/fedimint).
 
-Set the variables in `.env` by copying `example.env`, then run `cargo run`. It's also set up as a clap app so you can start the server with command line args as well.
+## Getting Started
 
-## Fedimint Client Endpoints
+You can install the cli app with `cargo install fedimint-clientd` or by cloning the repo and running `cargo build --release` in the root directory.
 
-The Fedimint client supports the following endpoints (and has naive websocket support at `/fedimint/v2/ws`, see code for details until I improve the interface. PRs welcome!)
+`fedimint-clientd` runs from the command line and takes a few arguments, which are also available as environment variables. Fedimint uses rocksDB, an embedded key-value store, to store its state. The `--fm_db_path` argument is required and should be an absolute path to a directory where the database will be stored.
+
+```
+CLI USAGE:
+fedimint-clientd \
+  --fm_db_path=/absolute/path/to/dir/to/store/database \
+  --password="some-secure-password-that-becomes-the-bearer-token" \
+  --addr="127.0.0.1:8080"
+  --mode="default"
+
+ENV USAGE:
+FM_DB_PATH=/absolute/path/to/dir/to/store/database
+FEDIMINT_CLIENTD_PASSWORD="some-secure-password-that-becomes-the-bearer-token"
+FEDIMINT_CLIENTD_ADDR="127.0.0.1:8080"
+FEDIMINT_CLIENTD_MODE="default"
+```
+
+## Fedimint Clientd Endpoints
+
+`fedimint-clientd` supports the following endpoints (and has naive websocket support at `/fedimint/v2/ws`, see code for details until I improve the interface. PRs welcome!)
 
 ### Admin related commands:
 
@@ -47,35 +66,3 @@ The Fedimint client supports the following endpoints (and has naive websocket su
 
 - `/health`: health check endpoint.
 - `/metrics`: exports API metrics using opentelemetry with prometheus exporter (num requests, latency, high-level metrics only)
-
-
-Soon(TM): maps [Cashu NUT](https://github.com/cashubtc/nuts) endpoints to fedimint client.
-
-# Supported Cashu NUTs: (Notation, Utilization, and Terminology)
-
-- [ ] NUT-00: Notation, Utilization, and Terminology
-  - Fedimint ecash does not currently encode the federation endpoint as part of the ecash, just the federation id. Fedimint encourages longer running relationships based off its trust model so doesnt currently support on the fly issuance / reissuance. Can coerce a mapping but doesnt exactly match. returns a federation id instead
-- [ ] NUT-01: Mint public key exchange
-  - [ ] `/v1/keys`: supportable
-  - [ ] `/v1/keys/{keyset-id}`: supportable (fedimint only maintains 1 keyset)
-  - Fedimint does not currently rotate keysets. Responds with single keyset mapping in Cashu format.
-- [ ] NUT-02: Keysets and keyset ID
-  - [ ] `/v1/keysets`: supportable
-- [ ] NUT-03: Swap tokens
-  - [ ] `/v1/swap`: supportable
-  - Equivalent to Fedimint Reissue. Proofs are slightly different but functionally equivalent.
-- [ ] NUT-04: Mint tokens
-  - [ ] `/v1/mint/quote/{method}`: supportable
-      - [ ] method=bolt11: supportable via lngateway
-      - [ ] method=onchain: supportable via pegin
-  - [ ] `/v1/mint/quote/{method}/{quote_id}`: supportable
-  - [ ] `/v1/mint/{method}`: supportable
-    - Fedimint client handles these a little differently but can probably coerce the flow, dont get why it requires the 2nd round after status is completed, should just return the notes there.
-- [ ] NUT-05: Melting tokens
-  - [ ] `/v1/melt/quote/{method}`: supportable
-      - [ ] method=bolt11: supportable via lngateway
-      - [ ] method=onchain: supportable via pegout
-  - [ ] `/v1/melt/quote/{method}/{quote_id}`: supportable
-- [ ] NUT-06: Mint information
-  - [ ] `/v1/info`: supportable
-
