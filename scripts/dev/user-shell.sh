@@ -1,8 +1,10 @@
 # shellcheck shell=bash
 
 eval "$(devimint env)"
+source ./scripts/dev/completion.sh
+source ./scripts/dev/aliases.sh
 
-echo Waiting for devimint to start up fedimint
+echo Waiting for fedimint start
 
 STATUS="$(devimint wait)"
 if [ "$STATUS" = "ERROR" ]
@@ -12,15 +14,7 @@ then
     exit 1
 fi
 
-alias lightning-cli="\$FM_LIGHTNING_CLI"
-alias lncli="\$FM_LNCLI"
-alias bitcoin-cli="\$FM_BTC_CLIENT"
-alias fedimint-cli="\$FM_MINT_CLIENT"
-alias gateway-cln="\$FM_GWCLI_CLN"
-alias gateway-lnd="\$FM_GWCLI_LND"
-
-eval "$(fedimint-cli completion bash)" || true
-eval "$(gateway-cli completion bash)" || true
+eval "$(devimint env)"
 
 echo Done!
 echo
@@ -34,8 +28,3 @@ echo "  gateway-cln    - cli client for the CLN gateway"
 echo "  gateway-lnd    - cli client for the LND gateway"
 echo
 echo "Use '--help' on each command for more information"
-echo ""
-echo "Important mprocs key sequences:"
-echo ""
-echo "  ctrl+a <up/down arrow> - switching between panels"
-echo "  ctrl+a q               - quit mprocs"

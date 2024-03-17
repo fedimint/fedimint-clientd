@@ -1,5 +1,5 @@
 {
-  description = "description = A fedimint client daemon for server side applications to hold, use, and manage Bitcoin";
+  description = "description = A fedimint client demon for server side applications to hold, use, and manage Bitcoin";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
@@ -85,8 +85,10 @@
       {
         legacyPackages = outputs;
         packages = {
-          default = outputs.fedimint-clientd;
+          inherit (flakeboxLib.craneMultiBuild) gatewayd fedimint-dbtool gateway-cli fedimint-cli fedimintd fedimint-load-test-tool;
+          inherit (flakeboxLib.craneMultiBuild) client-pkgs gateway-pkgs fedimint-pkgs devimint;
         };
+
         devShells = flakeboxLib.mkShells (commonArgs // {
           toolchain = toolchainNative;
           nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
