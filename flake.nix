@@ -1,5 +1,5 @@
 {
-  description = "description = A fedimint client daemon for server side applications to hold, use, and manage Bitcoin";
+  description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
