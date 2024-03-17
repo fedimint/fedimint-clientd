@@ -19,7 +19,7 @@ fedimint-clientd \
   --mode="default"
 
 ENV USAGE:
-FM_DB_PATH=/absolute/path/to/dir/to/store/database
+FEDIMINT_CLIENTD_DB_PATH=/absolute/path/to/dir/to/store/database
 FEDIMINT_CLIENTD_PASSWORD="some-secure-password-that-becomes-the-bearer-token"
 FEDIMINT_CLIENTD_ADDR="127.0.0.1:8080"
 FEDIMINT_CLIENTD_MODE="default"
@@ -27,7 +27,11 @@ FEDIMINT_CLIENTD_MODE="default"
 
 ## Fedimint Clientd Endpoints
 
-`fedimint-clientd` supports the following endpoints (and has naive websocket support at `/fedimint/v2/ws`, see code for details until I improve the interface. PRs welcome!)
+`fedimint-clientd` supports the following endpoints (and has naive websocket support at `/fedimint/v2/ws`, see code for details until I improve the interface. PRs welcome!). All the endpoints are authed with a Bearer token from the password (from CLI or env). You can hit the endpoints as such with curl, or use the python/typescript/golang wrappers:
+
+```
+curl http://localhost:3333/fedimint/v2/admin/info -H 'Authorization: Bearer some-secure-password-that-becomes-the-bearer-token'
+```
 
 ### Admin related commands:
 
