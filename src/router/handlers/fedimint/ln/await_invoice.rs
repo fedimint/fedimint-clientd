@@ -1,19 +1,18 @@
-use anyhow::anyhow;
+use anyhow::anyhow; // For detailed error messages
+use axum::extract::ws::{WebSocket, Message as WSMessage};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use fedimint_client::ClientArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
-use fedimint_ln_client::{LightningClientModule, LnReceiveState};
+use fedimint_ln_client::{LightningClientModule, LnReceiveState}; // Assuming this is the correct module
 use futures_util::StreamExt;
-use serde::Deserialize;
-use serde_json::{json, Value};
-use tracing::info;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use std::convert::Infallible; // If there's no scenario where this async fn can fail
 
 use crate::error::AppError;
-use crate::router::handlers::fedimint::admin::get_note_summary;
-use crate::router::handlers::fedimint::admin::info::InfoResponse;
 use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
@@ -23,54 +22,79 @@ pub struct AwaitInvoiceRequest {
     pub federation_id: Option<FederationId>,
 }
 
-async fn _await_invoice(
-    client: ClientArc,
-    req: AwaitInvoiceRequest,
-) -> Result<InfoResponse, AppError> {
-    let lightning_module = &client.get_first_module::<LightningClientModule>();
-    let mut updates = lightning_module
-        .subscribe_ln_receive(req.operation_id)
-        .await?
-        .into_stream();
-    while let Some(update) = updates.next().await {
-        info!("Update: {update:?}");
-        match update {
-            LnReceiveState::Claimed => {
-                return Ok(get_note_summary(&client).await?);
-            }
-            LnReceiveState::Canceled { reason } => {
-                return Err(AppError::new(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    anyhow!(reason),
-                ))
-            }
-            _ => {}
-        }
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AwaitInvoiceResponse {
+    pub status: LnReceiveState,
+}
 
-        info!("Update: {update:?}");
+pub async fn handle_ws(
+    mut ws: WebSocket,
+    state: AppState,
+) -> Result<(), Infallible> {
+    while let Some(message) = ws.next().await {
+        match message {
+            Ok(WSMessage::Text(text)) => {
+                let req: Result<AwaitInvoiceRequest, _> = serde_json::from_str(&text);
+
+                let client_result = if let Ok(req) = req.as_ref() {
+                    match state.get_client(req.federation_id).await {
+                        Ok(client) => Some(client),
+                        Err(_) => None,
+                    }
+                } else {
+                    None
+                };
+
+                if let (Ok(req), Some(client)) = (req, client_result) {
+                    match handle_invoice_request(client, req.operation_id).await {
+                        Ok(invoice_state) => {
+                            let response = serde_json::to_string(&AwaitInvoiceResponse { status: invoice_state })
+                                .unwrap_or_else(|_| json!({ "error": "Serialization error" }).to_string());
+                            ws.send(WSMessage::Text(response)).await.ok(); 
+                        },
+                        Err(_) => {
+                            let error_message = json!({ "error": "Error processing invoice request" }).to_string();
+                            ws.send(WSMessage::Text(error_message)).await.ok(); 
+                        }
+                    }
+                } else {
+                    let error_message = json!({ "error": "Invalid request or client retrieval failed" }).to_string();
+                    ws.send(WSMessage::Text(error_message)).await.ok(); 
+                }
+            },
+            _ => continue, // Non-text messages are ignored
+        }
     }
 
-    Err(AppError::new(
-        StatusCode::INTERNAL_SERVER_ERROR,
-        anyhow!("Unexpected end of stream"),
-    ))
+    Ok(())
 }
 
-pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value::<AwaitInvoiceRequest>(v)
-        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
-    let client = state.get_client(v.federation_id).await?;
-    let invoice = _await_invoice(client, v).await?;
-    let invoice_json = json!(invoice);
-    Ok(invoice_json)
+async fn handle_invoice_request(client: ClientArc, operation_id: OperationId) -> Result<LnReceiveState, AppError> {
+
+    let updates = client
+        .get_first_module::<LightningClientModule>()
+        .subscribe_ln_receive(operation_id)
+        .await
+        .map_err(|_| AppError::from_status_code(StatusCode::INTERNAL_SERVER_ERROR))?
+        .into_stream();
+
+    updates.fold(None, |_, update| async move { Some(update) }).await
+        .ok_or_else(|| AppError::from_status_code(StatusCode::INTERNAL_SERVER_ERROR))
 }
 
-#[axum_macros::debug_handler]
 pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<AwaitInvoiceRequest>,
-) -> Result<Json<InfoResponse>, AppError> {
-    let client = state.get_client(req.federation_id).await?;
-    let invoice = _await_invoice(client, req).await?;
-    Ok(Json(invoice))
+) -> Result<Json<AwaitInvoiceResponse>, AppError> {
+    // Retrieve the client using the federation ID provided in the request
+    let client = state.get_client(req.federation_id).await
+        .map_err(|_| AppError::new(StatusCode::INTERNAL_SERVER_ERROR, anyhow!("Failed to get client")))?;
+
+    // Handle the invoice request and await its completion
+    let invoice_state = handle_invoice_request(client, req.operation_id).await
+        .map_err(|e| AppError::new(StatusCode::INTERNAL_SERVER_ERROR, anyhow!("Error handling invoice request: {}", e)))?;
+    
+    // Return the invoice response as JSON
+    Ok(Json(AwaitInvoiceResponse { status: invoice_state }))
 }
