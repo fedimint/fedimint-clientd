@@ -23,16 +23,8 @@ impl AppState {
     }
 
     // Helper function to get a specific client from the state or default
-    pub async fn get_client(
-        &self,
-        federation_id: Option<FederationId>,
-    ) -> Result<ClientArc, AppError> {
-        let client = match federation_id {
-            Some(federation_id) => self.multimint.get(&federation_id).await,
-            None => self.multimint.get_default().await,
-        };
-
-        match client {
+    pub async fn get_client(&self, federation_id: FederationId) -> Result<ClientArc, AppError> {
+        match self.multimint.get(&federation_id).await {
             Some(client) => Ok(client),
             None => Err(AppError::new(
                 StatusCode::BAD_REQUEST,

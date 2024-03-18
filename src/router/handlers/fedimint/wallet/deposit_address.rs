@@ -20,7 +20,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct DepositAddressRequest {
     pub timeout: u64,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Debug, Serialize)]

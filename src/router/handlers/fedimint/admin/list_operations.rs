@@ -18,7 +18,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct ListOperationsRequest {
     pub limit: usize,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Serialize)]
@@ -88,7 +88,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<ListOperationsRequest>,
 ) -> Result<Json<Value>, AppError> {
-    let client = state.get_client(None).await?;
+    let client = state.get_client(req.federation_id).await?;
     let operations = _list_operations(client, req).await?;
     Ok(Json(operations))
 }

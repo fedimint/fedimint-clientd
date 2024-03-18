@@ -21,7 +21,7 @@ use crate::state::AppState;
 pub struct WithdrawRequest {
     pub address: Address,
     pub amount_sat: BitcoinAmountOrAll,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Debug, Serialize)]

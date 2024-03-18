@@ -20,7 +20,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct AwaitInvoiceRequest {
     pub operation_id: OperationId,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 async fn _await_invoice(

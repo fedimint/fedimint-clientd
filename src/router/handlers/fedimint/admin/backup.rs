@@ -17,7 +17,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct BackupRequest {
     pub metadata: BTreeMap<String, String>,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 async fn _backup(client: ClientArc, req: BackupRequest) -> Result<(), AppError> {

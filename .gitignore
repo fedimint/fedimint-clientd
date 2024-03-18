@@ -1,4 +1,5 @@
 /target
+/target-nix
 .env
 fm_client_db
 .cargo

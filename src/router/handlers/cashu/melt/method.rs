@@ -23,7 +23,7 @@ pub struct PostMeltQuoteMethodRequest {
     pub request: String,
     pub amount: Amount,
     pub unit: Unit,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Debug, Serialize)]

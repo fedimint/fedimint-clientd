@@ -22,7 +22,7 @@ pub struct SpendRequest {
     pub amount_msat: Amount,
     pub allow_overpay: bool,
     pub timeout: u64,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Debug, Serialize)]

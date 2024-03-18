@@ -15,7 +15,7 @@ use crate::state::AppState;
 #[derive(Debug, Deserialize)]
 pub struct SwapRequest {
     pub notes: OOBNotes,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Debug, Serialize)]

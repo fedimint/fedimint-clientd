@@ -18,7 +18,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct AwaitLnPayRequest {
     pub operation_id: OperationId,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 async fn _await_pay(client: ClientArc, req: AwaitLnPayRequest) -> Result<LnPayResponse, AppError> {
