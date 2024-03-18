@@ -24,12 +24,11 @@ use state::AppState;
 // use tower_http::cors::{Any, CorsLayer};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
 
-#[derive(Clone, Debug, ValueEnum)]
+#[derive(Clone, Debug, ValueEnum, PartialEq)]
 enum Mode {
-    Fedimint,
-    Cashu,
+    Rest,
     Ws,
-    Default,
+    Cashu,
 }
 
 #[derive(Subcommand)]
@@ -43,11 +42,11 @@ enum Commands {
 struct Cli {
     /// Federation invite code
     #[clap(long, env = "FEDIMINT_CLIENTD_INVITE_CODE", required = false)]
-    federation_invite_code: String,
+    invite_code: String,
 
     /// Path to FM database
     #[clap(long, env = "FEDIMINT_CLIENTD_DB_PATH", required = true)]
-    fm_db_path: PathBuf,
+    db_path: PathBuf,
 
     /// Password
     #[clap(long, env = "FEDIMINT_CLIENTD_PASSWORD", required = true)]
@@ -57,8 +56,8 @@ struct Cli {
     #[clap(long, env = "FEDIMINT_CLIENTD_ADDR", required = true)]
     addr: String,
 
-    /// Mode of operation
-    #[clap(long, default_value = "default")]
+    /// Mode: ws, rest
+    #[clap(long, default_value = "rest")]
     mode: Mode,
 }
 
@@ -70,11 +69,16 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
     let cli: Cli = Cli::parse();
-    let mut state = AppState::new(cli.fm_db_path).await?;
-    match InviteCode::from_str(&cli.federation_invite_code) {
+
+    let mut state = AppState::new(cli.db_path).await?;
+
+    match InviteCode::from_str(&cli.invite_code) {
         Ok(invite_code) => {
             let federation_id = state.multimint.register_new(invite_code, true).await?;
             info!("Created client for federation id: {:?}", federation_id);
+            if cli.mode == Mode::Cashu {
+                state.cashu_mint = Some(federation_id);
+            }
         }
         Err(e) => {
             info!(
@@ -84,20 +88,23 @@ async fn main() -> Result<()> {
         }
     }
 
+    if state.multimint.all().await.is_empty() {
+        return Err(anyhow::anyhow!("No clients found, must have at least one client to start the server. Try providing a federation invite code with the `--invite-code` flag or setting the `FEDIMINT_CLIENTD_INVITE_CODE` environment variable."));
+    }
+
     let app = match cli.mode {
-        Mode::Fedimint => Router::new()
-            .nest("/fedimint/v2", fedimint_v2_rest())
-            .with_state(state)
-            .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
-        Mode::Cashu => Router::new()
-            .nest("/cashu/v1", cashu_v1_rest())
+        Mode::Rest => Router::new()
+            .nest("/v2", fedimint_v2_rest())
             .with_state(state)
             .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
         Mode::Ws => Router::new()
-            .route("/fedimint/v2/ws", get(websocket_handler))
+            .route("/ws", get(websocket_handler))
             .with_state(state)
             .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
-        Mode::Default => create_default_router(state, &cli.password).await?,
+        Mode::Cashu => Router::new()
+            .nest("/v1", cashu_v1_rest())
+            .with_state(state)
+            .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
     };
 
     let cors = CorsLayer::new()
@@ -130,23 +137,6 @@ async fn main() -> Result<()> {
     axum::serve(listener, app).await.unwrap();
 
     Ok(())
-}
-
-pub async fn create_default_router(state: AppState, password: &str) -> Result<Router> {
-    // TODO: Allow CORS? Probably not, since this should just interact with the
-    // local machine. let cors = CorsLayer::new()
-    //     .allow_methods([Method::GET, Method::POST])
-    //     .allow_origin(Any);
-
-    let app = Router::new()
-        .route("/fedimint/v2/ws", get(websocket_handler))
-        .nest("/fedimint/v2", fedimint_v2_rest())
-        .nest("/cashu/v1", cashu_v1_rest())
-        .with_state(state)
-        // .layer(cors)
-        .layer(ValidateRequestHeaderLayer::bearer(password));
-
-    Ok(app)
 }
 
 /// Implements Fedimint V0.2 API Route matching against CLI commands:

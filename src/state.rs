@@ -10,12 +10,16 @@ use crate::error::AppError;
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub multimint: MultiMint,
+    pub cashu_mint: Option<FederationId>,
 }
 
 impl AppState {
     pub async fn new(fm_db_path: PathBuf) -> Result<Self> {
         let clients = MultiMint::new(fm_db_path).await?;
-        Ok(Self { multimint: clients })
+        Ok(Self {
+            multimint: clients,
+            cashu_mint: None,
+        })
     }
 
     // Helper function to get a specific client from the state or default
@@ -33,6 +37,22 @@ impl AppState {
             None => Err(AppError::new(
                 StatusCode::BAD_REQUEST,
                 anyhow!("No client found for federation id"),
+            )),
+        }
+    }
+
+    pub async fn get_cashu_client(&self) -> Result<ClientArc, AppError> {
+        match self.cashu_mint {
+            Some(client) => match self.multimint.get(&client).await {
+                Some(client) => Ok(client),
+                None => Err(AppError::new(
+                    StatusCode::BAD_REQUEST,
+                    anyhow!("No cashu client found for federation id"),
+                )),
+            },
+            None => Err(AppError::new(
+                StatusCode::BAD_REQUEST,
+                anyhow!("No cashu client set"),
             )),
         }
     }

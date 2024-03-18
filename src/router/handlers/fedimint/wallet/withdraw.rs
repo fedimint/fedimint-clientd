@@ -20,7 +20,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct WithdrawRequest {
     pub address: Address,
-    pub amount_msat: BitcoinAmountOrAll,
+    pub amount_sat: BitcoinAmountOrAll,
     pub federation_id: Option<FederationId>,
 }
 
@@ -33,7 +33,7 @@ pub struct WithdrawResponse {
 
 async fn _withdraw(client: ClientArc, req: WithdrawRequest) -> Result<WithdrawResponse, AppError> {
     let wallet_module = client.get_first_module::<WalletClientModule>();
-    let (amount, fees) = match req.amount_msat {
+    let (amount, fees) = match req.amount_sat {
         // If the amount is "all", then we need to subtract the fees from
         // the amount we are withdrawing
         BitcoinAmountOrAll::All => {
