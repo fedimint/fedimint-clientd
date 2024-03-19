@@ -18,7 +18,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct SwitchGatewayRequest {
     pub gateway_id: String,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 async fn _switch_gateway(client: ClientArc, req: SwitchGatewayRequest) -> Result<Value, AppError> {
@@ -34,7 +34,7 @@ async fn _switch_gateway(client: ClientArc, req: SwitchGatewayRequest) -> Result
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<SwitchGatewayRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
-    let client = state.get_client(None).await?;
+    let client = state.get_client(v.federation_id).await?;
     let gateway = _switch_gateway(client, v).await?;
     let gateway_json = json!(gateway);
     Ok(gateway_json)

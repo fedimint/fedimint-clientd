@@ -22,7 +22,7 @@ pub enum ModuleSelector {
 pub struct ModuleRequest {
     pub module: ModuleSelector,
     pub args: Vec<String>,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 async fn _module(_client: ClientArc, _req: ModuleRequest) -> Result<(), AppError> {

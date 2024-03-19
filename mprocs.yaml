@@ -2,7 +2,7 @@ procs:
   user:
     shell: zsh
     stop: SIGKILL
-  fedimint-http:
+  fedimint-clientd:
     shell: cargo run
     stop: SIGTERM
   ngrok:

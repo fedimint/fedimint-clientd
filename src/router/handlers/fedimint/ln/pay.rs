@@ -22,7 +22,7 @@ pub struct LnPayRequest {
     pub amount_msat: Option<Amount>,
     pub finish_in_background: bool,
     pub lnurl_comment: Option<String>,
-    pub federeation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Debug, Serialize)]
@@ -68,7 +68,7 @@ async fn _pay(client: ClientArc, req: LnPayRequest) -> Result<LnPayResponse, App
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<LnPayRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
-    let client = state.get_client(v.federeation_id).await?;
+    let client = state.get_client(v.federation_id).await?;
     let pay = _pay(client, v).await?;
     let pay_json = json!(pay);
     Ok(pay_json)
@@ -79,7 +79,7 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<LnPayRequest>,
 ) -> Result<Json<LnPayResponse>, AppError> {
-    let client = state.get_client(req.federeation_id).await?;
+    let client = state.get_client(req.federation_id).await?;
     let pay = _pay(client, req).await?;
     Ok(Json(pay))
 }

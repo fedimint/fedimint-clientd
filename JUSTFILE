@@ -2,6 +2,9 @@
 set dotenv-load := true
 
 dev:
+  mprocs -c mprocs.yaml
+
+mprocs:
   ./scripts/mprocs-nix.sh dev-fed mprocs-new.yaml
 
 alias b := build

@@ -2,7 +2,9 @@
   description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
+    nixpkgs = {
+      url = "github:nixos/nixpkgs/nixos-23.11";
+    };
 
     flakebox = {
       url = "github:rustshop/flakebox";
@@ -20,11 +22,13 @@
   outputs = { self, nixpkgs, flakebox, flake-utils, fedimint }:
     flake-utils.lib.eachDefaultSystem (system:
       let
+        nixpkgs = fedimint.inputs.nixpkgs;
         pkgs = import nixpkgs { 
           inherit system; 
           overlays = fedimint.overlays.fedimint;
         };
         lib = pkgs.lib;
+        fmLib = fedimint.lib.${system};
         flakeboxLib = flakebox.lib.${system} { };
         rustSrc = flakeboxLib.filterSubPaths {
           root = builtins.path {
@@ -87,14 +91,15 @@
         packages = {
           default = outputs.fedimint-clientd;
         };
-        devShells = flakeboxLib.mkShells (commonArgs // {
-          toolchain = toolchainNative;
-          nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
-            pkgs.mprocs
-            fedimint.packages.${system}.devimint
-            fedimint.packages.${system}.gateway-pkgs
-            fedimint.packages.${system}.fedimint-pkgs
-          ];
-        });
+         devShells = fmLib.devShells // {
+          default = fmLib.devShells.default.overrideAttrs (prev: {
+            nativeBuildInputs = [
+              pkgs.mprocs
+              fedimint.packages.${system}.devimint
+              fedimint.packages.${system}.gateway-pkgs
+              fedimint.packages.${system}.fedimint-pkgs
+            ] ++ prev.nativeBuildInputs;
+          });
+        };
       });
 }

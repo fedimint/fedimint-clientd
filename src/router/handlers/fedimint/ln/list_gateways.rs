@@ -14,7 +14,7 @@ use crate::state::AppState;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ListGatewaysRequest {
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 async fn _list_gateways(client: ClientArc) -> Result<Value, AppError> {

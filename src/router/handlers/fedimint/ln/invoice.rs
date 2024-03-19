@@ -19,7 +19,7 @@ pub struct LnInvoiceRequest {
     pub amount_msat: Amount,
     pub description: String,
     pub expiry_time: Option<u64>,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Debug, Serialize)]

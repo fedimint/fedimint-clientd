@@ -17,7 +17,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct AwaitDepositRequest {
     pub operation_id: OperationId,
-    pub federation_id: Option<FederationId>,
+    pub federation_id: FederationId,
 }
 
 #[derive(Debug, Serialize)]
