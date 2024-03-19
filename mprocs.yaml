@@ -3,7 +3,7 @@ procs:
     shell: zsh
     stop: SIGKILL
   fedimint-clientd:
-    shell: cargo run
+    shell: cargo run --manifest-path fedimint-clientd/Cargo.toml
     stop: SIGTERM
   ngrok:
     shell: ngrok http http://localhost:3333

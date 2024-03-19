@@ -56,6 +56,10 @@ struct Cli {
     #[clap(long, env = "FEDIMINT_CLIENTD_ADDR", required = true)]
     addr: String,
 
+    /// Manual secret
+    #[clap(long, env = "FEDIMINT_CLIENTD_MANUAL_SECRET", required = false)]
+    manual_secret: Option<String>,
+
     /// Mode: ws, rest
     #[clap(long, default_value = "rest")]
     mode: Mode,
@@ -72,9 +76,17 @@ async fn main() -> Result<()> {
 
     let mut state = AppState::new(cli.db_path).await?;
 
+    let manual_secret = match cli.manual_secret {
+        Some(secret) => Some(secret),
+        None => match std::env::var("FEDIMINT_CLIENTD_MANUAL_SECRET") {
+            Ok(secret) => Some(secret),
+            Err(_) => None,
+        },
+    };
+
     match InviteCode::from_str(&cli.invite_code) {
         Ok(invite_code) => {
-            let federation_id = state.multimint.register_new(invite_code, true).await?;
+            let federation_id = state.multimint.register_new(invite_code, manual_secret).await?;
             info!("Created client for federation id: {:?}", federation_id);
             if cli.mode == Mode::Cashu {
                 state.cashu_mint = Some(federation_id);

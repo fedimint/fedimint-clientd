@@ -1,3 +1,5 @@
+use std::env;
+
 use anyhow::{anyhow, Error};
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -15,7 +17,7 @@ use crate::state::AppState;
 #[serde(rename_all = "camelCase")]
 pub struct JoinRequest {
     pub invite_code: InviteCode,
-    pub set_default: bool,
+    pub use_manual_secret: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -25,8 +27,20 @@ pub struct JoinResponse {
 }
 
 async fn _join(mut multimint: MultiMint, req: JoinRequest) -> Result<JoinResponse, Error> {
+    let manual_secret = if req.use_manual_secret {
+        match env::var("FEDIMINT_CLIENTD_MANUAL_SECRET") {
+            Ok(secret) => Some(secret),
+            Err(_) => {
+                return Err(anyhow!("FEDIMINT_CLIENTD_MANUAL_SECRET must be set to join with manual secret"))
+            }
+        }
+    } else {
+        None
+    };
+
+
     let _ = multimint
-        .register_new(req.invite_code.clone(), req.set_default)
+        .register_new(req.invite_code.clone(), manual_secret)
         .await?;
 
     let federation_ids = multimint.ids().await.into_iter().collect::<Vec<_>>();
