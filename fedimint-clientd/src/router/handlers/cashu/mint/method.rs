@@ -10,7 +10,9 @@ use fedimint_core::time::now;
 use fedimint_core::Amount;
 use fedimint_ln_client::LightningClientModule;
 use fedimint_wallet_client::WalletClientModule;
+use lightning_invoice::{Bolt11InvoiceDescription, Description};
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 use crate::error::AppError;
 use crate::router::handlers::cashu::{Method, Unit};
@@ -63,18 +65,34 @@ pub async fn mint_bolt11(
     client: ClientHandleArc,
     amount_msat: Amount,
 ) -> Result<PostMintQuoteMethodResponse, AppError> {
-    let lightning_module = client.get_first_module::<LightningClientModule>();
-    lightning_module.select_active_gateway().await?;
-
     let valid_until = now() + Duration::from_secs(DEFAULT_MINT_EXPIRY_OFFSET);
     let expiry_time = crate::utils::system_time_to_u64(valid_until)?;
+    let lightning_module = client.get_first_module::<LightningClientModule>();
+    let gateway_id = match lightning_module.list_gateways().await.first() {
+        Some(gateway_announcement) => gateway_announcement.info.gateway_id,
+        None => {
+            error!("No gateways available");
+            return Err(AppError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                anyhow!("No gateways available"),
+            ))
+        }
+    };
+    let gateway = lightning_module.select_gateway(&gateway_id).await.ok_or_else(|| {
+        error!("Failed to select gateway");
+        AppError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            anyhow!("Failed to select gateway"),
+        )
+    })?;
 
-    let (operation_id, invoice) = lightning_module
+    let (operation_id, invoice, _) = lightning_module
         .create_bolt11_invoice(
             amount_msat,
-            format!("{}, method={:?}", DEFAULT_MINT_DESCRIPTION, Method::Bolt11),
+            Bolt11InvoiceDescription::Direct(&Description::new(DEFAULT_MINT_DESCRIPTION.to_string())?),
             Some(expiry_time),
             (),
+            Some(gateway),
         )
         .await?;
 

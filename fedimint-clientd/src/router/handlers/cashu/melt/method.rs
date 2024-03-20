@@ -12,7 +12,7 @@ use fedimint_wallet_client::{WalletClientModule, WithdrawState};
 use futures_util::StreamExt;
 use lightning_invoice::Bolt11Invoice;
 use serde::{Deserialize, Serialize};
-use tracing::info;
+use tracing::{error, info};
 
 use crate::error::AppError;
 use crate::router::handlers::cashu::{Method, Unit};
@@ -69,7 +69,23 @@ pub async fn melt_bolt11(
     amount_msat: Amount,
 ) -> Result<PostMeltQuoteMethodResponse, AppError> {
     let lightning_module = client.get_first_module::<LightningClientModule>();
-    lightning_module.select_active_gateway().await?;
+    let gateway_id = match lightning_module.list_gateways().await.first() {
+        Some(gateway_announcement) => gateway_announcement.info.gateway_id,
+        None => {
+            error!("No gateways available");
+            return Err(AppError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                anyhow!("No gateways available"),
+            ))
+        }
+    };
+    let gateway = lightning_module.select_gateway(&gateway_id).await.ok_or_else(|| {
+        error!("Failed to select gateway");
+        AppError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            anyhow!("Failed to select gateway"),
+        )
+    })?;
 
     let bolt11 = Bolt11Invoice::from_str(&request)?;
     let bolt11_amount = Amount::from_msats(
@@ -93,7 +109,7 @@ pub async fn melt_bolt11(
         payment_type,
         contract_id: _,
         fee,
-    } = lightning_module.pay_bolt11_invoice(bolt11, ()).await?;
+    } = lightning_module.pay_bolt11_invoice(Some(gateway), bolt11, ()).await?;
 
     let operation_id = payment_type.operation_id();
     info!("Gateway fee: {fee}, payment operation id: {operation_id}");
