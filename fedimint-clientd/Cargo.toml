@@ -40,7 +40,7 @@ time = { version = "0.3.25", features = ["formatting"] }
 chrono = "0.4.31"
 futures-util = "0.3.30"
 clap = { version = "4.4.13", features = ["derive", "env"] }
-multimint = { version = "0.1.12", path = "../multimint" }
+multimint = { version = "0.1.12" }
 axum-otel-metrics = "0.8.0"
 
 [patch.crates-io]
