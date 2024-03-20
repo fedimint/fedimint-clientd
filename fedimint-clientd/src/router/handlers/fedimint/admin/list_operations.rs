@@ -3,7 +3,7 @@ use std::time::UNIX_EPOCH;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use serde::{Deserialize, Serialize};
@@ -33,7 +33,7 @@ pub struct OperationOutput {
 }
 
 async fn _list_operations(
-    client: ClientArc,
+    client: ClientHandleArc,
     req: ListOperationsRequest,
 ) -> Result<Value, AppError> {
     const ISO8601_CONFIG: iso8601::EncodedConfig = iso8601::Config::DEFAULT

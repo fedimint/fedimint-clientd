@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use fedimint_wallet_client::{DepositState, WalletClientModule};
@@ -27,7 +27,7 @@ pub struct AwaitDepositResponse {
 }
 
 async fn _await_deposit(
-    client: ClientArc,
+    client: ClientHandleArc,
     req: AwaitDepositRequest,
 ) -> Result<AwaitDepositResponse, AppError> {
     let mut updates = client

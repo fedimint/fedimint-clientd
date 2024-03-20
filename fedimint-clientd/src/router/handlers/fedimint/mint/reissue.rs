@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use futures_util::StreamExt;
@@ -25,7 +25,10 @@ pub struct ReissueResponse {
     pub amount_msat: Amount,
 }
 
-async fn _reissue(client: ClientArc, req: ReissueRequest) -> Result<ReissueResponse, AppError> {
+async fn _reissue(
+    client: ClientHandleArc,
+    req: ReissueRequest,
+) -> Result<ReissueResponse, AppError> {
     let amount_msat = req.notes.total_amount();
 
     let mint = client.get_first_module::<MintClientModule>();

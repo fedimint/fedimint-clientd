@@ -1,12 +1,12 @@
 use std::str::FromStr;
 
 use anyhow::{bail, Context};
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::Amount;
 use fedimint_ln_client::{InternalPayState, LightningClientModule, LnPayState, PayType};
-use futures_util::StreamExt;
 use lightning_invoice::Bolt11Invoice;
 use tracing::{debug, info};
+use futures_util::StreamExt;
 
 use self::pay::{LnPayRequest, LnPayResponse};
 
@@ -15,7 +15,6 @@ pub mod await_pay;
 pub mod invoice;
 pub mod list_gateways;
 pub mod pay;
-pub mod switch_gateway;
 
 pub async fn get_invoice(req: &LnPayRequest) -> anyhow::Result<Bolt11Invoice> {
     let info = req.payment_info.trim();
@@ -65,14 +64,12 @@ pub async fn get_invoice(req: &LnPayRequest) -> anyhow::Result<Bolt11Invoice> {
 }
 
 pub async fn wait_for_ln_payment(
-    client: &ClientArc,
+    client: &ClientHandleArc,
     payment_type: PayType,
     contract_id: String,
     return_on_funding: bool,
 ) -> anyhow::Result<Option<LnPayResponse>> {
     let lightning_module = client.get_first_module::<LightningClientModule>();
-    lightning_module.select_active_gateway().await?;
-
     match payment_type {
         PayType::Internal(operation_id) => {
             let mut updates = lightning_module

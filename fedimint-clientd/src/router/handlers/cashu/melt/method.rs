@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::Amount;
 use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment};
@@ -64,7 +64,7 @@ pub async fn handle_method(
 }
 
 pub async fn melt_bolt11(
-    client: ClientArc,
+    client: ClientHandleArc,
     request: String,
     amount_msat: Amount,
 ) -> Result<PostMeltQuoteMethodResponse, AppError> {
@@ -108,7 +108,7 @@ pub async fn melt_bolt11(
 }
 
 async fn melt_onchain(
-    client: ClientArc,
+    client: ClientHandleArc,
     request: String,
     amount_sat: bitcoin::Amount,
 ) -> Result<PostMeltQuoteMethodResponse, AppError> {

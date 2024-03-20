@@ -64,7 +64,6 @@ pub enum JsonRpcMethod {
     LnPay,
     LnAwaitPay,
     LnListGateways,
-    LnSwitchGateway,
     WalletDepositAddress,
     WalletAwaitDeposit,
     WalletWithdraw,
@@ -148,7 +147,7 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
             handlers::fedimint::admin::config::handle_ws(state.clone()).await
         }
         JsonRpcMethod::AdminDiscoverVersion => {
-            handlers::fedimint::admin::discover_version::handle_ws(state.clone()).await
+            handlers::fedimint::admin::discover_version::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminFederationIds => {
             handlers::fedimint::admin::federation_ids::handle_ws(state.clone(), req.params).await
@@ -195,9 +194,6 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
         }
         JsonRpcMethod::LnListGateways => {
             handlers::fedimint::ln::list_gateways::handle_ws(state.clone(), req.params).await
-        }
-        JsonRpcMethod::LnSwitchGateway => {
-            handlers::fedimint::ln::switch_gateway::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::WalletDepositAddress => {
             handlers::fedimint::wallet::deposit_address::handle_ws(state.clone(), req.params).await

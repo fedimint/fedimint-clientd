@@ -2,14 +2,14 @@ use anyhow::{anyhow, Context};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use fedimint_core::Amount;
 use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment, PayType};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tracing::info;
+use tracing::{error, info};
 
 use crate::error::AppError;
 use crate::router::handlers::fedimint::ln::{get_invoice, wait_for_ln_payment};
@@ -34,17 +34,33 @@ pub struct LnPayResponse {
     pub fee: Amount,
 }
 
-async fn _pay(client: ClientArc, req: LnPayRequest) -> Result<LnPayResponse, AppError> {
+async fn _pay(client: ClientHandleArc, req: LnPayRequest) -> Result<LnPayResponse, AppError> {
     let bolt11 = get_invoice(&req).await?;
     info!("Paying invoice: {bolt11}");
     let lightning_module = client.get_first_module::<LightningClientModule>();
-    lightning_module.select_active_gateway().await?;
+    let gateway_id = match lightning_module.list_gateways().await.first() {
+        Some(gateway_announcement) => gateway_announcement.info.gateway_id,
+        None => {
+            error!("No gateways available");
+            return Err(AppError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                anyhow!("No gateways available"),
+            ))
+        }
+    };
+    let gateway = lightning_module.select_gateway(&gateway_id).await.ok_or_else(|| {
+        error!("Failed to select gateway");
+        AppError::new(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            anyhow!("Failed to select gateway"),
+        )
+    })?;
 
     let OutgoingLightningPayment {
         payment_type,
         contract_id,
         fee,
-    } = lightning_module.pay_bolt11_invoice(bolt11, ()).await?;
+    } = lightning_module.pay_bolt11_invoice(Some(gateway), bolt11, ()).await?;
     let operation_id = payment_type.operation_id();
     info!("Gateway fee: {fee}, payment operation id: {operation_id}");
     if req.finish_in_background {

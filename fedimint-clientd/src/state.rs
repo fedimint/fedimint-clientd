@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
 use axum::http::StatusCode;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::{FederationId, FederationIdPrefix};
 use multimint::MultiMint;
 
@@ -23,7 +23,10 @@ impl AppState {
     }
 
     // Helper function to get a specific client from the state or default
-    pub async fn get_client(&self, federation_id: FederationId) -> Result<ClientArc, AppError> {
+    pub async fn get_client(
+        &self,
+        federation_id: FederationId,
+    ) -> Result<ClientHandleArc, AppError> {
         match self.multimint.get(&federation_id).await {
             Some(client) => Ok(client),
             None => Err(AppError::new(
@@ -33,7 +36,7 @@ impl AppState {
         }
     }
 
-    pub async fn get_cashu_client(&self) -> Result<ClientArc, AppError> {
+    pub async fn get_cashu_client(&self) -> Result<ClientHandleArc, AppError> {
         match self.cashu_mint {
             Some(client) => match self.multimint.get(&client).await {
                 Some(client) => Ok(client),
@@ -52,7 +55,7 @@ impl AppState {
     pub async fn get_client_by_prefix(
         &self,
         federation_id_prefix: &FederationIdPrefix,
-    ) -> Result<ClientArc, AppError> {
+    ) -> Result<ClientHandleArc, AppError> {
         let client = self.multimint.get_by_prefix(federation_id_prefix).await;
 
         match client {

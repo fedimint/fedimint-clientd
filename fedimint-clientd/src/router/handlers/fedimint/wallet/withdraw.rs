@@ -2,9 +2,9 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
+use bitcoin::hashes::hex::ToHex;
 use bitcoin::Address;
-use bitcoin_hashes::hex::ToHex;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::BitcoinAmountOrAll;
 use fedimint_wallet_client::{WalletClientModule, WithdrawState};
@@ -31,7 +31,10 @@ pub struct WithdrawResponse {
     pub fees_sat: u64,
 }
 
-async fn _withdraw(client: ClientArc, req: WithdrawRequest) -> Result<WithdrawResponse, AppError> {
+async fn _withdraw(
+    client: ClientHandleArc,
+    req: WithdrawRequest,
+) -> Result<WithdrawResponse, AppError> {
     let wallet_module = client.get_first_module::<WalletClientModule>();
     let (amount, fees) = match req.amount_sat {
         // If the amount is "all", then we need to subtract the fees from

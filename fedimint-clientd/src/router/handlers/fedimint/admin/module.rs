@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::{ModuleInstanceId, ModuleKind};
 use serde::Deserialize;
@@ -25,7 +25,7 @@ pub struct ModuleRequest {
     pub federation_id: FederationId,
 }
 
-async fn _module(_client: ClientArc, _req: ModuleRequest) -> Result<(), AppError> {
+async fn _module(_client: ClientHandleArc, _req: ModuleRequest) -> Result<(), AppError> {
     // TODO: Figure out how to impl this
     Err(AppError::new(
         StatusCode::INTERNAL_SERVER_ERROR,

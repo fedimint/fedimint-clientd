@@ -86,7 +86,10 @@ async fn main() -> Result<()> {
 
     match InviteCode::from_str(&cli.invite_code) {
         Ok(invite_code) => {
-            let federation_id = state.multimint.register_new(invite_code, manual_secret).await?;
+            let federation_id = state
+                .multimint
+                .register_new(invite_code, manual_secret)
+                .await?;
             info!("Created client for federation id: {:?}", federation_id);
             if cli.mode == Mode::Cashu {
                 state.cashu_mint = Some(federation_id);
@@ -210,10 +213,6 @@ fn fedimint_v2_rest() -> Router<AppState> {
         .route(
             "/list-gateways",
             post(fedimint::ln::list_gateways::handle_rest),
-        )
-        .route(
-            "/switch-gateway",
-            post(fedimint::ln::switch_gateway::handle_rest),
         );
 
     let wallet_router = Router::new()

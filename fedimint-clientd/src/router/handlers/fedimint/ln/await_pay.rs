@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context};
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use fedimint_ln_client::{LightningClientModule, PayType};
@@ -21,7 +21,10 @@ pub struct AwaitLnPayRequest {
     pub federation_id: FederationId,
 }
 
-async fn _await_pay(client: ClientArc, req: AwaitLnPayRequest) -> Result<LnPayResponse, AppError> {
+async fn _await_pay(
+    client: ClientHandleArc,
+    req: AwaitLnPayRequest,
+) -> Result<LnPayResponse, AppError> {
     let lightning_module = client.get_first_module::<LightningClientModule>();
     let ln_pay_details = lightning_module
         .get_ln_pay_details_for(req.operation_id)

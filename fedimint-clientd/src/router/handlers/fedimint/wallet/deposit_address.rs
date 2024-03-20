@@ -5,7 +5,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use bitcoin::Address;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use fedimint_core::time::now;
@@ -31,7 +31,7 @@ pub struct DepositAddressResponse {
 }
 
 async fn _deposit_address(
-    client: ClientArc,
+    client: ClientHandleArc,
     req: DepositAddressRequest,
 ) -> Result<DepositAddressResponse, AppError> {
     let wallet_module = client.get_first_module::<WalletClientModule>();

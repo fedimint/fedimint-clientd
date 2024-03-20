@@ -5,7 +5,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use fedimint_client::backup::Metadata;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -20,7 +20,7 @@ pub struct BackupRequest {
     pub federation_id: FederationId,
 }
 
-async fn _backup(client: ClientArc, req: BackupRequest) -> Result<(), AppError> {
+async fn _backup(client: ClientHandleArc, req: BackupRequest) -> Result<(), AppError> {
     client
         .backup_to_federation(Metadata::from_json_serialized(req.metadata))
         .await

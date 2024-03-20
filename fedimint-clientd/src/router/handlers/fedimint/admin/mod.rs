@@ -8,12 +8,12 @@ pub mod list_operations;
 pub mod module;
 pub mod restore;
 
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_mint_client::MintClientModule;
 use fedimint_wallet_client::WalletClientModule;
 use info::InfoResponse;
 
-pub async fn get_note_summary(client: &ClientArc) -> anyhow::Result<InfoResponse> {
+pub async fn get_note_summary(client: &ClientHandleArc) -> anyhow::Result<InfoResponse> {
     let mint_client = client.get_first_module::<MintClientModule>();
     let wallet_client = client.get_first_module::<WalletClientModule>();
     let summary = mint_client

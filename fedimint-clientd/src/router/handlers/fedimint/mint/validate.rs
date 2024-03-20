@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::Amount;
 use fedimint_mint_client::{MintClientModule, OOBNotes};
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,10 @@ pub struct ValidateResponse {
     pub amount_msat: Amount,
 }
 
-async fn _validate(client: ClientArc, req: ValidateRequest) -> Result<ValidateResponse, AppError> {
+async fn _validate(
+    client: ClientHandleArc,
+    req: ValidateRequest,
+) -> Result<ValidateResponse, AppError> {
     let amount_msat = client
         .get_first_module::<MintClientModule>()
         .validate_notes(req.notes)

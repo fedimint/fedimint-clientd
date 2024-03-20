@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::time::now;
 use fedimint_core::Amount;
@@ -60,7 +60,7 @@ const DEFAULT_MINT_EXPIRY_OFFSET: u64 = 3600;
 const DEFAULT_MINT_DESCRIPTION: &str = "Cashu mint operation";
 
 pub async fn mint_bolt11(
-    client: ClientArc,
+    client: ClientHandleArc,
     amount_msat: Amount,
 ) -> Result<PostMintQuoteMethodResponse, AppError> {
     let lightning_module = client.get_first_module::<LightningClientModule>();
@@ -87,7 +87,7 @@ pub async fn mint_bolt11(
 }
 
 async fn mint_onchain(
-    client: ClientArc,
+    client: ClientHandleArc,
     _amount_sat: Amount,
 ) -> Result<PostMintQuoteMethodResponse, AppError> {
     let wallet_client = client.get_first_module::<WalletClientModule>();

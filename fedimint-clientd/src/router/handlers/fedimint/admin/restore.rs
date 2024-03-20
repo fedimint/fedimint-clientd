@@ -2,13 +2,13 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientArc;
+use fedimint_client::ClientHandleArc;
 use serde_json::{json, Value};
 
 use crate::error::AppError;
 use crate::state::AppState;
 
-async fn _restore(_client: ClientArc, _v: Value) -> Result<(), AppError> {
+async fn _restore(_client: ClientHandleArc, _v: Value) -> Result<(), AppError> {
     // TODO: unimplemented in cli
     Err(AppError::new(
         StatusCode::INTERNAL_SERVER_ERROR,

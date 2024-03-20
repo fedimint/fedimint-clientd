@@ -31,13 +31,14 @@ async fn _join(mut multimint: MultiMint, req: JoinRequest) -> Result<JoinRespons
         match env::var("FEDIMINT_CLIENTD_MANUAL_SECRET") {
             Ok(secret) => Some(secret),
             Err(_) => {
-                return Err(anyhow!("FEDIMINT_CLIENTD_MANUAL_SECRET must be set to join with manual secret"))
+                return Err(anyhow!(
+                    "FEDIMINT_CLIENTD_MANUAL_SECRET must be set to join with manual secret"
+                ))
             }
         }
     } else {
         None
     };
-
 
     let _ = multimint
         .register_new(req.invite_code.clone(), manual_secret)

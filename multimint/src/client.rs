@@ -1,12 +1,15 @@
-//! LocalClientBuilder is a builder pattern for adding Fedimint Clients to the multimint
+//! LocalClientBuilder is a builder pattern for adding Fedimint Clients to the
+//! multimint
 
-use anyhow::Result;
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 use std::path::PathBuf;
+use std::sync::Arc;
 
+use anyhow::Result;
 use fedimint_client::secret::{PlainRootSecretStrategy, RootSecretStrategy};
-use fedimint_client::{get_config_from_db, Client, FederationInfo};
+use fedimint_client::Client;
+use fedimint_core::config::ClientConfig;
 use fedimint_core::db::{
     Committable, Database, DatabaseTransaction, IDatabaseTransactionOpsCoreTyped,
 };
@@ -33,7 +36,11 @@ impl LocalClientBuilder {
 impl LocalClientBuilder {
     /// Build a new client with the given config and optional manual secret
     #[allow(clippy::too_many_arguments)]
-    pub async fn build(&self, config: FederationConfig, manual_secret: Option<[u8; 64]>) -> Result<fedimint_client::ClientArc> {
+    pub async fn build(
+        &self,
+        config: FederationConfig,
+        manual_secret: Option<[u8; 64]>,
+    ) -> Result<fedimint_client::ClientHandleArc> {
         let federation_id = config.invite_code.federation_id();
 
         let db_path = self.work_dir.join(format!("{federation_id}.db"));
@@ -43,39 +50,43 @@ impl LocalClientBuilder {
             Default::default(),
         );
 
-        let mut client_builder = Client::builder();
-        client_builder.with_database(db.clone());
+        let mut client_builder = Client::builder(db);
         client_builder.with_module(WalletClientInit(None));
         client_builder.with_module(MintClientInit);
         client_builder.with_module(LightningClientInit);
         client_builder.with_primary_module(1);
 
-        let client_secret = match client_builder.load_decodable_client_secret().await {
-            Ok(secret) => secret,
-            Err(_) => {
-                if let Some(manual_secret) = manual_secret {
-                    info!("Using manual secret provided by user and writing to client storage");
-                    client_builder.store_encodable_client_secret(manual_secret).await?;
-                    manual_secret
-                } else {
-                    info!("Generating new secret and writing to client storage");
-                    let secret = PlainRootSecretStrategy::random(&mut thread_rng());
-                    client_builder.store_encodable_client_secret(secret).await?;
-                    secret
+        let client_secret =
+            match Client::load_decodable_client_secret::<[u8; 64]>(client_builder.db()).await {
+                Ok(secret) => secret,
+                Err(_) => {
+                    if let Some(manual_secret) = manual_secret {
+                        info!("Using manual secret provided by user and writing to client storage");
+                        Client::store_encodable_client_secret(client_builder.db(), manual_secret)
+                            .await?;
+                        manual_secret
+                    } else {
+                        info!("Generating new secret and writing to client storage");
+                        let secret = PlainRootSecretStrategy::random(&mut thread_rng());
+                        Client::store_encodable_client_secret(client_builder.db(), secret).await?;
+                        secret
+                    }
                 }
-            }
-        };
+            };
 
         let root_secret = PlainRootSecretStrategy::to_root_secret(&client_secret);
+        let client_res = if Client::is_initialized(client_builder.db()).await {
+            client_builder.open(root_secret).await
+        } else {
+            let client_config =
+                ClientConfig::download_from_invite_code(&config.invite_code).await?;
+            client_builder
+                // TODO: make this configurable?
+                .join(root_secret, client_config.to_owned())
+                .await
+        }?;
 
-        if get_config_from_db(&db).await.is_none() {
-            let federation_info = FederationInfo::from_invite_code(config.invite_code).await?;
-            client_builder.with_federation_info(federation_info);
-        };
-
-        let client_res = client_builder.build(root_secret.clone()).await?;
-
-        Ok(client_res)
+        Ok(Arc::new(client_res))
     }
 
     /// Save the federation config to the database
