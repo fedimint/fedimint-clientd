@@ -7,6 +7,9 @@ dev:
 mprocs:
   ./scripts/mprocs-nix.sh dev-fed mprocs-new.yaml
 
+test-ts:
+  bun run wrappers/fedimint-ts/test.ts
+
 alias b := build
 alias c := check
 alias t := test
