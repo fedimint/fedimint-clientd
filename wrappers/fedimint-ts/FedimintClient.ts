@@ -338,9 +338,15 @@ class FedimintClient {
       amountMsat: number,
       allowOverpay: boolean,
       timeout: number,
+      includeInvite: boolean,
       federationId?: string
     ): FedimintResponse<SpendResponse> => {
-      const request: SpendRequest = { amountMsat, allowOverpay, timeout };
+      const request: SpendRequest = {
+        amountMsat,
+        allowOverpay,
+        timeout,
+        includeInvite,
+      };
 
       return await this.postWithId<SpendResponse>(
         "/mint/spend",
@@ -425,10 +431,10 @@ class FedimintClient {
      */
     withdraw: async (
       address: string,
-      amountMsat: number | "all",
+      amountSat: number | "all",
       federationId?: string
     ): FedimintResponse<WithdrawResponse> => {
-      const request: WithdrawRequest = { address, amountMsat };
+      const request: WithdrawRequest = { address, amountSat };
 
       return await this.postWithId<WithdrawResponse>(
         "/wallet/withdraw",

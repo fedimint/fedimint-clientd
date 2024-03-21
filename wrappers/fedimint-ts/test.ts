@@ -85,7 +85,7 @@ async function main() {
   // MINT METHODS
   // `/v2/mint/spend`
   logMethod("/v2/mint/spend");
-  let mintData = await fedimintClient.mint.spend(3000, true, 1000);
+  let mintData = await fedimintClient.mint.spend(3000, true, 1000, false);
   logInputAndOutput(
     { amountMsat: 3000, allowOverpay: true, timeout: 1000 },
     data
@@ -116,11 +116,13 @@ async function main() {
   // `/v2/onchain/withdraw`
   logMethod("/v2/onchain/withdraw");
   data = await fedimintClient.onchain.withdraw(data.address, 1000);
-  logInputAndOutput({ address: data.address, amountMsat: 1000 }, data);
+  logInputAndOutput({ address: data.address, amountSat: 1000 }, data);
   // // `/v2/onchain/await-deposit`
   // logMethod("/v2/onchain/await-deposit");
   // data = await fedimintClient.onchain.awaitDeposit(data.operationId);
   // logInputAndOutput({ operationId: data.operationId }, data);
+
+  console.log("Done: All methods tested successfully!");
 }
 
 main().catch(console.error);

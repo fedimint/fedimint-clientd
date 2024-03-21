@@ -91,7 +91,7 @@ interface AwaitDepositResponse {
 
 interface WithdrawRequest {
   address: string;
-  amountMsat: number | "all";
+  amountSat: number | "all";
 }
 
 interface WithdrawResponse {
@@ -158,6 +158,7 @@ interface SpendRequest {
   amountMsat: number;
   allowOverpay: boolean;
   timeout: number;
+  includeInvite: boolean;
 }
 
 interface SpendResponse {
