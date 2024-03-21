@@ -43,16 +43,19 @@ async fn _invoice(
             return Err(AppError::new(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 anyhow!("No gateways available"),
-            ))
+            ));
         }
     };
-    let gateway = lightning_module.select_gateway(&gateway_id).await.ok_or_else(|| {
-        error!("Failed to select gateway");
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            anyhow!("Failed to select gateway"),
-        )
-    })?;
+    let gateway = lightning_module
+        .select_gateway(&gateway_id)
+        .await
+        .ok_or_else(|| {
+            error!("Failed to select gateway");
+            AppError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                anyhow!("Failed to select gateway"),
+            )
+        })?;
 
     let (operation_id, invoice, _) = lightning_module
         .create_bolt11_invoice(

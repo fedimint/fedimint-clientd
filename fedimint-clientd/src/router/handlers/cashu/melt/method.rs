@@ -76,16 +76,19 @@ pub async fn melt_bolt11(
             return Err(AppError::new(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 anyhow!("No gateways available"),
-            ))
+            ));
         }
     };
-    let gateway = lightning_module.select_gateway(&gateway_id).await.ok_or_else(|| {
-        error!("Failed to select gateway");
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            anyhow!("Failed to select gateway"),
-        )
-    })?;
+    let gateway = lightning_module
+        .select_gateway(&gateway_id)
+        .await
+        .ok_or_else(|| {
+            error!("Failed to select gateway");
+            AppError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                anyhow!("Failed to select gateway"),
+            )
+        })?;
 
     let bolt11 = Bolt11Invoice::from_str(&request)?;
     let bolt11_amount = Amount::from_msats(
@@ -109,7 +112,9 @@ pub async fn melt_bolt11(
         payment_type,
         contract_id: _,
         fee,
-    } = lightning_module.pay_bolt11_invoice(Some(gateway), bolt11, ()).await?;
+    } = lightning_module
+        .pay_bolt11_invoice(Some(gateway), bolt11, ())
+        .await?;
 
     let operation_id = payment_type.operation_id();
     info!("Gateway fee: {fee}, payment operation id: {operation_id}");

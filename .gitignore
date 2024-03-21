@@ -4,3 +4,4 @@
 fm_client_db
 .cargo
 .vscode
+.DS_Store
