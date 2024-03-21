@@ -1,106 +1,57 @@
-interface FederationIdPrefix {
-    0: number; // Assuming u8 is equivalent to number in TypeScript
-    1: number;
-    2: number;
-    3: number;
-}
-
-interface TieredMulti<T> {
-    [amount: number]: T[]; // Assuming Amount is equivalent to number in TypeScript
-}
-
-interface Signature {
-    0: G1Affine;
-}
-
-interface G1Affine {
-    x: Fp;
-    y: Fp;
-    infinity: Choice;
-}
-
-interface Fp {
-    0: number[]; // Assuming u64 is equivalent to number in TypeScript
-}
-
-interface Choice {
-    0: number; // Assuming u8 is equivalent to number in TypeScript
-}
-
-interface KeyPair {
-    0: number[]; // Assuming c_uchar is equivalent to number in TypeScript
-}
-
-interface OOBNotesData {
-    Notes?: TieredMulti<SpendableNote>;
-    FederationIdPrefix?: FederationIdPrefix;
-    Default?: {
-        variant: number; // Assuming u64 is equivalent to number in TypeScript
-        bytes: number[]; // Assuming Vec<u8> is equivalent to number[] in TypeScript
-    };
-}
-
-interface OOBNotes {
-    0: OOBNotesData[];
-}
-
-interface SpendableNote {
-    signature: Signature;
-    spendKey: KeyPair;
-}
+type FederationIdPrefix = string;
 
 interface ReissueRequest {
-    notes: string;
+  notes: string;
 }
 
 interface ReissueResponse {
-    amountMsat: number;
+  amountMsat: number;
 }
 
 interface SpendRequest {
-    amountMsat: number;
-    allowOverpay: boolean;
-    timeout: number;
+  amountMsat: number;
+  allowOverpay: boolean;
+  timeout: number;
 }
 
 interface SpendResponse {
-    operation: string;
-    notes: string;
+  operation: string;
+  notes: string;
 }
 
 interface ValidateRequest {
-    notes: string;
+  notes: string;
 }
 
 interface ValidateResponse {
-    amountMsat: number;
+  amountMsat: number;
 }
 
 interface SplitRequest {
-    notes: OOBNotes;
+  notes: string;
 }
 
 interface SplitResponse {
-    notes: Record<number, OOBNotes>;
+  notes: Record<number, string>;
 }
 
 interface CombineRequest {
-    notes: string;
+  notesVec: string[];
 }
 
 interface CombineResponse {
-    notes: string;
+  notes: string;
 }
 
 export type {
-    ReissueRequest,
-    ReissueResponse,
-    SpendRequest,
-    SpendResponse,
-    ValidateRequest,
-    ValidateResponse,
-    SplitRequest,
-    SplitResponse,
-    CombineRequest,
-    CombineResponse,
+  ReissueRequest,
+  ReissueResponse,
+  SpendRequest,
+  SpendResponse,
+  ValidateRequest,
+  ValidateResponse,
+  SplitRequest,
+  SplitResponse,
+  CombineRequest,
+  CombineResponse,
 };

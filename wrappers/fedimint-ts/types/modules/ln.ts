@@ -1,57 +1,51 @@
 interface LnInvoiceRequest {
-    amountMsat: number;
-    description: string;
-    expiryTime?: number;
+  amountMsat: number;
+  description: string;
+  expiryTime?: number;
 }
 
 interface LnInvoiceResponse {
-    operationId: string;
-    invoice: string;
+  operationId: string;
+  invoice: string;
 }
 
 interface AwaitInvoiceRequest {
-    operationId: string;
+  operationId: string;
 }
 
 interface LnPayRequest {
-    paymentInfo: string;
-    amountMsat?: number;
-    finishInBackground: boolean;
-    lnurlComment?: string;
+  paymentInfo: string;
+  amountMsat?: number;
+  lnurlComment?: string;
 }
 
 interface LnPayResponse {
-    operationId: string;
-    paymentType: string;
-    contractId: string;
-    fee: number;
-}
-
-interface AwaitLnPayRequest {
-    operationId: string;
+  operationId: string;
+  paymentType: string;
+  contractId: string;
+  fee: number;
 }
 
 interface Gateway {
-    nodePubKey: string;
-    active: boolean;
+  nodePubKey: string;
+  active: boolean;
 }
 
 interface ListGatewaysResponse {
-    [federationId: string]: Gateway[];
+  [federationId: string]: Gateway[];
 }
 
 interface SwitchGatewayRequest {
-    gatewayId: string;
+  gatewayId: string;
 }
 
 export type {
-    LnInvoiceRequest,
-    LnInvoiceResponse,
-    AwaitInvoiceRequest,
-    LnPayRequest,
-    LnPayResponse,
-    AwaitLnPayRequest,
-    Gateway,
-    ListGatewaysResponse,
-    SwitchGatewayRequest,
-}
+  LnInvoiceRequest,
+  LnInvoiceResponse,
+  AwaitInvoiceRequest,
+  LnPayRequest,
+  LnPayResponse,
+  Gateway,
+  ListGatewaysResponse,
+  SwitchGatewayRequest,
+};

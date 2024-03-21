@@ -7,13 +7,11 @@ import type {
 } from "./types/common";
 import type {
   AwaitInvoiceRequest,
-  AwaitLnPayRequest,
   Gateway,
   LnInvoiceRequest,
   LnInvoiceResponse,
   LnPayRequest,
   LnPayResponse,
-  SwitchGatewayRequest,
 } from "./types/modules/ln";
 import type {
   CombineRequest,
@@ -92,7 +90,7 @@ class FedimintClient {
   private activeFederationId: string;
 
   constructor(baseUrl: string, password: string, activeFederationId: string) {
-    this.baseUrl = baseUrl + "/fedimint/v2";
+    this.baseUrl = baseUrl + "/v2";
     this.password = password;
     this.activeFederationId = activeFederationId;
   }
@@ -211,12 +209,10 @@ class FedimintClient {
    * Returns an array of federation IDs that the client is now connected to
    */
   public async join(
-    inviteCode: string,
-    setDefault: boolean
+    inviteCode: string
   ): FedimintResponse<FederationIdsResponse> {
     return await this.post<FederationIdsResponse>("/admin/join", {
       inviteCode,
-      setDefault,
     });
   }
 
@@ -224,9 +220,11 @@ class FedimintClient {
    * Outputs a list of operations that have been performed on the federation
    */
   public async listOperations(
-    request: ListOperationsRequest,
+    limit: number,
     federationId?: string
   ): FedimintResponse<OperationOutput[]> {
+    const request: ListOperationsRequest = { limit };
+
     return await this.postWithId<OperationOutput[]>(
       "/admin/list-operations",
       request,
@@ -242,112 +240,63 @@ class FedimintClient {
      * Creates a lightning invoice to receive payment via gateway
      */
     createInvoice: async (
-      request: LnInvoiceRequest,
+      amountMsat: number,
+      description: string,
+      expiryTime?: number,
       federationId?: string
-    ): FedimintResponse<LnInvoiceResponse> =>
-      await this.postWithId<LnInvoiceResponse>(
+    ): FedimintResponse<LnInvoiceResponse> => {
+      const request: LnInvoiceRequest = { amountMsat, description, expiryTime };
+
+      return await this.postWithId<LnInvoiceResponse>(
         "/ln/invoice",
         request,
         federationId
-      ),
+      );
+    },
 
     /**
      * Waits for a lightning invoice to be paid
      */
     awaitInvoice: async (
-      request: AwaitInvoiceRequest,
+      operationId: string,
       federationId?: string
-    ): FedimintResponse<InfoResponse> =>
-      await this.postWithId<InfoResponse>(
+    ): FedimintResponse<InfoResponse> => {
+      const request: AwaitInvoiceRequest = { operationId };
+
+      return await this.postWithId<InfoResponse>(
         "/ln/await-invoice",
         request,
         federationId
-      ),
+      );
+    },
 
     /**
      * Pays a lightning invoice or lnurl via a gateway
      */
     pay: async (
-      request: LnPayRequest,
+      paymentInfo: string,
+      amountMsat?: number,
+      lnurlComment?: string,
       federationId?: string
-    ): FedimintResponse<LnPayResponse> =>
-      await this.postWithId<LnPayResponse>("/ln/pay", request, federationId),
+    ): FedimintResponse<LnPayResponse> => {
+      const request: LnPayRequest = {
+        paymentInfo,
+        amountMsat,
+        lnurlComment,
+      };
 
-    /**
-     * Waits for a lightning payment to complete
-     */
-    awaitPay: async (
-      request: AwaitLnPayRequest,
-      federationId?: string
-    ): FedimintResponse<LnPayResponse> =>
-      await this.postWithId<LnPayResponse>(
-        "/ln/await-pay",
+      return await this.postWithId<LnPayResponse>(
+        "/ln/pay",
         request,
         federationId
-      ),
+      );
+    },
 
     /**
      * Outputs a list of registered lighting lightning gateways
      */
     listGateways: async (): FedimintResponse<Gateway[]> =>
       await this.postWithId<Gateway[]>("/ln/list-gateways", {}),
-
-    /**
-     * Switches the active lightning gateway
-     */
-    switchGateway: async (
-      request: SwitchGatewayRequest,
-      federationId?: string
-    ): FedimintResponse<Gateway> =>
-      await this.postWithId<Gateway>(
-        "/ln/switch-gateway",
-        request,
-        federationId
-      ),
-  };
-
-  /**
-   * A module for creating a bitcoin deposit address
-   */
-  public wallet = {
-    /**
-     * Creates a new bitcoin deposit address
-     */
-    createDepositAddress: async (
-      request: DepositAddressRequest,
-      federationId?: string
-    ): FedimintResponse<DepositAddressResponse> =>
-      await this.postWithId<DepositAddressResponse>(
-        "/wallet/deposit-address",
-        request,
-        federationId
-      ),
-
-    /**
-     * Waits for a bitcoin deposit to be confirmed
-     */
-    awaitDeposit: async (
-      request: AwaitDepositRequest,
-      federationId?: string
-    ): FedimintResponse<AwaitDepositResponse> =>
-      await this.postWithId<AwaitDepositResponse>(
-        "/wallet/await-deposit",
-        request,
-        federationId
-      ),
-
-    /**
-     * Withdraws bitcoin from the federation
-     */
-    withdraw: async (
-      request: WithdrawRequest,
-      federationId?: string
-    ): FedimintResponse<WithdrawResponse> =>
-      await this.postWithId<WithdrawResponse>(
-        "/wallet/withdraw",
-        request,
-        federationId
-      ),
   };
 
   /**
@@ -358,54 +307,123 @@ class FedimintClient {
      * Reissues an ecash note
      */
     reissue: async (
-      request: ReissueRequest,
+      notes: string,
       federationId?: string
-    ): FedimintResponse<ReissueResponse> =>
-      await this.postWithId<ReissueResponse>(
+    ): FedimintResponse<ReissueResponse> => {
+      const request: ReissueRequest = { notes };
+
+      return await this.postWithId<ReissueResponse>(
         "/mint/reissue",
         request,
         federationId
-      ),
+      );
+    },
 
     /**
      * Spends an ecash note
      */
     spend: async (
-      request: SpendRequest,
+      amountMsat: number,
+      allowOverpay: boolean,
+      timeout: number,
       federationId?: string
-    ): FedimintResponse<SpendResponse> =>
-      await this.postWithId<SpendResponse>(
+    ): FedimintResponse<SpendResponse> => {
+      const request: SpendRequest = { amountMsat, allowOverpay, timeout };
+
+      return await this.postWithId<SpendResponse>(
         "/mint/spend",
         request,
         federationId
-      ),
+      );
+    },
 
     /**
      * Validates an ecash note
      */
     validate: async (
-      request: ValidateRequest,
+      notes: string,
       federationId?: string
-    ): FedimintResponse<ValidateResponse> =>
-      await this.postWithId<ValidateResponse>(
+    ): FedimintResponse<ValidateResponse> => {
+      const request: ValidateRequest = { notes };
+
+      return await this.postWithId<ValidateResponse>(
         "/mint/validate",
         request,
         federationId
-      ),
+      );
+    },
 
     /**
-     * Splits an ecash note
+     * Splits an ecash note into smaller notes
      */
-    split: async (request: SplitRequest): FedimintResponse<SplitResponse> =>
-      await this.post<SplitResponse>("/mint/split", request),
+    split: async (notes: string): FedimintResponse<SplitResponse> => {
+      const request: SplitRequest = { notes };
+
+      return await this.post<SplitResponse>("/mint/split", request);
+    },
 
     /**
      * Combines ecash notes
      */
-    combine: async (
-      request: CombineRequest
-    ): FedimintResponse<CombineResponse> =>
-      await this.post<CombineResponse>("/mint/combine", request),
+    combine: async (notesVec: string[]): FedimintResponse<CombineResponse> => {
+      const request: CombineRequest = { notesVec };
+
+      return await this.post<CombineResponse>("/mint/combine", request);
+    },
+  };
+
+  /**
+   * A module for onchain bitcoin operations
+   */
+  public onchain = {
+    /**
+     * Creates a new bitcoin deposit address
+     */
+    createDepositAddress: async (
+      timeout: number,
+      federationId?: string
+    ): FedimintResponse<DepositAddressResponse> => {
+      const request: DepositAddressRequest = { timeout };
+
+      return await this.postWithId<DepositAddressResponse>(
+        "/wallet/deposit-address",
+        request,
+        federationId
+      );
+    },
+
+    /**
+     * Waits for a bitcoin deposit to be confirmed
+     */
+    awaitDeposit: async (
+      operationId: string,
+      federationId?: string
+    ): FedimintResponse<AwaitDepositResponse> => {
+      const request: AwaitDepositRequest = { operationId };
+
+      return await this.postWithId<AwaitDepositResponse>(
+        "/wallet/await-deposit",
+        request,
+        federationId
+      );
+    },
+
+    /**
+     * Withdraws bitcoin from the federation
+     */
+    withdraw: async (
+      address: string,
+      amountMsat: number | "all",
+      federationId?: string
+    ): FedimintResponse<WithdrawResponse> => {
+      const request: WithdrawRequest = { address, amountMsat };
+
+      return await this.postWithId<WithdrawResponse>(
+        "/wallet/withdraw",
+        request,
+        federationId
+      );
+    },
   };
 }
 
