@@ -15,6 +15,23 @@ interface InfoResponse {
   denominationsMsat: TieredSummary;
 }
 
+interface FederationIdsResponse {
+  federationIds: string[];
+}
+
+interface DiscoverVersionRequest {
+  threshold?: number;
+}
+
+interface DiscoverVersionResponse {
+  [federationId: string]: any;
+}
+
+interface JoinRequest {
+  inviteCode: string;
+  useManualSecret: boolean;
+}
+
 interface BackupRequest {
   metadata: { [key: string]: string };
 }
@@ -100,7 +117,6 @@ interface AwaitInvoiceRequest {
 interface LnPayRequest {
   paymentInfo: string;
   amountMsat?: number;
-  finishInBackground: boolean;
   lnurlComment?: string;
 }
 
@@ -124,59 +140,14 @@ interface SwitchGatewayRequest {
   gatewayId: string;
 }
 
-interface FederationIdPrefix {
-  0: number; // Assuming u8 is equivalent to number in TypeScript
-  1: number;
-  2: number;
-  3: number;
-}
+type FederationIdPrefix = string;
 
 interface TieredMulti<T> {
-  [amount: number]: T[]; // Assuming Amount is equivalent to number in TypeScript
-}
-
-interface Signature {
-  0: G1Affine;
-}
-
-interface G1Affine {
-  x: Fp;
-  y: Fp;
-  infinity: Choice;
-}
-
-interface Fp {
-  0: number[]; // Assuming u64 is equivalent to number in TypeScript
-}
-
-interface Choice {
-  0: number; // Assuming u8 is equivalent to number in TypeScript
-}
-
-interface KeyPair {
-  0: number[]; // Assuming c_uchar is equivalent to number in TypeScript
-}
-
-interface OOBNotesData {
-  Notes?: TieredMulti<SpendableNote>;
-  FederationIdPrefix?: FederationIdPrefix;
-  Default?: {
-    variant: number; // Assuming u64 is equivalent to number in TypeScript
-    bytes: number[]; // Assuming Vec<u8> is equivalent to number[] in TypeScript
-  };
-}
-
-interface OOBNotes {
-  0: OOBNotesData[];
-}
-
-interface SpendableNote {
-  signature: Signature;
-  spendKey: KeyPair;
+  [amount: number]: T[];
 }
 
 interface ReissueRequest {
-  notes: OOBNotes;
+  notes: string;
 }
 
 interface ReissueResponse {
@@ -191,11 +162,11 @@ interface SpendRequest {
 
 interface SpendResponse {
   operation: string;
-  notes: OOBNotes;
+  notes: string;
 }
 
 interface ValidateRequest {
-  notes: OOBNotes;
+  notes: string;
 }
 
 interface ValidateResponse {
@@ -203,25 +174,29 @@ interface ValidateResponse {
 }
 
 interface SplitRequest {
-  notes: OOBNotes;
+  notes: string;
 }
 
 interface SplitResponse {
-  notes: Record<number, OOBNotes>;
+  notes: Record<number, string>;
 }
 
 interface CombineRequest {
-  notes: OOBNotes[];
+  notesVec: string[];
 }
 
 interface CombineResponse {
-  notes: OOBNotes;
+  notes: string;
 }
 
 export type {
   Tiered,
   TieredSummary,
   InfoResponse,
+  FederationIdsResponse,
+  DiscoverVersionRequest,
+  DiscoverVersionResponse,
+  JoinRequest,
   BackupRequest,
   ListOperationsRequest,
   OperationOutput,

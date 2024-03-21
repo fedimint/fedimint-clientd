@@ -230,7 +230,7 @@ fn fedimint_v2_rest() -> Router<AppState> {
         .route("/backup", post(fedimint::admin::backup::handle_rest))
         .route(
             "/discover-version",
-            get(fedimint::admin::discover_version::handle_rest),
+            post(fedimint::admin::discover_version::handle_rest),
         )
         .route(
             "/federation-ids",

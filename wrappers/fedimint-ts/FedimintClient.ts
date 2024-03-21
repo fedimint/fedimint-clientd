@@ -4,7 +4,10 @@ import type {
   ListOperationsRequest,
   FederationIdsResponse,
   OperationOutput,
-} from "./types/common";
+  DiscoverVersionRequest,
+  DiscoverVersionResponse,
+  JoinRequest,
+} from "./types";
 import type {
   AwaitInvoiceRequest,
   Gateway,
@@ -12,7 +15,7 @@ import type {
   LnInvoiceResponse,
   LnPayRequest,
   LnPayResponse,
-} from "./types/modules/ln";
+} from "./types";
 import type {
   CombineRequest,
   CombineResponse,
@@ -24,7 +27,7 @@ import type {
   SplitResponse,
   ValidateRequest,
   ValidateResponse,
-} from "./types/modules/mint";
+} from "./types";
 import type {
   AwaitDepositRequest,
   AwaitDepositResponse,
@@ -32,7 +35,7 @@ import type {
   DepositAddressResponse,
   WithdrawRequest,
   WithdrawResponse,
-} from "./types/modules/wallet";
+} from "./types";
 
 type FedimintResponse<T> = Promise<T>;
 
@@ -186,8 +189,16 @@ class FedimintClient {
   /**
    * Returns the API version to use to communicate with the federation
    */
-  public async discoverVersion(): FedimintResponse<string> {
-    return this.get<string>("/admin/discover-version");
+  public async discoverVersion(
+    threshold?: number
+  ): FedimintResponse<DiscoverVersionResponse> {
+    const request: DiscoverVersionRequest = threshold ? { threshold } : {};
+    console.log("request", request);
+
+    return this.post<DiscoverVersionResponse>(
+      "/admin/discover-version",
+      request
+    );
   }
 
   /**
@@ -209,11 +220,12 @@ class FedimintClient {
    * Returns an array of federation IDs that the client is now connected to
    */
   public async join(
-    inviteCode: string
+    inviteCode: string,
+    useManualSecret: boolean = false
   ): FedimintResponse<FederationIdsResponse> {
-    return await this.post<FederationIdsResponse>("/admin/join", {
-      inviteCode,
-    });
+    const request: JoinRequest = { inviteCode, useManualSecret };
+
+    return await this.post<FederationIdsResponse>("/admin/join", request);
   }
 
   /**

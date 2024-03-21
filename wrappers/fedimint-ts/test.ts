@@ -5,13 +5,13 @@ dotenv.config();
 
 const logMethod = (method: string) => {
   console.log("--------------------");
-  console.log(`\nMethod: ${method}`);
+  console.log(`Method: ${method}`);
 };
 
 const logInputAndOutput = (input: any, output: any) => {
   console.log("Input: ", input);
   console.log("Output: ", output);
-  console.log("--------------------\n\n");
+  console.log("--------------------");
 };
 
 async function buildTestClient() {
@@ -19,7 +19,7 @@ async function buildTestClient() {
   const password = process.env.PASSWORD || "password";
   const builder = new FedimintClientBuilder();
   builder.setBaseUrl(baseUrl).setPassword(password).setActiveFederationId(
-    "412d2a9338ebeee5957382eb06eac07fa5235087b5a7d5d0a6e18c635394e9ed" // Fedi Alpha Mutinynet
+    "15db8cb4f1ec8e484d73b889372bec94812580f929e8148b7437d359af422cd3" // Fedi Alpha Mutinynet
   );
 
   return await builder.build();
@@ -109,17 +109,18 @@ async function main() {
   logInputAndOutput({ notesVec }, data);
 
   // ONCHAIN METHODS
-  // // `/v2/onchain/deposit-address`
-  // logMethod("/v2/onchain/deposit-address");
-  // data = await fedimintClient.onchain.createDepositAddress(1000);
-  // logInputAndOutput({ timeout: 1000 }, data);
+  // `/v2/onchain/deposit-address`
+  logMethod("/v2/onchain/deposit-address");
+  data = await fedimintClient.onchain.createDepositAddress(1000);
+  logInputAndOutput({ timeout: 1000 }, data);
+  // `/v2/onchain/withdraw`
+  logMethod("/v2/onchain/withdraw");
+  data = await fedimintClient.onchain.withdraw(data.address, 1000);
+  logInputAndOutput({ address: data.address, amountMsat: 1000 }, data);
   // // `/v2/onchain/await-deposit`
   // logMethod("/v2/onchain/await-deposit");
   // data = await fedimintClient.onchain.awaitDeposit(data.operationId);
   // logInputAndOutput({ operationId: data.operationId }, data);
-  // // `/v2/onchain/withdraw`
-  // logMethod("/v2/onchain/withdraw");
-  // data = await fedimintClient.
 }
 
 main().catch(console.error);
