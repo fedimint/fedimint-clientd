@@ -1,5 +1,6 @@
 [build]
 rustflags = ["--cfg", "tokio_unstable"]
+rustdocflags = ["--cfg", "tokio_unstable"]
 
 [env]
 RUST_LOG = "info"
