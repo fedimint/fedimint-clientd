@@ -11,7 +11,7 @@ use crate::error::AppError;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CombineRequest {
-    pub notes: Vec<OOBNotes>,
+    pub notes_vec: Vec<OOBNotes>,
 }
 
 #[derive(Debug, Serialize)]
@@ -22,7 +22,7 @@ pub struct CombineResponse {
 
 async fn _combine(req: CombineRequest) -> Result<CombineResponse, AppError> {
     let federation_id_prefix = match req
-        .notes
+        .notes_vec
         .iter()
         .map(|notes| notes.federation_id_prefix())
         .all_equal_value()
@@ -43,7 +43,7 @@ async fn _combine(req: CombineRequest) -> Result<CombineResponse, AppError> {
     };
 
     let combined_notes = req
-        .notes
+        .notes_vec
         .iter()
         .flat_map(|notes| notes.notes().iter_items().map(|(amt, note)| (amt, *note)))
         .collect();

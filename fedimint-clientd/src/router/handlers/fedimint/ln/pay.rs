@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context};
+use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
@@ -20,7 +20,6 @@ use crate::state::AppState;
 pub struct LnPayRequest {
     pub payment_info: String,
     pub amount_msat: Option<Amount>,
-    pub finish_in_background: bool,
     pub lnurl_comment: Option<String>,
     pub federation_id: FederationId,
 }
@@ -45,40 +44,36 @@ async fn _pay(client: ClientHandleArc, req: LnPayRequest) -> Result<LnPayRespons
             return Err(AppError::new(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 anyhow!("No gateways available"),
-            ))
+            ));
         }
     };
-    let gateway = lightning_module.select_gateway(&gateway_id).await.ok_or_else(|| {
-        error!("Failed to select gateway");
-        AppError::new(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            anyhow!("Failed to select gateway"),
-        )
-    })?;
+    let gateway = lightning_module
+        .select_gateway(&gateway_id)
+        .await
+        .ok_or_else(|| {
+            error!("Failed to select gateway");
+            AppError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                anyhow!("Failed to select gateway"),
+            )
+        })?;
 
     let OutgoingLightningPayment {
         payment_type,
         contract_id,
         fee,
-    } = lightning_module.pay_bolt11_invoice(Some(gateway), bolt11, ()).await?;
+    } = lightning_module
+        .pay_bolt11_invoice(Some(gateway), bolt11, ())
+        .await?;
     let operation_id = payment_type.operation_id();
     info!("Gateway fee: {fee}, payment operation id: {operation_id}");
-    if req.finish_in_background {
-        wait_for_ln_payment(&client, payment_type, contract_id.to_string(), true).await?;
-        info!("Payment will finish in background, use await-ln-pay to get the result");
-        Ok(LnPayResponse {
-            operation_id,
-            payment_type,
-            contract_id: contract_id.to_string(),
-            fee,
+
+    wait_for_ln_payment(&client, payment_type, contract_id.to_string(), false)
+        .await?
+        .ok_or_else(|| {
+            error!("Payment failed");
+            AppError::new(StatusCode::INTERNAL_SERVER_ERROR, anyhow!("Payment failed"))
         })
-    } else {
-        Ok(
-            wait_for_ln_payment(&client, payment_type, contract_id.to_string(), false)
-                .await?
-                .context("expected a response")?,
-        )
-    }
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {

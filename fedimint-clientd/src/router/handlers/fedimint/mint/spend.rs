@@ -8,7 +8,9 @@ use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
 use fedimint_core::Amount;
-use fedimint_mint_client::{MintClientModule, OOBNotes, SelectNotesWithAtleastAmount, SelectNotesWithExactAmount};
+use fedimint_mint_client::{
+    MintClientModule, OOBNotes, SelectNotesWithAtleastAmount, SelectNotesWithExactAmount,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::{info, warn};
@@ -36,39 +38,39 @@ pub struct SpendResponse {
 async fn _spend(client: ClientHandleArc, req: SpendRequest) -> Result<SpendResponse, AppError> {
     warn!("The client will try to double-spend these notes after the duration specified by the --timeout option to recover any unclaimed e-cash.");
     let mint_module = client.get_first_module::<MintClientModule>();
-            let timeout = Duration::from_secs(req.timeout);
-            let (operation, notes) = if req.allow_overpay {
-                let (operation, notes) = mint_module
-                    .spend_notes_with_selector(
-                        &SelectNotesWithAtleastAmount,
-                        req.amount_msat,
-                        timeout,
-                        req.include_invite,
-                        (),
-                    )
-                    .await?;
+    let timeout = Duration::from_secs(req.timeout);
+    let (operation, notes) = if req.allow_overpay {
+        let (operation, notes) = mint_module
+            .spend_notes_with_selector(
+                &SelectNotesWithAtleastAmount,
+                req.amount_msat,
+                timeout,
+                req.include_invite,
+                (),
+            )
+            .await?;
 
-                let overspend_amount = notes.total_amount() - req.amount_msat;
-                if overspend_amount != Amount::ZERO {
-                    warn!(
-                        "Selected notes {} worth more than requested",
-                        overspend_amount
-                    );
-                }
+        let overspend_amount = notes.total_amount() - req.amount_msat;
+        if overspend_amount != Amount::ZERO {
+            warn!(
+                "Selected notes {} worth more than requested",
+                overspend_amount
+            );
+        }
 
-                (operation, notes)
-            } else {
-                mint_module
-                    .spend_notes_with_selector(
-                        &SelectNotesWithExactAmount,
-                        req.amount_msat,
-                        timeout,
-                        req.include_invite,
-                        (),
-                    )
-                    .await?
-            };
-            info!("Spend e-cash operation: {operation}");
+        (operation, notes)
+    } else {
+        mint_module
+            .spend_notes_with_selector(
+                &SelectNotesWithExactAmount,
+                req.amount_msat,
+                timeout,
+                req.include_invite,
+                (),
+            )
+            .await?
+    };
+    info!("Spend e-cash operation: {operation}");
     Ok(SpendResponse { operation, notes })
 }
 

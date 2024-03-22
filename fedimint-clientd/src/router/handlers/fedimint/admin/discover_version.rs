@@ -15,7 +15,10 @@ pub struct DiscoverVersionRequest {
     threshold: Option<usize>,
 }
 
-async fn _discover_version(multimint: MultiMint, threshold: Option<usize>) -> Result<Value, AppError> {
+async fn _discover_version(
+    multimint: MultiMint,
+    threshold: Option<usize>,
+) -> Result<Value, AppError> {
     let mut api_versions = HashMap::new();
     for (id, client) in multimint.clients.lock().await.iter() {
         api_versions.insert(

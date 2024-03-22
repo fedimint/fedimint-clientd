@@ -209,7 +209,6 @@ fn fedimint_v2_rest() -> Router<AppState> {
             post(fedimint::ln::await_invoice::handle_rest),
         )
         .route("/pay", post(fedimint::ln::pay::handle_rest))
-        .route("/await-pay", post(fedimint::ln::await_pay::handle_rest))
         .route(
             "/list-gateways",
             post(fedimint::ln::list_gateways::handle_rest),
@@ -230,7 +229,7 @@ fn fedimint_v2_rest() -> Router<AppState> {
         .route("/backup", post(fedimint::admin::backup::handle_rest))
         .route(
             "/discover-version",
-            get(fedimint::admin::discover_version::handle_rest),
+            post(fedimint::admin::discover_version::handle_rest),
         )
         .route(
             "/federation-ids",

@@ -62,7 +62,6 @@ pub enum JsonRpcMethod {
     LnInvoice,
     LnAwaitInvoice,
     LnPay,
-    LnAwaitPay,
     LnListGateways,
     WalletDepositAddress,
     WalletAwaitDeposit,
@@ -188,9 +187,6 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
         }
         JsonRpcMethod::LnPay => {
             handlers::fedimint::ln::pay::handle_ws(state.clone(), req.params).await
-        }
-        JsonRpcMethod::LnAwaitPay => {
-            handlers::fedimint::ln::await_pay::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::LnListGateways => {
             handlers::fedimint::ln::list_gateways::handle_ws(state.clone(), req.params).await
