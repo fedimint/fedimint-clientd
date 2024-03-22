@@ -212,12 +212,20 @@ fn fedimint_v2_rest() -> Router<AppState> {
             post(fedimint::ln::invoice_external_pubkey::handle_rest),
         )
         .route(
+            "/invoice-external-pubkey-tweaked",
+            post(fedimint::ln::invoice_external_pubkey_tweaked::handle_rest),
+        )
+        .route(
             "/await-invoice",
             post(fedimint::ln::await_invoice::handle_rest),
         )
         .route(
             "/claim-external-receive",
             post(fedimint::ln::claim_external_receive::handle_rest),
+        )
+        .route(
+            "/claim-external-receive-tweaked",
+            post(fedimint::ln::claim_external_receive_tweaked::handle_rest),
         )
         .route("/pay", post(fedimint::ln::pay::handle_rest))
         .route(

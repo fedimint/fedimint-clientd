@@ -61,8 +61,10 @@ pub enum JsonRpcMethod {
     MintCombine,
     LnInvoice,
     LnInvoiceExternalPubkey,
+    LnInvoiceExternalPubkeyTweaked,
     LnAwaitInvoice,
     LnClaimExternalReceive,
+    LnClaimExternalReceiveTweaked,
     LnPay,
     LnListGateways,
     WalletDepositAddress,
@@ -188,12 +190,26 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
             handlers::fedimint::ln::invoice_external_pubkey::handle_ws(state.clone(), req.params)
                 .await
         }
+        JsonRpcMethod::LnInvoiceExternalPubkeyTweaked => {
+            handlers::fedimint::ln::invoice_external_pubkey_tweaked::handle_ws(
+                state.clone(),
+                req.params,
+            )
+            .await
+        }
         JsonRpcMethod::LnAwaitInvoice => {
             handlers::fedimint::ln::await_invoice::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::LnClaimExternalReceive => {
             handlers::fedimint::ln::claim_external_receive::handle_ws(state.clone(), req.params)
                 .await
+        }
+        JsonRpcMethod::LnClaimExternalReceiveTweaked => {
+            handlers::fedimint::ln::claim_external_receive_tweaked::handle_ws(
+                state.clone(),
+                req.params,
+            )
+            .await
         }
         JsonRpcMethod::LnPay => {
             handlers::fedimint::ln::pay::handle_ws(state.clone(), req.params).await
