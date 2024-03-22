@@ -986,18 +986,6 @@ checksum = "8d79878f18e518d77cfb3126939d0e63a62cad845d51a3266f4ac866f2efe57f"
 
 [[package]]
 name = "fedimint-aead"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "argon2",
- "hex",
- "rand",
- "ring 0.17.8",
-]
-
-[[package]]
-name = "fedimint-aead"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
@@ -1006,27 +994,6 @@ dependencies = [
  "hex",
  "rand",
  "ring 0.17.8",
-]
-
-[[package]]
-name = "fedimint-bitcoind"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "async-trait",
- "bitcoin 0.29.2",
- "bitcoin_hashes 0.11.0",
- "bitcoincore-rpc",
- "esplora-client",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-logging 0.3.0-rc.0",
- "lazy_static",
- "rand",
- "serde",
- "serde_json",
- "tracing",
- "url",
 ]
 
 [[package]]
@@ -1040,8 +1007,8 @@ dependencies = [
  "bitcoin_hashes 0.11.0",
  "bitcoincore-rpc",
  "esplora-client",
- "fedimint-core 0.3.0-rc.1",
- "fedimint-logging 0.3.0-rc.1",
+ "fedimint-core",
+ "fedimint-logging",
  "lazy_static",
  "rand",
  "serde",
@@ -1052,49 +1019,10 @@ dependencies = [
 
 [[package]]
 name = "fedimint-build"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "serde_json",
-]
-
-[[package]]
-name = "fedimint-build"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
  "serde_json",
-]
-
-[[package]]
-name = "fedimint-client"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "aquamarine",
- "async-stream",
- "async-trait",
- "bitcoin 0.29.2",
- "bitcoin_hashes 0.11.0",
- "fedimint-aead 0.3.0-rc.0",
- "fedimint-build 0.3.0-rc.0",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-derive-secret 0.3.0-rc.0",
- "fedimint-logging 0.3.0-rc.0",
- "futures",
- "itertools 0.12.1",
- "rand",
- "ring 0.17.8",
- "secp256k1-zkp",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "thiserror",
- "tokio",
- "tokio-stream",
- "tracing",
 ]
 
 [[package]]
@@ -1108,11 +1036,11 @@ dependencies = [
  "async-trait",
  "bitcoin 0.29.2",
  "bitcoin_hashes 0.11.0",
- "fedimint-aead 0.3.0-rc.1",
- "fedimint-build 0.3.0-rc.1",
- "fedimint-core 0.3.0-rc.1",
- "fedimint-derive-secret 0.3.0-rc.1",
- "fedimint-logging 0.3.0-rc.1",
+ "fedimint-aead",
+ "fedimint-build",
+ "fedimint-core",
+ "fedimint-derive-secret",
+ "fedimint-logging",
  "futures",
  "itertools 0.12.1",
  "rand",
@@ -1143,12 +1071,12 @@ dependencies = [
  "clap",
  "dotenv",
  "fedimint",
- "fedimint-client 0.3.0-rc.0",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-ln-client 0.3.0-rc.0",
- "fedimint-mint-client 0.3.0-rc.0",
- "fedimint-rocksdb 0.3.0-rc.0",
- "fedimint-wallet-client 0.3.0-rc.0",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-ln-client",
+ "fedimint-mint-client",
+ "fedimint-rocksdb",
+ "fedimint-wallet-client",
  "futures-util",
  "itertools 0.12.1",
  "lazy_static",
@@ -1168,59 +1096,6 @@ dependencies = [
 
 [[package]]
 name = "fedimint-core"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "async-lock",
- "async-recursion",
- "async-trait",
- "backtrace",
- "bech32",
- "bincode",
- "bitcoin 0.29.2",
- "bitcoin 0.30.2",
- "bitcoin_hashes 0.11.0",
- "bitvec",
- "erased-serde",
- "fedimint-derive 0.3.0-rc.0",
- "fedimint-logging 0.3.0-rc.0",
- "fedimint-tbs 0.3.0-rc.0",
- "fedimint-threshold-crypto",
- "futures",
- "getrandom",
- "gloo-timers 0.3.0",
- "hex",
- "imbl",
- "itertools 0.12.1",
- "js-sys",
- "jsonrpsee-core",
- "jsonrpsee-types",
- "jsonrpsee-wasm-client",
- "jsonrpsee-ws-client",
- "lightning",
- "lightning-invoice",
- "lru",
- "macro_rules_attribute",
- "miniscript 10.0.0",
- "parity-scale-codec",
- "rand",
- "secp256k1-zkp",
- "serde",
- "serde_json",
- "sha3",
- "strum",
- "strum_macros",
- "thiserror",
- "tokio",
- "tokio-rustls 0.23.4",
- "tracing",
- "url",
- "wasm-bindgen-futures",
-]
-
-[[package]]
-name = "fedimint-core"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
@@ -1236,9 +1111,9 @@ dependencies = [
  "bitcoin_hashes 0.11.0",
  "bitvec",
  "erased-serde",
- "fedimint-derive 0.3.0-rc.1",
- "fedimint-logging 0.3.0-rc.1",
- "fedimint-tbs 0.3.0-rc.1",
+ "fedimint-derive",
+ "fedimint-logging",
+ "fedimint-tbs",
  "fedimint-threshold-crypto",
  "futures",
  "getrandom",
@@ -1274,17 +1149,6 @@ dependencies = [
 
 [[package]]
 name = "fedimint-derive"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "itertools 0.12.1",
- "proc-macro2",
- "quote",
- "syn 2.0.53",
-]
-
-[[package]]
-name = "fedimint-derive"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
@@ -1296,36 +1160,15 @@ dependencies = [
 
 [[package]]
 name = "fedimint-derive-secret"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-hkdf 0.3.0-rc.0",
- "fedimint-tbs 0.3.0-rc.0",
- "ring 0.17.8",
- "secp256k1-zkp",
-]
-
-[[package]]
-name = "fedimint-derive-secret"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
  "anyhow",
- "fedimint-core 0.3.0-rc.1",
- "fedimint-hkdf 0.3.0-rc.1",
- "fedimint-tbs 0.3.0-rc.1",
+ "fedimint-core",
+ "fedimint-hkdf",
+ "fedimint-tbs",
  "ring 0.17.8",
  "secp256k1-zkp",
-]
-
-[[package]]
-name = "fedimint-hkdf"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "bitcoin_hashes 0.11.0",
 ]
 
 [[package]]
@@ -1334,40 +1177,6 @@ version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
  "bitcoin_hashes 0.11.0",
-]
-
-[[package]]
-name = "fedimint-ln-client"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "aquamarine",
- "async-stream",
- "async-trait",
- "bincode",
- "bitcoin 0.29.2",
- "bitcoin_hashes 0.11.0",
- "erased-serde",
- "fedimint-client 0.3.0-rc.0",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-ln-common 0.3.0-rc.0",
- "fedimint-threshold-crypto",
- "futures",
- "itertools 0.12.1",
- "lightning-invoice",
- "rand",
- "reqwest",
- "secp256k1 0.24.3",
- "secp256k1-zkp",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "thiserror",
- "tokio",
- "tracing",
- "url",
 ]
 
 [[package]]
@@ -1383,9 +1192,9 @@ dependencies = [
  "bitcoin 0.29.2",
  "bitcoin_hashes 0.11.0",
  "erased-serde",
- "fedimint-client 0.3.0-rc.1",
- "fedimint-core 0.3.0-rc.1",
- "fedimint-ln-common 0.3.0-rc.1",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-ln-common",
  "fedimint-threshold-crypto",
  "futures",
  "itertools 0.12.1",
@@ -1406,36 +1215,6 @@ dependencies = [
 
 [[package]]
 name = "fedimint-ln-common"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "aquamarine",
- "async-trait",
- "bitcoin 0.29.2",
- "bitcoin_hashes 0.11.0",
- "erased-serde",
- "fedimint-client 0.3.0-rc.0",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-threshold-crypto",
- "futures",
- "itertools 0.12.1",
- "lightning",
- "lightning-invoice",
- "rand",
- "secp256k1 0.24.3",
- "serde",
- "serde-big-array",
- "serde_json",
- "strum",
- "strum_macros",
- "thiserror",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "fedimint-ln-common"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
@@ -1445,8 +1224,8 @@ dependencies = [
  "bitcoin 0.29.2",
  "bitcoin_hashes 0.11.0",
  "erased-serde",
- "fedimint-client 0.3.0-rc.1",
- "fedimint-core 0.3.0-rc.1",
+ "fedimint-client",
+ "fedimint-core",
  "fedimint-threshold-crypto",
  "futures",
  "itertools 0.12.1",
@@ -1466,55 +1245,11 @@ dependencies = [
 
 [[package]]
 name = "fedimint-logging"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "fedimint-logging"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
  "anyhow",
  "tracing-subscriber",
-]
-
-[[package]]
-name = "fedimint-mint-client"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "aquamarine",
- "async-stream",
- "async-trait",
- "base64 0.22.0",
- "bincode",
- "bitcoin_hashes 0.11.0",
- "erased-serde",
- "fedimint-client 0.3.0-rc.0",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-derive-secret 0.3.0-rc.0",
- "fedimint-logging 0.3.0-rc.0",
- "fedimint-mint-common 0.3.0-rc.0",
- "fedimint-tbs 0.3.0-rc.0",
- "fedimint-threshold-crypto",
- "futures",
- "itertools 0.12.1",
- "rand",
- "secp256k1 0.24.3",
- "secp256k1-zkp",
- "serde",
- "serde-big-array",
- "serde_json",
- "strum",
- "strum_macros",
- "thiserror",
- "tokio",
- "tracing",
 ]
 
 [[package]]
@@ -1530,12 +1265,12 @@ dependencies = [
  "bincode",
  "bitcoin_hashes 0.11.0",
  "erased-serde",
- "fedimint-client 0.3.0-rc.1",
- "fedimint-core 0.3.0-rc.1",
- "fedimint-derive-secret 0.3.0-rc.1",
- "fedimint-logging 0.3.0-rc.1",
- "fedimint-mint-common 0.3.0-rc.1",
- "fedimint-tbs 0.3.0-rc.1",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-derive-secret",
+ "fedimint-logging",
+ "fedimint-mint-common",
+ "fedimint-tbs",
  "fedimint-threshold-crypto",
  "futures",
  "itertools 0.12.1",
@@ -1554,30 +1289,6 @@ dependencies = [
 
 [[package]]
 name = "fedimint-mint-common"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "async-trait",
- "bincode",
- "bitcoin_hashes 0.11.0",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-tbs 0.3.0-rc.0",
- "fedimint-threshold-crypto",
- "futures",
- "itertools 0.12.1",
- "rand",
- "secp256k1 0.24.3",
- "secp256k1-zkp",
- "serde",
- "strum",
- "strum_macros",
- "thiserror",
- "tracing",
-]
-
-[[package]]
-name = "fedimint-mint-common"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
@@ -1585,8 +1296,8 @@ dependencies = [
  "async-trait",
  "bincode",
  "bitcoin_hashes 0.11.0",
- "fedimint-core 0.3.0-rc.1",
- "fedimint-tbs 0.3.0-rc.1",
+ "fedimint-core",
+ "fedimint-tbs",
  "fedimint-threshold-crypto",
  "futures",
  "itertools 0.12.1",
@@ -1602,45 +1313,16 @@ dependencies = [
 
 [[package]]
 name = "fedimint-rocksdb"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "async-trait",
- "fedimint-core 0.3.0-rc.0",
- "futures",
- "rocksdb",
- "tokio",
- "tracing",
-]
-
-[[package]]
-name = "fedimint-rocksdb"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
  "anyhow",
  "async-trait",
- "fedimint-core 0.3.0-rc.1",
+ "fedimint-core",
  "futures",
  "rocksdb",
  "tokio",
  "tracing",
-]
-
-[[package]]
-name = "fedimint-tbs"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "bitcoin_hashes 0.11.0",
- "bls12_381",
- "ff",
- "group",
- "rand",
- "rand_chacha",
- "serde",
- "sha3",
 ]
 
 [[package]]
@@ -1682,37 +1364,6 @@ dependencies = [
 
 [[package]]
 name = "fedimint-wallet-client"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "aquamarine",
- "async-stream",
- "async-trait",
- "bitcoin 0.29.2",
- "erased-serde",
- "fedimint-bitcoind 0.3.0-rc.0",
- "fedimint-client 0.3.0-rc.0",
- "fedimint-core 0.3.0-rc.0",
- "fedimint-wallet-common 0.3.0-rc.0",
- "futures",
- "impl-tools",
- "miniscript 10.0.0",
- "rand",
- "secp256k1 0.24.3",
- "serde",
- "serde_json",
- "strum",
- "strum_macros",
- "thiserror",
- "tokio",
- "tracing",
- "url",
- "validator",
-]
-
-[[package]]
-name = "fedimint-wallet-client"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
@@ -1722,10 +1373,10 @@ dependencies = [
  "async-trait",
  "bitcoin 0.29.2",
  "erased-serde",
- "fedimint-bitcoind 0.3.0-rc.1",
- "fedimint-client 0.3.0-rc.1",
- "fedimint-core 0.3.0-rc.1",
- "fedimint-wallet-common 0.3.0-rc.1",
+ "fedimint-bitcoind",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-wallet-common",
  "futures",
  "impl-tools",
  "miniscript 10.0.0",
@@ -1744,31 +1395,6 @@ dependencies = [
 
 [[package]]
 name = "fedimint-wallet-common"
-version = "0.3.0-rc.0"
-source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.0#45c945d6307f440fd18d1fde3331fc681e0b5d1c"
-dependencies = [
- "anyhow",
- "async-trait",
- "bitcoin 0.29.2",
- "erased-serde",
- "fedimint-core 0.3.0-rc.0",
- "futures",
- "impl-tools",
- "miniscript 10.0.0",
- "miniscript 9.0.2",
- "rand",
- "secp256k1 0.24.3",
- "serde",
- "strum",
- "strum_macros",
- "thiserror",
- "tracing",
- "url",
- "validator",
-]
-
-[[package]]
-name = "fedimint-wallet-common"
 version = "0.3.0-rc.1"
 source = "git+https://github.com/fedimint/fedimint?tag=v0.3.0-rc.1#c51ea0c85576008dcbf9d94e2fe994dfa34bca61"
 dependencies = [
@@ -1776,7 +1402,7 @@ dependencies = [
  "async-trait",
  "bitcoin 0.29.2",
  "erased-serde",
- "fedimint-core 0.3.0-rc.1",
+ "fedimint-core",
  "futures",
  "impl-tools",
  "miniscript 10.0.0",
@@ -2823,12 +2449,12 @@ name = "multimint"
 version = "0.1.12"
 dependencies = [
  "anyhow",
- "fedimint-client 0.3.0-rc.1",
- "fedimint-core 0.3.0-rc.1",
- "fedimint-ln-client 0.3.0-rc.1",
- "fedimint-mint-client 0.3.0-rc.1",
- "fedimint-rocksdb 0.3.0-rc.1",
- "fedimint-wallet-client 0.3.0-rc.1",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-ln-client",
+ "fedimint-mint-client",
+ "fedimint-rocksdb",
+ "fedimint-wallet-client",
  "futures-util",
  "hex",
  "rand",

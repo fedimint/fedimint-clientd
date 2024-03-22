@@ -182,7 +182,10 @@ async fn main() -> Result<()> {
 /// Lightning network related commands:
 /// - `/fedimint/v2/ln/invoice`: Create a lightning invoice to receive payment
 ///   via gateway.
+/// - `/fedimint/v2/ln/invoice-external-pubkey`: Create a lightning invoice to
+///  receive payment via gateway with external pubkey.
 /// - `/fedimint/v2/ln/await-invoice`: Wait for incoming invoice to be paid.
+/// - `/fedimint/v2/ln/claim-external-receive`: Claim an external receive.
 /// - `/fedimint/v2/ln/pay`: Pay a lightning invoice or lnurl via a gateway.
 /// - `/fedimint/v2/ln/await-pay`: Wait for a lightning payment to complete.
 /// - `/fedimint/v2/ln/list-gateways`: List registered gateways.
@@ -205,8 +208,24 @@ fn fedimint_v2_rest() -> Router<AppState> {
     let ln_router = Router::new()
         .route("/invoice", post(fedimint::ln::invoice::handle_rest))
         .route(
+            "/invoice-external-pubkey",
+            post(fedimint::ln::invoice_external_pubkey::handle_rest),
+        )
+        .route(
+            "/invoice-external-pubkey-tweaked",
+            post(fedimint::ln::invoice_external_pubkey_tweaked::handle_rest),
+        )
+        .route(
             "/await-invoice",
             post(fedimint::ln::await_invoice::handle_rest),
+        )
+        .route(
+            "/claim-external-receive",
+            post(fedimint::ln::claim_external_receive::handle_rest),
+        )
+        .route(
+            "/claim-external-receive-tweaked",
+            post(fedimint::ln::claim_external_receive_tweaked::handle_rest),
         )
         .route("/pay", post(fedimint::ln::pay::handle_rest))
         .route(

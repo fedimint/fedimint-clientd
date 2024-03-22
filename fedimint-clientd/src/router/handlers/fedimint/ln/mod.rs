@@ -11,7 +11,11 @@ use tracing::{debug, info};
 use self::pay::{LnPayRequest, LnPayResponse};
 
 pub mod await_invoice;
+pub mod claim_external_receive;
+pub mod claim_external_receive_tweaked;
 pub mod invoice;
+pub mod invoice_external_pubkey;
+pub mod invoice_external_pubkey_tweaked;
 pub mod list_gateways;
 pub mod pay;
 
