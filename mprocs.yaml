@@ -1,6 +1,7 @@
 procs:
   user:
-    shell: zsh
+    shell: zsh # if on macOS
+    # shell: bash # if on Linux
     stop: SIGKILL
   fedimint-clientd:
     shell: cargo run --manifest-path fedimint-clientd/Cargo.toml
