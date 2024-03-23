@@ -23,6 +23,7 @@ pub struct JoinRequest {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JoinResponse {
+    pub this_federation_id: FederationId,
     pub federation_ids: Vec<FederationId>,
 }
 
@@ -40,13 +41,16 @@ async fn _join(mut multimint: MultiMint, req: JoinRequest) -> Result<JoinRespons
         None
     };
 
-    let _ = multimint
+    let this_federation_id = multimint
         .register_new(req.invite_code.clone(), manual_secret)
         .await?;
 
     let federation_ids = multimint.ids().await.into_iter().collect::<Vec<_>>();
 
-    Ok(JoinResponse { federation_ids })
+    Ok(JoinResponse {
+        this_federation_id,
+        federation_ids,
+    })
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {

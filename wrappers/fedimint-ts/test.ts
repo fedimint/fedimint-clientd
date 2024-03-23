@@ -43,13 +43,18 @@ async function buildTestClient() {
     "15db8cb4f1ec8e484d73b889372bec94812580f929e8148b7437d359af422cd3" // Fedi Alpha Mutinynet
   );
 
-  return await builder.build();
+  const client = await builder.build();
+
+  await client.useDefaultGateway();
+
+  console.log("Default gateway id: ", client.getActiveGatewayId());
+
+  return client;
 }
 
 // Runs through all of the methods in the Fedimint Client
 async function main() {
   const fedimintClient = await buildTestClient();
-
   const keyPair = newKeyPair();
   console.log("Generated key pair: ", keyPair);
 
@@ -75,7 +80,7 @@ async function main() {
     process.env.INVITE_CODE ||
     "fed11qgqrgvnhwden5te0v9k8q6rp9ekh2arfdeukuet595cr2ttpd3jhq6rzve6zuer9wchxvetyd938gcewvdhk6tcqqysptkuvknc7erjgf4em3zfh90kffqf9srujn6q53d6r056e4apze5cw27h75";
   logMethod("/v2/admin/join");
-  data = await fedimintClient.join(inviteCode);
+  data = await fedimintClient.join(inviteCode, true, true);
   logInputAndOutput({ inviteCode }, data);
   // `/v2/admin/list-operations`
   logMethod("/v2/admin/list-operations");

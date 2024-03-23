@@ -32,6 +32,11 @@ interface JoinRequest {
   useManualSecret: boolean;
 }
 
+interface JoinResponse {
+  thisFederationId: string;
+  federationIds: string[];
+}
+
 interface BackupRequest {
   metadata: { [key: string]: string };
 }
@@ -165,9 +170,33 @@ interface LnAwaitPayRequest {
   operationId: string;
 }
 
+interface GatewayInfo {
+  api: string;
+  fees: GatewayFees;
+  gateway_id: string;
+  gateway_redeem_key: string;
+  lightning_alias: string;
+  mint_channel_id: number;
+  node_pub_key: string;
+  route_hints: any[]; // Adjust the type according to the actual structure of route hints
+  supports_private_payments: boolean;
+}
+
+interface GatewayFees {
+  base_msat: number;
+  proportional_millionths: number;
+}
+
+interface GatewayTTL {
+  nanos: number;
+  secs: number;
+}
+
 interface Gateway {
-  nodePubKey: string;
-  active: boolean;
+  federation_id: string;
+  info: GatewayInfo;
+  ttl: GatewayTTL;
+  vetted: boolean;
 }
 
 interface SwitchGatewayRequest {
@@ -258,6 +287,7 @@ export type {
   DiscoverVersionRequest,
   DiscoverVersionResponse,
   JoinRequest,
+  JoinResponse,
   BackupRequest,
   ListOperationsRequest,
   OperationOutput,
