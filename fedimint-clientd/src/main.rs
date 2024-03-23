@@ -199,6 +199,14 @@ async fn main() -> Result<()> {
 /// - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
 fn fedimint_v2_rest() -> Router<AppState> {
     let mint_router = Router::new()
+        .route(
+            "/decode-notes",
+            post(fedimint::mint::decode_notes::handle_rest),
+        )
+        .route(
+            "/encode-notes",
+            post(fedimint::mint::encode_notes::handle_rest),
+        )
         .route("/reissue", post(fedimint::mint::reissue::handle_rest))
         .route("/spend", post(fedimint::mint::spend::handle_rest))
         .route("/validate", post(fedimint::mint::validate::handle_rest))

@@ -54,6 +54,8 @@ pub enum JsonRpcMethod {
     AdminModule,
     AdminRestore,
     AdminListOperations,
+    MintDecodeNotes,
+    MintEncodeNotes,
     MintReissue,
     MintSpend,
     MintValidate,
@@ -169,6 +171,12 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
         }
         JsonRpcMethod::AdminListOperations => {
             handlers::fedimint::admin::list_operations::handle_ws(state.clone(), req.params).await
+        }
+        JsonRpcMethod::MintDecodeNotes => {
+            handlers::fedimint::mint::decode_notes::handle_ws(req.params).await
+        }
+        JsonRpcMethod::MintEncodeNotes => {
+            handlers::fedimint::mint::encode_notes::handle_ws(req.params).await
         }
         JsonRpcMethod::MintReissue => {
             handlers::fedimint::mint::reissue::handle_ws(state.clone(), req.params).await
