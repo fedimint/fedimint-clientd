@@ -5,12 +5,12 @@ type DepositAddressRequest struct {
 }
 
 type DepositAddressResponse struct {
-	OperationID string `json:"operation_id"`
+	OperationId string `json:"operationId"`
 	Address     string `json:"address"`
 }
 
 type AwaitDepositRequest struct {
-	OperationID string `json:"operation_id"`
+	OperationId string `json:"operationId"`
 }
 
 type AwaitDepositResponse struct {
@@ -18,11 +18,11 @@ type AwaitDepositResponse struct {
 }
 
 type WithdrawRequest struct {
-	Address    string `json:"address"`
-	AmountMsat string `json:"amount_msat"`
+	Address   string `json:"address"`
+	AmountSat int    `json:"amountSat"`
 }
 
 type WithdrawResponse struct {
 	Txid    string `json:"txid"`
-	FeesSat int    `json:"fees_sat"`
+	FeesSat int    `json:"feesSat"`
 }

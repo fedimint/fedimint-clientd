@@ -27,6 +27,16 @@ type FederationIdsResponse struct {
 	FederationIds []string `json:"federationIds"`
 }
 
+type JoinRequest struct {
+	InviteCode      string `json:"inviteCode"`
+	UseManualSecret bool   `json:"useManualSecret"`
+}
+
+type JoinResponse struct {
+	ThisFederationId string   `json:"thisFederationId"`
+	FederationIds    []string `json:"federationIds"`
+}
+
 type OperationOutput struct {
 	ID            string      `json:"id"`
 	CreationTime  string      `json:"creation_time"`

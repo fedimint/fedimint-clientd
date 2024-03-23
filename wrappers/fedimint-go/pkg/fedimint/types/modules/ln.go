@@ -33,9 +33,33 @@ type AwaitLnPayRequest struct {
 	Operation_id string `json:"operation_id"`
 }
 
+type GatewayInfo struct {
+	API                     string        `json:"api"`
+	Fees                    GatewayFees   `json:"fees"`
+	GatewayID               string        `json:"gateway_id"`
+	GatewayRedeemKey        string        `json:"gateway_redeem_key"`
+	LightningAlias          string        `json:"lightning_alias"`
+	MintChannelID           int           `json:"mint_channel_id"`
+	NodePubKey              string        `json:"node_pub_key"`
+	RouteHints              []interface{} `json:"route_hints"` // Adjust the type according to the actual structure of route hints
+	SupportsPrivatePayments bool          `json:"supports_private_payments"`
+}
+
+type GatewayFees struct {
+	BaseMsat               int `json:"base_msat"`
+	ProportionalMillionths int `json:"proportional_millionths"`
+}
+
+type GatewayTTL struct {
+	Nanos int `json:"nanos"`
+	Secs  int `json:"secs"`
+}
+
 type Gateway struct {
-	Node_pub_key string `json:"node_pub_key"`
-	Active       bool   `json:"active"`
+	FederationID string      `json:"federation_id"`
+	Info         GatewayInfo `json:"info"`
+	TTL          GatewayTTL  `json:"ttl"`
+	Vetted       bool        `json:"vetted"`
 }
 
 // string::> FederationId

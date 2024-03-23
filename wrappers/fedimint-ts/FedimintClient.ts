@@ -247,6 +247,20 @@ class FedimintClient {
   }
 
   /**
+   * Fetches wallet information including holdings, tiers, and federation metadata.
+   */
+  public async info(): FedimintResponse<InfoResponse> {
+    return await this.get<InfoResponse>("/admin/info");
+  }
+
+  /**
+   * Returns the client configurations by federationId
+   */
+  public async config(): FedimintResponse<any> {
+    return await this.get<any>("/admin/config");
+  }
+
+  /**
    * Uploads the encrypted snapshot of mint notest to the federation
    */
   public async backup(
@@ -258,13 +272,6 @@ class FedimintClient {
       metadata,
       federationId
     );
-  }
-
-  /**
-   * Returns the client configurations by federationId
-   */
-  public async config(): FedimintResponse<any> {
-    return await this.get<any>("/admin/config");
   }
 
   /**
@@ -283,17 +290,26 @@ class FedimintClient {
   }
 
   /**
+   * Outputs a list of operations that have been performed on the federation
+   */
+  public async listOperations(
+    limit: number,
+    federationId?: string
+  ): FedimintResponse<OperationOutput[]> {
+    const request: ListOperationsRequest = { limit };
+
+    return await this.postWithFederationId<OperationOutput[]>(
+      "/admin/list-operations",
+      request,
+      federationId
+    );
+  }
+
+  /**
    * Returns the current set of connected federation IDs
    */
   public async federationIds(): FedimintResponse<FederationIdsResponse> {
     return await this.get<FederationIdsResponse>("/admin/federation-ids");
-  }
-
-  /**
-   * Fetches wallet information including holdings, tiers, and federation metadata.
-   */
-  public async info(): FedimintResponse<InfoResponse> {
-    return await this.get<InfoResponse>("/admin/info");
   }
 
   /**
@@ -315,22 +331,6 @@ class FedimintClient {
     }
 
     return response;
-  }
-
-  /**
-   * Outputs a list of operations that have been performed on the federation
-   */
-  public async listOperations(
-    limit: number,
-    federationId?: string
-  ): FedimintResponse<OperationOutput[]> {
-    const request: ListOperationsRequest = { limit };
-
-    return await this.postWithFederationId<OperationOutput[]>(
-      "/admin/list-operations",
-      request,
-      federationId
-    );
   }
 
   /**
