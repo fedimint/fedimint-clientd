@@ -160,6 +160,14 @@ async function main() {
     { amountMsat: 3000, allowOverpay: true, timeout: 1000 },
     data
   );
+  // `/v2/mint/decode-notes`
+  logMethod("/v2/mint/decode-notes");
+  data = await fedimintClient.mint.decodeNotes(mintData.notes);
+  logInputAndOutput({ notes: mintData.notes }, data);
+  // `/v2/mint/encode-notes`
+  logMethod("/v2/mint/encode-notes");
+  data = await fedimintClient.mint.encodeNotes(data.notesJson);
+  logInputAndOutput({ notesJson: data.notesJson }, data);
   // `/v2/mint/validate`
   logMethod("/v2/mint/validate");
   data = await fedimintClient.mint.validate(mintData.notes);

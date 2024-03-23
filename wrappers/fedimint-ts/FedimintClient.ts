@@ -35,6 +35,11 @@ import type {
   OnchainDepositAddressResponse,
   OnchainWithdrawRequest,
   OnchainWithdrawResponse,
+  MintDecodeNotesRequest,
+  MintEncodeNotesRequest,
+  NotesJson,
+  MintEncodeNotesResponse,
+  MintDecodeNotesResponse,
 } from "./types";
 
 type FedimintResponse<T> = Promise<T>;
@@ -404,6 +409,39 @@ class FedimintClient {
    * A module for interacting with an ecash mint
    */
   public mint = {
+    /**
+     * Decodes hex encoded binary ecash notes to json
+     */
+    decodeNotes: async (
+      notes: string
+    ): FedimintResponse<MintDecodeNotesResponse> => {
+      const request: MintDecodeNotesRequest = {
+        notes,
+      };
+
+      return await this.post<MintDecodeNotesResponse>(
+        "/mint/decode-notes",
+        request
+      );
+    },
+
+    /**
+     * Encodes json notes to hex encoded binary notes
+     */
+    encodeNotes: async (
+      notesJson: NotesJson
+    ): FedimintResponse<MintEncodeNotesResponse> => {
+      const request: MintEncodeNotesRequest = {
+        notesJsonStr: JSON.stringify(notesJson),
+      };
+      console.log("request: ", request);
+
+      return await this.post<MintEncodeNotesResponse>(
+        "/mint/encode-notes",
+        request
+      );
+    },
+
     /**
      * Reissues an ecash note
      */

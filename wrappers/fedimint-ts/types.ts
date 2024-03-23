@@ -180,6 +180,22 @@ interface TieredMulti<T> {
   [amount: number]: T[];
 }
 
+interface MintDecodeNotesRequest {
+  notes: string;
+}
+
+interface MintDecodeNotesResponse {
+  notesJson: NotesJson;
+}
+
+interface MintEncodeNotesRequest {
+  notesJsonStr: string;
+}
+
+interface MintEncodeNotesResponse {
+  notes: string;
+}
+
 interface MintReissueRequest {
   notes: string;
 }
@@ -224,6 +240,16 @@ interface MintCombineResponse {
   notes: string;
 }
 
+interface NotesJson {
+  federation_id_prefix: string;
+  notes: {
+    [denomination: string]: Array<{
+      signature: string;
+      spend_key: string;
+    }>;
+  };
+}
+
 export type {
   Tiered,
   TieredSummary,
@@ -254,7 +280,12 @@ export type {
   LnPayResponse,
   LnAwaitPayRequest,
   Gateway,
+  NotesJson,
   SwitchGatewayRequest,
+  MintDecodeNotesRequest,
+  MintDecodeNotesResponse,
+  MintEncodeNotesRequest,
+  MintEncodeNotesResponse,
   MintReissueRequest,
   MintReissueResponse,
   MintSpendRequest,

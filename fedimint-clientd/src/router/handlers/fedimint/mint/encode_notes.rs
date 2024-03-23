@@ -3,16 +3,18 @@ use std::str::FromStr;
 use anyhow::anyhow;
 use axum::http::StatusCode;
 use axum::Json;
+use fedimint_core::config::FederationIdPrefix;
 use fedimint_mint_client::OOBNotes;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+use super::OOBNotesJson;
 use crate::error::AppError;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EncodeRequest {
-    pub notes_json: Value,
+    pub notes_json_str: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -22,9 +24,11 @@ pub struct EncodeResponse {
 }
 
 async fn _encode_notes(req: EncodeRequest) -> Result<EncodeResponse, AppError> {
-    let notes_str = req.notes_json.to_string();
-    let notes = OOBNotes::from_str(&notes_str)
+    let notes = serde_json::from_str::<OOBNotesJson>(&req.notes_json_str)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid notes: {}", e)))?;
+    let prefix = FederationIdPrefix::from_str(&notes.federation_id_prefix)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid prefix: {}", e)))?;
+    let notes = OOBNotes::new(prefix, notes.notes);
 
     Ok(EncodeResponse { notes })
 }
