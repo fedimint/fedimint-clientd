@@ -2,6 +2,7 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
+use bitcoin::secp256k1::PublicKey;
 use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
@@ -21,6 +22,7 @@ pub struct LnPayRequest {
     pub payment_info: String,
     pub amount_msat: Option<Amount>,
     pub lnurl_comment: Option<String>,
+    pub gateway_id: PublicKey,
     pub federation_id: FederationId,
 }
 
@@ -37,21 +39,11 @@ async fn _pay(client: ClientHandleArc, req: LnPayRequest) -> Result<LnPayRespons
     let bolt11 = get_invoice(&req).await?;
     info!("Paying invoice: {bolt11}");
     let lightning_module = client.get_first_module::<LightningClientModule>();
-    let gateway_id = match lightning_module.list_gateways().await.first() {
-        Some(gateway_announcement) => gateway_announcement.info.gateway_id,
-        None => {
-            error!("No gateways available");
-            return Err(AppError::new(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                anyhow!("No gateways available"),
-            ));
-        }
-    };
     let gateway = lightning_module
-        .select_gateway(&gateway_id)
+        .select_gateway(&req.gateway_id)
         .await
         .ok_or_else(|| {
-            error!("Failed to select gateway");
+            error!("Failed to select gateway: {}", req.gateway_id);
             AppError::new(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 anyhow!("Failed to select gateway"),
