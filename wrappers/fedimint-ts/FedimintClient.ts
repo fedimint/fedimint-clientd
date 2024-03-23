@@ -355,32 +355,6 @@ class FedimintClient {
         federationId
       );
     },
-
-    /**
-     * Creates a lightning invoice where the gateway contract locks the ecash to a specific pubkey
-     * Useful for creating invoices that pay to another user besides yourself
-     */
-    createInvoicePubkey: async (
-      pubkey: string,
-      amountMsat: number,
-      description: string,
-      expiryTime?: number,
-      federationId?: string
-    ): FedimintResponse<LnInvoiceResponse> => {
-      const request: LnInvoiceExternalPubkeyRequest = {
-        externalPubkey: pubkey,
-        amountMsat,
-        description,
-        expiryTime,
-      };
-
-      return await this.postWithId<LnInvoiceExternalPubkeyResponse>(
-        "/ln/invoice-external-pubkey",
-        request,
-        federationId
-      );
-    },
-
     /**
      * Waits for a lightning invoice to be paid
      */

@@ -53,8 +53,6 @@ async function main() {
   const keyPair = newKeyPair();
   console.log("Generated key pair: ", keyPair);
 
-  return;
-
   // ADMIN METHODS
   // `/v2/admin/config`
   logMethod("/v2/admin/config");
@@ -107,6 +105,52 @@ async function main() {
   logMethod("/v2/ln/await-invoice");
   data = await fedimintClient.ln.awaitInvoice(operationId);
   logInputAndOutput({ operationId }, data);
+  // `/v1/ln/invoice-external-pubkey`
+  logMethod("/v1/ln/invoice-external-pubkey");
+  data = await fedimintClient.ln.createInvoiceForPubkey(
+    keyPair.publicKey,
+    1000,
+    "test"
+  );
+  logInputAndOutput(
+    {
+      externalPubkey: keyPair.publicKey,
+      amountMsat: 10000,
+      description: "test",
+    },
+    data
+  );
+  // pay the invoice
+  payResponse = await fedimintClient.ln.pay(data.invoice);
+  // `/v1/ln/claim-external-pubkey`
+  logMethod("/v1/ln/claim-external-pubkey");
+  data = await fedimintClient.ln.claimPubkeyReceive(keyPair.privateKey);
+  logInputAndOutput({ privateKey: keyPair.privateKey }, data);
+  // `/v1/ln/invoice-external-pubkey-tweaked`
+  logMethod("/v1/ln/invoice-external-pubkey-tweaked");
+  data = await fedimintClient.ln.createInvoiceForPubkeyTweak(
+    keyPair.publicKey,
+    1,
+    1000,
+    "test"
+  );
+  logInputAndOutput(
+    {
+      externalPubkey: keyPair.publicKey,
+      tweak: 1,
+      amountMsat: 10000,
+      description: "test",
+    },
+    data
+  );
+  // pay the invoice
+  payResponse = await fedimintClient.ln.pay(data.invoice);
+  // `/v1/ln/claim-external-pubkey-tweaked`
+  logMethod("/v1/ln/claim-external-pubkey-tweaked");
+  data = await fedimintClient.ln.claimPubkeyReceiveTweaked(keyPair.privateKey, [
+    1,
+  ]);
+  logInputAndOutput({ privateKey: keyPair.privateKey, tweaks: [1] }, data);
 
   // MINT METHODS
   // `/v2/mint/spend`
