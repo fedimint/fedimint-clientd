@@ -1,53 +1,76 @@
 package modules
 
 type LnInvoiceRequest struct {
-	AmountMsat  int    `json:"amount_msat"`
+	AmountMsat  uint64 `json:"amountMsat"`
 	Description string `json:"description"`
-	ExpiryTime  *int   `json:"expiry_time"`
+	ExpiryTime  *int   `json:"expiryTime"`
+}
+
+type LnInvoiceExternalPubkeyRequest struct {
+	AmountMsat     uint64 `json:"amountMsat"`
+	Description    string `json:"description"`
+	ExpiryTime     *int   `json:"expiryTime"`
+	ExternalPubkey string `json:"externalPubkey"`
+}
+
+type LnInvoiceExternalPubkeyTweakedRequest struct {
+	AmountMsat     uint64 `json:"amountMsat"`
+	Description    string `json:"description"`
+	ExpiryTime     *int   `json:"expiryTime"`
+	ExternalPubkey string `json:"externalPubkey"`
+	Tweak          uint64 `json:"tweak"`
 }
 
 type LnInvoiceResponse struct {
-	OperationID string `json:"operation_id"`
+	OperationId string `json:"operationId"`
 	Invoice     string `json:"invoice"`
 }
 
-type AwaitInvoiceRequest struct {
-	OperationID string `json:"operation_id"`
+type LnClaimPubkeyReceiveRequest struct {
+	PrivateKey string `json:"privateKey"`
+}
+
+type LnClaimPubkeyTweakedRequest struct {
+	PrivateKey string   `json:"privateKey"`
+	Tweaks     []uint64 `json:"tweaks"`
+}
+
+type LnAwaitInvoiceRequest struct {
+	OperationId string `json:"operationId"`
 }
 
 type LnPayRequest struct {
-	Payment_info         string  `json:"payment_info"`
-	Amount_msat          *int    `json:"amount_msat"`
-	Finish_in_background bool    `json:"finish_in_background"`
-	Lnurl_comment        *string `json:"lnurl_comment"`
+	PaymentInfo  string  `json:"paymentInfo"`
+	AmountMsat   *uint64 `json:"amountMsat"`
+	LnurlComment *string `json:"lnurlComment"`
 }
 
 type LnPayResponse struct {
-	Pperation_id string `json:"operation_id"`
-	Payment_type string `json:"payment_type"`
-	Contract_id  string `json:"contract_id"`
-	Fee          int    `json:"fee"`
+	PperationId string `json:"operationId"`
+	PaymentType string `json:"paymentType"`
+	ContractId  string `json:"contractId"`
+	Fee         int    `json:"fee"`
 }
 
 type AwaitLnPayRequest struct {
-	Operation_id string `json:"operation_id"`
+	OperationId string `json:"operationId"`
 }
 
 type GatewayInfo struct {
 	API                     string        `json:"api"`
 	Fees                    GatewayFees   `json:"fees"`
-	GatewayID               string        `json:"gateway_id"`
-	GatewayRedeemKey        string        `json:"gateway_redeem_key"`
-	LightningAlias          string        `json:"lightning_alias"`
-	MintChannelID           int           `json:"mint_channel_id"`
-	NodePubKey              string        `json:"node_pub_key"`
-	RouteHints              []interface{} `json:"route_hints"` // Adjust the type according to the actual structure of route hints
-	SupportsPrivatePayments bool          `json:"supports_private_payments"`
+	GatewayID               string        `json:"gatewayId"`
+	GatewayRedeemKey        string        `json:"gatewayRedeemKey"`
+	LightningAlias          string        `json:"lightningAlias"`
+	MintChannelID           int           `json:"mintChannelId"`
+	NodePubKey              string        `json:"nodePubKey"`
+	RouteHints              []interface{} `json:"routeHints"` // Adjust the type according to the actual structure of route hints
+	SupportsPrivatePayments bool          `json:"supportsPrivatePayments"`
 }
 
 type GatewayFees struct {
-	BaseMsat               int `json:"base_msat"`
-	ProportionalMillionths int `json:"proportional_millionths"`
+	BaseMsat               int `json:"baseMsat"`
+	ProportionalMillionths int `json:"proportionalMillionths"`
 }
 
 type GatewayTTL struct {
@@ -56,7 +79,7 @@ type GatewayTTL struct {
 }
 
 type Gateway struct {
-	FederationID string      `json:"federation_id"`
+	FederationID string      `json:"federationId"`
 	Info         GatewayInfo `json:"info"`
 	TTL          GatewayTTL  `json:"ttl"`
 	Vetted       bool        `json:"vetted"`
@@ -66,5 +89,5 @@ type Gateway struct {
 type ListGatewaysResponse map[string][]Gateway
 
 type SwitchGatewayRequest struct {
-	Gateway_id string `json:"gateway_id"`
+	GatewayId string `json:"gatewayId"`
 }

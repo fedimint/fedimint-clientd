@@ -1,28 +1,28 @@
 package modules
 
-type DepositAddressRequest struct {
+type OnchainDepositAddressRequest struct {
 	Timeout int `json:"timeout"`
 }
 
-type DepositAddressResponse struct {
+type OnchainDepositAddressResponse struct {
 	OperationId string `json:"operationId"`
 	Address     string `json:"address"`
 }
 
-type AwaitDepositRequest struct {
+type OnchainAwaitDepositRequest struct {
 	OperationId string `json:"operationId"`
 }
 
-type AwaitDepositResponse struct {
+type OnchainAwaitDepositResponse struct {
 	Status string `json:"status"`
 }
 
-type WithdrawRequest struct {
+type OnchainWithdrawRequest struct {
 	Address   string `json:"address"`
 	AmountSat int    `json:"amountSat"`
 }
 
-type WithdrawResponse struct {
+type OnchainWithdrawResponse struct {
 	Txid    string `json:"txid"`
 	FeesSat int    `json:"feesSat"`
 }

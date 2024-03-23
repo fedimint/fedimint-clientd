@@ -45,49 +45,74 @@ type OOBNotes struct {
 
 type SpendableNote struct {
 	Signature Signature `json:"signature"`
-	SpendKey  KeyPair   `json:"spend_key"`
+	SpendKey  KeyPair   `json:"spendKey"`
 }
 
-// @> `ReissueRequest` notes should be string? as fedimint-ts does uses string.
-type ReissueRequest struct {
-	Notes OOBNotes `json:"notes"`
+type NotesJson struct {
+	FederationIdPrefix string                             `json:"federation_id_prefix"`
+	Notes              map[string][]SignatureSpendKeyPair `json:"notes"`
 }
 
-type ReissueResponse struct {
-	AmountMsat uint64 `json:"amount_msat"`
+type SignatureSpendKeyPair struct {
+	Signature string `json:"signature"`
+	SpendKey  string `json:"spend_key"`
 }
 
-type SpendRequest struct {
-	AmountMsat   uint64 `json:"amount_msat"`
-	AllowOverpay bool   `json:"allow_overpay"`
-	Timeout      uint64 `json:"timeout"`
+type DecodeNotesRequest struct {
+	Notes string `json:"notes"`
 }
 
-type SpendResponse struct {
-	Operation string   `json:"operation"`
-	Notes     OOBNotes `json:"notes"`
+type DecodeNotesResponse struct {
+	NotesJson string `json:"notesJson"`
 }
 
-type ValidateRequest struct {
-	Notes OOBNotes `json:"notes"`
+type EncodeNotesRequest struct {
+	NotesJsonStr string `json:"notesJsonStr"`
 }
 
-type ValidateResponse struct {
-	AmountMsat uint64 `json:"amount_msat"`
+type EncodeNotesResponse struct {
+	Notes string `json:"notes"`
+}
+type MintReissueRequest struct {
+	Notes string `json:"notes"`
 }
 
-type SplitRequest struct {
-	Notes OOBNotes `json:"notes"`
+type MintReissueResponse struct {
+	AmountMsat uint64 `json:"amountMsat"`
 }
 
-type SplitResponse struct {
-	Notes map[uint64]OOBNotes `json:"notes"`
+type MintSpendRequest struct {
+	AmountMsat    uint64 `json:"amountMsat"`
+	AllowOverpay  bool   `json:"allowOverpay"`
+	Timeout       uint64 `json:"timeout"`
+	IncludeInvite bool   `json:"includeInvite"`
 }
 
-type CombineRequest struct {
-	Notes []OOBNotes `json:"notes"`
+type MintSpendResponse struct {
+	OperationId string   `json:"operationId"`
+	Notes       OOBNotes `json:"notes"`
 }
 
-type CombineResponse struct {
-	Notes OOBNotes `json:"notes"`
+type MintValidateRequest struct {
+	Notes string `json:"notes"`
+}
+
+type MintValidateResponse struct {
+	AmountMsat uint64 `json:"amountMsat"`
+}
+
+type MintSplitRequest struct {
+	Notes string `json:"notes"`
+}
+
+type MintSplitResponse struct {
+	Notes map[uint64]string `json:"notes"`
+}
+
+type MintCombineRequest struct {
+	NotesVec []string `json:"notesVec"`
+}
+
+type MintCombineResponse struct {
+	Notes string `json:"notes"`
 }

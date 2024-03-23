@@ -54,7 +54,7 @@ func main() {
 
 	fmt.Println("Waiting for payment...")
 
-	awaitInvoiceRequest := modules.AwaitInvoiceRequest{
+	awaitInvoiceRequest := modules.LnAwaitInvoiceRequest{
 		OperationID: invoiceResponse.OperationID,
 	}
 
