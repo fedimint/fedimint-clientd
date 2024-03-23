@@ -7,34 +7,34 @@ import type {
   DiscoverVersionRequest,
   DiscoverVersionResponse,
   JoinRequest,
-} from "./types";
-import type {
-  AwaitInvoiceRequest,
+  LnInvoiceExternalPubkeyRequest,
+  LnInvoiceExternalPubkeyResponse,
+  LnInvoiceExternalPubkeyTweakedRequest,
+  LnInvoiceExternalPubkeyTweakedResponse,
+  LnClaimPubkeyReceiveRequest,
+  LnClaimPubkeyReceiveTweakedRequest,
+  LnAwaitInvoiceRequest,
   Gateway,
   LnInvoiceRequest,
   LnInvoiceResponse,
   LnPayRequest,
   LnPayResponse,
-} from "./types";
-import type {
-  CombineRequest,
-  CombineResponse,
-  ReissueRequest,
-  ReissueResponse,
-  SpendRequest,
-  SpendResponse,
-  SplitRequest,
-  SplitResponse,
-  ValidateRequest,
-  ValidateResponse,
-} from "./types";
-import type {
-  AwaitDepositRequest,
-  AwaitDepositResponse,
-  DepositAddressRequest,
-  DepositAddressResponse,
-  WithdrawRequest,
-  WithdrawResponse,
+  MintCombineRequest,
+  MintCombineResponse,
+  MintReissueRequest,
+  MintReissueResponse,
+  MintSpendRequest,
+  MintSpendResponse,
+  MintSplitRequest,
+  MintSplitResponse,
+  MintValidateRequest,
+  MintValidateResponse,
+  OnchainAwaitDepositRequest,
+  OnchainAwaitDepositResponse,
+  OnchainDepositAddressRequest,
+  OnchainDepositAddressResponse,
+  OnchainWithdrawRequest,
+  OnchainWithdrawResponse,
 } from "./types";
 
 type FedimintResponse<T> = Promise<T>;
@@ -267,13 +267,128 @@ class FedimintClient {
     },
 
     /**
+     * Creates a lightning invoice where the gateway contract locks the ecash to a specific pubkey
+     * Useful for creating invoices that pay to another user besides yourself
+     */
+    createInvoiceForPubkey: async (
+      pubkey: string,
+      amountMsat: number,
+      description: string,
+      expiryTime?: number,
+      federationId?: string
+    ): FedimintResponse<LnInvoiceResponse> => {
+      const request: LnInvoiceExternalPubkeyRequest = {
+        externalPubkey: pubkey,
+        amountMsat,
+        description,
+        expiryTime,
+      };
+
+      return await this.postWithId<LnInvoiceExternalPubkeyResponse>(
+        "/ln/invoice-external-pubkey",
+        request,
+        federationId
+      );
+    },
+
+    /**
+     * Creates a lightning invoice where the gateway contract locks the ecash to a tweakedpubkey
+     * Fedimint-clientd tweaks the provided pubkey by the provided tweak, provide the pubkey and tweak
+     * Useful for creating invoices that pay to another user besides yourself
+     */
+    createInvoiceForPubkeyTweak: async (
+      pubkey: string,
+      tweak: number,
+      amountMsat: number,
+      description: string,
+      expiryTime?: number,
+      federationId?: string
+    ): FedimintResponse<LnInvoiceResponse> => {
+      const request: LnInvoiceExternalPubkeyTweakedRequest = {
+        externalPubkey: pubkey,
+        tweak,
+        amountMsat,
+        description,
+        expiryTime,
+      };
+
+      return await this.postWithId<LnInvoiceExternalPubkeyTweakedResponse>(
+        "/ln/invoice-external-pubkey-tweaked",
+        request,
+        federationId
+      );
+    },
+
+    /**
+     * Claims a lightning contract that was paid to a specific pubkey
+     */
+    claimPubkeyReceive: async (
+      privateKey: string,
+      federationId?: string
+    ): FedimintResponse<InfoResponse> => {
+      const request: LnClaimPubkeyReceiveRequest = { privateKey };
+
+      return await this.postWithId<InfoResponse>(
+        "/ln/claim-external-receive",
+        request,
+        federationId
+      );
+    },
+
+    /**
+     * Claims lightning contracts paid to tweaks of a pubkey
+     * Provide all the tweaks that were used to create the invoices
+     */
+    claimPubkeyReceiveTweaked: async (
+      privateKey: string,
+      tweaks: number[],
+      federationId?: string
+    ): FedimintResponse<InfoResponse> => {
+      const request: LnClaimPubkeyReceiveTweakedRequest = {
+        privateKey,
+        tweaks,
+      };
+
+      return await this.postWithId<InfoResponse>(
+        "/ln/claim-external-receive-tweaked",
+        request,
+        federationId
+      );
+    },
+
+    /**
+     * Creates a lightning invoice where the gateway contract locks the ecash to a specific pubkey
+     * Useful for creating invoices that pay to another user besides yourself
+     */
+    createInvoicePubkey: async (
+      pubkey: string,
+      amountMsat: number,
+      description: string,
+      expiryTime?: number,
+      federationId?: string
+    ): FedimintResponse<LnInvoiceResponse> => {
+      const request: LnInvoiceExternalPubkeyRequest = {
+        externalPubkey: pubkey,
+        amountMsat,
+        description,
+        expiryTime,
+      };
+
+      return await this.postWithId<LnInvoiceExternalPubkeyResponse>(
+        "/ln/invoice-external-pubkey",
+        request,
+        federationId
+      );
+    },
+
+    /**
      * Waits for a lightning invoice to be paid
      */
     awaitInvoice: async (
       operationId: string,
       federationId?: string
     ): FedimintResponse<InfoResponse> => {
-      const request: AwaitInvoiceRequest = { operationId };
+      const request: LnAwaitInvoiceRequest = { operationId };
 
       return await this.postWithId<InfoResponse>(
         "/ln/await-invoice",
@@ -321,10 +436,10 @@ class FedimintClient {
     reissue: async (
       notes: string,
       federationId?: string
-    ): FedimintResponse<ReissueResponse> => {
-      const request: ReissueRequest = { notes };
+    ): FedimintResponse<MintReissueResponse> => {
+      const request: MintReissueRequest = { notes };
 
-      return await this.postWithId<ReissueResponse>(
+      return await this.postWithId<MintReissueResponse>(
         "/mint/reissue",
         request,
         federationId
@@ -340,15 +455,15 @@ class FedimintClient {
       timeout: number,
       includeInvite: boolean,
       federationId?: string
-    ): FedimintResponse<SpendResponse> => {
-      const request: SpendRequest = {
+    ): FedimintResponse<MintSpendResponse> => {
+      const request: MintSpendRequest = {
         amountMsat,
         allowOverpay,
         timeout,
         includeInvite,
       };
 
-      return await this.postWithId<SpendResponse>(
+      return await this.postWithId<MintSpendResponse>(
         "/mint/spend",
         request,
         federationId
@@ -361,10 +476,10 @@ class FedimintClient {
     validate: async (
       notes: string,
       federationId?: string
-    ): FedimintResponse<ValidateResponse> => {
-      const request: ValidateRequest = { notes };
+    ): FedimintResponse<MintValidateResponse> => {
+      const request: MintValidateRequest = { notes };
 
-      return await this.postWithId<ValidateResponse>(
+      return await this.postWithId<MintValidateResponse>(
         "/mint/validate",
         request,
         federationId
@@ -374,19 +489,21 @@ class FedimintClient {
     /**
      * Splits an ecash note into smaller notes
      */
-    split: async (notes: string): FedimintResponse<SplitResponse> => {
-      const request: SplitRequest = { notes };
+    split: async (notes: string): FedimintResponse<MintSplitResponse> => {
+      const request: MintSplitRequest = { notes };
 
-      return await this.post<SplitResponse>("/mint/split", request);
+      return await this.post<MintSplitResponse>("/mint/split", request);
     },
 
     /**
      * Combines ecash notes
      */
-    combine: async (notesVec: string[]): FedimintResponse<CombineResponse> => {
-      const request: CombineRequest = { notesVec };
+    combine: async (
+      notesVec: string[]
+    ): FedimintResponse<MintCombineResponse> => {
+      const request: MintCombineRequest = { notesVec };
 
-      return await this.post<CombineResponse>("/mint/combine", request);
+      return await this.post<MintCombineResponse>("/mint/combine", request);
     },
   };
 
@@ -400,10 +517,10 @@ class FedimintClient {
     createDepositAddress: async (
       timeout: number,
       federationId?: string
-    ): FedimintResponse<DepositAddressResponse> => {
-      const request: DepositAddressRequest = { timeout };
+    ): FedimintResponse<OnchainDepositAddressResponse> => {
+      const request: OnchainDepositAddressRequest = { timeout };
 
-      return await this.postWithId<DepositAddressResponse>(
+      return await this.postWithId<OnchainDepositAddressResponse>(
         "/wallet/deposit-address",
         request,
         federationId
@@ -416,10 +533,10 @@ class FedimintClient {
     awaitDeposit: async (
       operationId: string,
       federationId?: string
-    ): FedimintResponse<AwaitDepositResponse> => {
-      const request: AwaitDepositRequest = { operationId };
+    ): FedimintResponse<OnchainAwaitDepositResponse> => {
+      const request: OnchainAwaitDepositRequest = { operationId };
 
-      return await this.postWithId<AwaitDepositResponse>(
+      return await this.postWithId<OnchainAwaitDepositResponse>(
         "/wallet/await-deposit",
         request,
         federationId
@@ -433,10 +550,10 @@ class FedimintClient {
       address: string,
       amountSat: number | "all",
       federationId?: string
-    ): FedimintResponse<WithdrawResponse> => {
-      const request: WithdrawRequest = { address, amountSat };
+    ): FedimintResponse<OnchainWithdrawResponse> => {
+      const request: OnchainWithdrawRequest = { address, amountSat };
 
-      return await this.postWithId<WithdrawResponse>(
+      return await this.postWithId<OnchainWithdrawResponse>(
         "/wallet/withdraw",
         request,
         federationId

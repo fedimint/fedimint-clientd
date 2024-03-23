@@ -1,5 +1,7 @@
+import { randomBytes } from "crypto";
 import { FedimintClientBuilder } from "./FedimintClient";
 import dotenv from "dotenv";
+import * as secp256k1 from "secp256k1";
 
 dotenv.config();
 
@@ -12,6 +14,25 @@ const logInputAndOutput = (input: any, output: any) => {
   console.log("Input: ", input);
   console.log("Output: ", output);
   console.log("--------------------");
+};
+
+interface KeyPair {
+  privateKey: string;
+  publicKey: string;
+}
+
+const newKeyPair = (): KeyPair => {
+  let privateKey: Buffer;
+  do {
+    privateKey = randomBytes(32);
+  } while (!secp256k1.privateKeyVerify(privateKey));
+
+  const publicKey = secp256k1.publicKeyCreate(privateKey);
+
+  return {
+    privateKey: privateKey.toString("hex"),
+    publicKey: Buffer.from(publicKey).toString("hex"),
+  };
 };
 
 async function buildTestClient() {
@@ -28,6 +49,11 @@ async function buildTestClient() {
 // Runs through all of the methods in the Fedimint Client
 async function main() {
   const fedimintClient = await buildTestClient();
+
+  const keyPair = newKeyPair();
+  console.log("Generated key pair: ", keyPair);
+
+  return;
 
   // ADMIN METHODS
   // `/v2/admin/config`

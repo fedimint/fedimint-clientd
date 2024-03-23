@@ -48,16 +48,16 @@ interface OperationOutput {
   outcome?: any;
 }
 
-interface DepositAddressRequest {
+interface OnchainDepositAddressRequest {
   timeout: number;
 }
 
-interface DepositAddressResponse {
+interface OnchainDepositAddressResponse {
   operationId: string;
   address: string;
 }
 
-interface AwaitDepositRequest {
+interface OnchainAwaitDepositRequest {
   operationId: string;
 }
 
@@ -85,16 +85,16 @@ interface AwaitDepositResponseConfirmed {
   out_idx: number;
 }
 
-interface AwaitDepositResponse {
+interface OnchainAwaitDepositResponse {
   status: { Confirmed: AwaitDepositResponseConfirmed } | { Failed: string };
 }
 
-interface WithdrawRequest {
+interface OnchainWithdrawRequest {
   address: string;
   amountSat: number | "all";
 }
 
-interface WithdrawResponse {
+interface OnchainWithdrawResponse {
   txid: string;
   feesSat: number;
 }
@@ -110,7 +110,41 @@ interface LnInvoiceResponse {
   invoice: string;
 }
 
-interface AwaitInvoiceRequest {
+interface LnInvoiceExternalPubkeyRequest {
+  amountMsat: number;
+  description: string;
+  externalPubkey: string;
+  expiryTime?: number;
+}
+
+interface LnInvoiceExternalPubkeyResponse {
+  operationId: string;
+  invoice: string;
+}
+
+interface LnInvoiceExternalPubkeyTweakedRequest {
+  amountMsat: number;
+  description: string;
+  externalPubkey: string;
+  tweak: number;
+  expiryTime?: number;
+}
+
+interface LnInvoiceExternalPubkeyTweakedResponse {
+  operationId: string;
+  invoice: string;
+}
+
+interface LnClaimPubkeyReceiveRequest {
+  privateKey: string;
+}
+
+interface LnClaimPubkeyReceiveTweakedRequest {
+  privateKey: string;
+  tweaks: number[];
+}
+
+interface LnAwaitInvoiceRequest {
   operationId: string;
 }
 
@@ -127,7 +161,7 @@ interface LnPayResponse {
   fee: number;
 }
 
-interface AwaitLnPayRequest {
+interface LnAwaitPayRequest {
   operationId: string;
 }
 
@@ -146,47 +180,47 @@ interface TieredMulti<T> {
   [amount: number]: T[];
 }
 
-interface ReissueRequest {
+interface MintReissueRequest {
   notes: string;
 }
 
-interface ReissueResponse {
+interface MintReissueResponse {
   amountMsat: number;
 }
 
-interface SpendRequest {
+interface MintSpendRequest {
   amountMsat: number;
   allowOverpay: boolean;
   timeout: number;
   includeInvite: boolean;
 }
 
-interface SpendResponse {
+interface MintSpendResponse {
   operation: string;
   notes: string;
 }
 
-interface ValidateRequest {
+interface MintValidateRequest {
   notes: string;
 }
 
-interface ValidateResponse {
+interface MintValidateResponse {
   amountMsat: number;
 }
 
-interface SplitRequest {
+interface MintSplitRequest {
   notes: string;
 }
 
-interface SplitResponse {
+interface MintSplitResponse {
   notes: Record<number, string>;
 }
 
-interface CombineRequest {
+interface MintCombineRequest {
   notesVec: string[];
 }
 
-interface CombineResponse {
+interface MintCombineResponse {
   notes: string;
 }
 
@@ -201,28 +235,34 @@ export type {
   BackupRequest,
   ListOperationsRequest,
   OperationOutput,
-  DepositAddressRequest,
-  DepositAddressResponse,
-  AwaitDepositRequest,
-  AwaitDepositResponse,
-  WithdrawRequest,
-  WithdrawResponse,
+  OnchainDepositAddressRequest,
+  OnchainDepositAddressResponse,
+  OnchainAwaitDepositRequest,
+  OnchainAwaitDepositResponse,
+  OnchainWithdrawRequest,
+  OnchainWithdrawResponse,
   LnInvoiceRequest,
   LnInvoiceResponse,
-  AwaitInvoiceRequest,
+  LnInvoiceExternalPubkeyRequest,
+  LnInvoiceExternalPubkeyResponse,
+  LnInvoiceExternalPubkeyTweakedRequest,
+  LnInvoiceExternalPubkeyTweakedResponse,
+  LnClaimPubkeyReceiveRequest,
+  LnClaimPubkeyReceiveTweakedRequest,
+  LnAwaitInvoiceRequest,
   LnPayRequest,
   LnPayResponse,
-  AwaitLnPayRequest,
+  LnAwaitPayRequest,
   Gateway,
   SwitchGatewayRequest,
-  ReissueRequest,
-  ReissueResponse,
-  SpendRequest,
-  SpendResponse,
-  ValidateRequest,
-  ValidateResponse,
-  SplitRequest,
-  SplitResponse,
-  CombineRequest,
-  CombineResponse,
+  MintReissueRequest,
+  MintReissueResponse,
+  MintSpendRequest,
+  MintSpendResponse,
+  MintValidateRequest,
+  MintValidateResponse,
+  MintSplitRequest,
+  MintSplitResponse,
+  MintCombineRequest,
+  MintCombineResponse,
 };
