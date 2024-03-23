@@ -40,6 +40,7 @@ import type {
   NotesJson,
   MintEncodeNotesResponse,
   MintDecodeNotesResponse,
+  JoinResponse,
 } from "./types";
 
 type FedimintResponse<T> = Promise<T>;
@@ -48,11 +49,13 @@ class FedimintClientBuilder {
   private baseUrl: string;
   private password: string;
   private activeFederationId: string;
+  private activeGatewayId: string;
 
   constructor() {
     this.baseUrl = "";
     this.password = "";
     this.activeFederationId = "";
+    this.activeGatewayId = "";
   }
 
   setBaseUrl(baseUrl: string): FedimintClientBuilder {
@@ -73,19 +76,22 @@ class FedimintClientBuilder {
     return this;
   }
 
+  setActiveGatewayId(gatewayId: string): FedimintClientBuilder {
+    this.activeGatewayId = gatewayId;
+
+    return this;
+  }
+
   build(): FedimintClient {
-    if (
-      this.baseUrl === "" ||
-      this.password === "" ||
-      this.activeFederationId === ""
-    ) {
-      throw new Error("baseUrl, password, and activeFederationId must be set");
+    if (this.baseUrl === "" || this.password === "") {
+      throw new Error("baseUrl, and password must be set");
     }
 
     const client = new FedimintClient(
       this.baseUrl,
       this.password,
-      this.activeFederationId
+      this.activeFederationId,
+      this.activeGatewayId
     );
 
     return client;
@@ -96,19 +102,61 @@ class FedimintClient {
   private baseUrl: string;
   private password: string;
   private activeFederationId: string;
+  private activeGatewayId: string;
 
-  constructor(baseUrl: string, password: string, activeFederationId: string) {
+  constructor(
+    baseUrl: string,
+    password: string,
+    activeFederationId: string,
+    activeGatewayId: string = ""
+  ) {
     this.baseUrl = baseUrl + "/v2";
     this.password = password;
     this.activeFederationId = activeFederationId;
+    this.activeGatewayId = activeGatewayId;
+    console.log(
+      "Fedimint Client initialized, must set activeGatewayId after intitalization to use lightning module methods or manually pass in gateways"
+    );
   }
 
   getActiveFederationId(): string {
     return this.activeFederationId;
   }
 
-  setActiveFederationId(federationId: string) {
+  setActiveFederationId(federationId: string, useDefaultGateway: boolean) {
     this.activeFederationId = federationId;
+    console.log("Changed active federation id to: ", federationId);
+
+    if (useDefaultGateway) {
+      this.ln.listGateways().then((gateways) => {
+        this.activeGatewayId = gateways[0].info.gateway_id;
+      });
+    } else {
+      console.log(
+        "Clearing active gateway id, must be set manually on lightning calls or setDefaultGatewayId to true"
+      );
+      this.activeGatewayId = "";
+    }
+  }
+
+  getActiveGatewayId(): string {
+    return this.activeGatewayId;
+  }
+
+  setActiveGatewayId(gatewayId: string) {
+    this.activeGatewayId = gatewayId;
+  }
+
+  async useDefaultGateway() {
+    // hits list_gateways and sets activeGatewayId to the first gateway
+    try {
+      const gateways = await this.ln.listGateways();
+      console.log("Gateways: ", gateways);
+      this.activeGatewayId = gateways[0].info.gateway_id;
+      console.log("Set active gateway id to: ", this.activeGatewayId);
+    } catch (error) {
+      console.error("Error setting default gateway id: ", error);
+    }
   }
 
   /**
@@ -158,20 +206,44 @@ class FedimintClient {
     return (await res.json()) as T;
   }
 
-  // Adjust postWithId to not require federationId as a mandatory parameter
-  // since ensureactiveFederationId will ensure it's set.
-  private async postWithId<T>(
+  private async postWithFederationId<T>(
     endpoint: string,
     body: any,
     federationId?: string
   ): FedimintResponse<T> {
-    // Note: No need to call ensureactiveFederationId here since post already does.
     const effectiveFederationId = federationId || this.activeFederationId;
 
     return this.post<T>(endpoint, {
       ...body,
       federationId: effectiveFederationId,
     });
+  }
+
+  private async postWithGatewayIdAndFederationId<T>(
+    endpoint: string,
+    body: any,
+    gatewayId?: string,
+    federationId?: string
+  ): FedimintResponse<T> {
+    try {
+      const effectiveGatewayId = gatewayId || this.activeGatewayId;
+      const effectiveFederationId = federationId || this.activeFederationId;
+
+      if (effectiveFederationId === "" || effectiveGatewayId === "") {
+        throw new Error(
+          "Must set active federation and gateway id before posting with them"
+        );
+      }
+
+      return this.post<T>(endpoint, {
+        ...body,
+        federationId: effectiveFederationId,
+        gatewayId: effectiveGatewayId,
+      });
+    } catch (error) {
+      console.error("Error posting with federation and gateway id: ", error);
+      throw error;
+    }
   }
 
   /**
@@ -181,7 +253,11 @@ class FedimintClient {
     metadata: BackupRequest,
     federationId?: string
   ): FedimintResponse<void> {
-    await this.postWithId<void>("/admin/backup", metadata, federationId);
+    await this.postWithFederationId<void>(
+      "/admin/backup",
+      metadata,
+      federationId
+    );
   }
 
   /**
@@ -226,11 +302,19 @@ class FedimintClient {
    */
   public async join(
     inviteCode: string,
+    setActiveFederationId: boolean,
+    useDefaultGateway: boolean,
     useManualSecret: boolean = false
-  ): FedimintResponse<FederationIdsResponse> {
+  ): FedimintResponse<JoinResponse> {
     const request: JoinRequest = { inviteCode, useManualSecret };
 
-    return await this.post<FederationIdsResponse>("/admin/join", request);
+    const response = await this.post<JoinResponse>("/admin/join", request);
+
+    if (setActiveFederationId) {
+      this.setActiveFederationId(response.thisFederationId, useDefaultGateway);
+    }
+
+    return response;
   }
 
   /**
@@ -242,7 +326,7 @@ class FedimintClient {
   ): FedimintResponse<OperationOutput[]> {
     const request: ListOperationsRequest = { limit };
 
-    return await this.postWithId<OperationOutput[]>(
+    return await this.postWithFederationId<OperationOutput[]>(
       "/admin/list-operations",
       request,
       federationId
@@ -260,13 +344,15 @@ class FedimintClient {
       amountMsat: number,
       description: string,
       expiryTime?: number,
+      gatewayId?: string,
       federationId?: string
     ): FedimintResponse<LnInvoiceResponse> => {
       const request: LnInvoiceRequest = { amountMsat, description, expiryTime };
 
-      return await this.postWithId<LnInvoiceResponse>(
+      return await this.postWithGatewayIdAndFederationId<LnInvoiceResponse>(
         "/ln/invoice",
         request,
+        gatewayId,
         federationId
       );
     },
@@ -280,6 +366,7 @@ class FedimintClient {
       amountMsat: number,
       description: string,
       expiryTime?: number,
+      gatewayId?: string,
       federationId?: string
     ): FedimintResponse<LnInvoiceResponse> => {
       const request: LnInvoiceExternalPubkeyRequest = {
@@ -289,9 +376,10 @@ class FedimintClient {
         expiryTime,
       };
 
-      return await this.postWithId<LnInvoiceExternalPubkeyResponse>(
+      return await this.postWithGatewayIdAndFederationId<LnInvoiceExternalPubkeyResponse>(
         "/ln/invoice-external-pubkey",
         request,
+        gatewayId,
         federationId
       );
     },
@@ -307,6 +395,7 @@ class FedimintClient {
       amountMsat: number,
       description: string,
       expiryTime?: number,
+      gatewayId?: string,
       federationId?: string
     ): FedimintResponse<LnInvoiceResponse> => {
       const request: LnInvoiceExternalPubkeyTweakedRequest = {
@@ -317,9 +406,10 @@ class FedimintClient {
         expiryTime,
       };
 
-      return await this.postWithId<LnInvoiceExternalPubkeyTweakedResponse>(
+      return await this.postWithGatewayIdAndFederationId<LnInvoiceExternalPubkeyTweakedResponse>(
         "/ln/invoice-external-pubkey-tweaked",
         request,
+        gatewayId,
         federationId
       );
     },
@@ -333,7 +423,7 @@ class FedimintClient {
     ): FedimintResponse<InfoResponse> => {
       const request: LnClaimPubkeyReceiveRequest = { privateKey };
 
-      return await this.postWithId<InfoResponse>(
+      return await this.postWithFederationId<InfoResponse>(
         "/ln/claim-external-receive",
         request,
         federationId
@@ -354,7 +444,7 @@ class FedimintClient {
         tweaks,
       };
 
-      return await this.postWithId<InfoResponse>(
+      return await this.postWithFederationId<InfoResponse>(
         "/ln/claim-external-receive-tweaked",
         request,
         federationId
@@ -369,7 +459,7 @@ class FedimintClient {
     ): FedimintResponse<InfoResponse> => {
       const request: LnAwaitInvoiceRequest = { operationId };
 
-      return await this.postWithId<InfoResponse>(
+      return await this.postWithFederationId<InfoResponse>(
         "/ln/await-invoice",
         request,
         federationId
@@ -383,6 +473,7 @@ class FedimintClient {
       paymentInfo: string,
       amountMsat?: number,
       lnurlComment?: string,
+      gatewayId?: string,
       federationId?: string
     ): FedimintResponse<LnPayResponse> => {
       const request: LnPayRequest = {
@@ -391,9 +482,10 @@ class FedimintClient {
         lnurlComment,
       };
 
-      return await this.postWithId<LnPayResponse>(
+      return await this.postWithGatewayIdAndFederationId<LnPayResponse>(
         "/ln/pay",
         request,
+        gatewayId,
         federationId
       );
     },
@@ -402,7 +494,7 @@ class FedimintClient {
      * Outputs a list of registered lighting lightning gateways
      */
     listGateways: async (): FedimintResponse<Gateway[]> =>
-      await this.postWithId<Gateway[]>("/ln/list-gateways", {}),
+      await this.postWithFederationId<Gateway[]>("/ln/list-gateways", {}),
   };
 
   /**
@@ -451,7 +543,7 @@ class FedimintClient {
     ): FedimintResponse<MintReissueResponse> => {
       const request: MintReissueRequest = { notes };
 
-      return await this.postWithId<MintReissueResponse>(
+      return await this.postWithFederationId<MintReissueResponse>(
         "/mint/reissue",
         request,
         federationId
@@ -475,7 +567,7 @@ class FedimintClient {
         includeInvite,
       };
 
-      return await this.postWithId<MintSpendResponse>(
+      return await this.postWithFederationId<MintSpendResponse>(
         "/mint/spend",
         request,
         federationId
@@ -491,7 +583,7 @@ class FedimintClient {
     ): FedimintResponse<MintValidateResponse> => {
       const request: MintValidateRequest = { notes };
 
-      return await this.postWithId<MintValidateResponse>(
+      return await this.postWithFederationId<MintValidateResponse>(
         "/mint/validate",
         request,
         federationId
@@ -532,7 +624,7 @@ class FedimintClient {
     ): FedimintResponse<OnchainDepositAddressResponse> => {
       const request: OnchainDepositAddressRequest = { timeout };
 
-      return await this.postWithId<OnchainDepositAddressResponse>(
+      return await this.postWithFederationId<OnchainDepositAddressResponse>(
         "/wallet/deposit-address",
         request,
         federationId
@@ -548,7 +640,7 @@ class FedimintClient {
     ): FedimintResponse<OnchainAwaitDepositResponse> => {
       const request: OnchainAwaitDepositRequest = { operationId };
 
-      return await this.postWithId<OnchainAwaitDepositResponse>(
+      return await this.postWithFederationId<OnchainAwaitDepositResponse>(
         "/wallet/await-deposit",
         request,
         federationId
@@ -565,7 +657,7 @@ class FedimintClient {
     ): FedimintResponse<OnchainWithdrawResponse> => {
       const request: OnchainWithdrawRequest = { address, amountSat };
 
-      return await this.postWithId<OnchainWithdrawResponse>(
+      return await this.postWithFederationId<OnchainWithdrawResponse>(
         "/wallet/withdraw",
         request,
         federationId
