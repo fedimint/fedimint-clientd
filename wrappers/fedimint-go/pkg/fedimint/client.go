@@ -6,7 +6,7 @@ import (
 	"fedimint-go-client/pkg/fedimint/types"
 	"fedimint-go-client/pkg/fedimint/types/modules"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -34,7 +34,7 @@ type OnchainModule struct {
 
 func NewFedimintClient(baseURL, password string, activeFederationId string) *FedimintClient {
 	fc := &FedimintClient{
-		BaseURL:            baseURL + "/fedimint/v2",
+		BaseURL:            baseURL + "/v2",
 		Password:           password,
 		ActiveFederationId: activeFederationId,
 	}
@@ -58,32 +58,38 @@ func (fc *FedimintClient) fetchWithAuth(endpoint string, method string, body []b
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("HTTP error! status: %d", resp.StatusCode)
+
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
-	return ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP error! status: %d, message: %s", resp.StatusCode, string(responseBody))
+	}
+	return responseBody, nil
 }
 
-func (fc *FedimintClient) getActiveFederationId() string {
+func (fc *FedimintClient) GetActiveFederationId() string {
 	return fc.ActiveFederationId
 }
 
-func (fc *FedimintClient) setActiveFederationId(federationId string, useDefaultGateway bool) {
+func (fc *FedimintClient) SetActiveFederationId(federationId string, useDefaultGateway bool) {
 	fc.ActiveFederationId = federationId
 	if useDefaultGateway {
-		fc.useDefaultGateway()
+		fc.UseDefaultGateway()
 	}
 }
 
-func (fc *FedimintClient) getActiveGatewayId() string {
+func (fc *FedimintClient) GetActiveGatewayId() string {
 	return fc.ActiveGatewayId
 }
 
-func (fc *FedimintClient) setActiveGatewayId(gatewayId string) {
+func (fc *FedimintClient) SetActiveGatewayId(gatewayId string) {
 	fc.ActiveGatewayId = gatewayId
 }
 
-func (fc *FedimintClient) useDefaultGateway() error {
+func (fc *FedimintClient) UseDefaultGateway() error {
 	// hits list_gateways and sets activeGatewayId to the first gateway
 	gateways, err := fc.Ln.ListGateways()
 	if err != nil {
@@ -103,40 +109,80 @@ func (fc *FedimintClient) get(endpoint string) ([]byte, error) {
 
 func (fc *FedimintClient) post(endpoint string, body interface{}) ([]byte, error) {
 	jsonBody, err := json.Marshal(body)
-	fmt.Println("jsonBody: ", string(jsonBody))
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("jsonBody: ", string(jsonBody))
 	return fc.fetchWithAuth(endpoint, "POST", jsonBody)
 }
 
-func (fc *FedimintClient) postWithFederationId(endpoint string, body interface{}, federationId string) ([]byte, error) {
-	effectiveFederationId := federationId
-	if effectiveFederationId == "" {
-		effectiveFederationId = fc.ActiveFederationId
+func (fc *FedimintClient) postWithFederationId(endpoint string, body interface{}, federationId *string) ([]byte, error) {
+	// Marshal the original body to JSON
+	originalBodyJSON, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
 	}
 
-	return fc.post(endpoint, map[string]interface{}{
-		"body":         body,
-		"federationId": effectiveFederationId,
-	})
+	// Unmarshal the JSON into a map to add federationId
+	var bodyMap map[string]interface{}
+	err = json.Unmarshal(originalBodyJSON, &bodyMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add federationId to the map
+	effectiveFederationId := fc.ActiveFederationId
+	if federationId != nil {
+		effectiveFederationId = *federationId
+	}
+	bodyMap["federationId"] = effectiveFederationId
+
+	// Marshal the modified map back to JSON
+	modifiedBodyJSON, err := json.Marshal(bodyMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the modified JSON as the body for the POST request
+	return fc.fetchWithAuth(endpoint, "POST", modifiedBodyJSON)
 }
 
-func (fc *FedimintClient) postWithGatewayIdAndFederationId(endpoint string, body interface{}, gatewayId string, federationId string) ([]byte, error) {
-	effectiveFederationId := federationId
-	if effectiveFederationId == "" {
-		effectiveFederationId = fc.ActiveFederationId
-	}
-	effectiveGatewayId := gatewayId
-	if effectiveGatewayId == "" {
-		effectiveGatewayId = fc.ActiveGatewayId
+func (fc *FedimintClient) postWithGatewayIdAndFederationId(endpoint string, body interface{}, gatewayId *string, federationId *string) ([]byte, error) {
+	// Marshal the original body to JSON
+	originalBodyJSON, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
 	}
 
-	return fc.post(endpoint, map[string]interface{}{
-		"body":         body,
-		"gatewayId":    effectiveGatewayId,
-		"federationId": effectiveFederationId,
-	})
+	// Unmarshal the JSON into a map to add federationId
+	var bodyMap map[string]interface{}
+	err = json.Unmarshal(originalBodyJSON, &bodyMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Add federationId to the map
+	effectiveFederationId := fc.ActiveFederationId
+	if federationId != nil {
+		effectiveFederationId = *federationId
+	}
+	bodyMap["federationId"] = effectiveFederationId
+
+	// Add gatewayId to the map
+	effectiveGatewayId := fc.ActiveGatewayId
+	if gatewayId != nil {
+		effectiveGatewayId = *gatewayId
+	}
+	bodyMap["gatewayId"] = effectiveGatewayId
+
+	// Marshal the modified map back to JSON
+	modifiedBodyJSON, err := json.Marshal(bodyMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Use the modified JSON as the body for the POST request
+	return fc.fetchWithAuth(endpoint, "POST", modifiedBodyJSON)
 }
 
 func (fc *FedimintClient) Info() (*types.InfoResponse, error) {
@@ -165,13 +211,14 @@ func (fc *FedimintClient) Config() (*types.FedimintResponse, error) {
 	return &configResp, nil
 }
 
-func (fc *FedimintClient) Backup(metadata *types.BackupRequest, federationId string) error {
+func (fc *FedimintClient) Backup(metadata *types.BackupRequest, federationId *string) error {
 	_, err := fc.postWithFederationId("/admin/backup", metadata, federationId)
 	return err
 }
 
-func (fc *FedimintClient) DiscoverVersion(threshold *int) (*types.FedimintResponse, error) {
-	resp, err := fc.post("/admin/discover-version", threshold)
+func (fc *FedimintClient) DiscoverVersion(threshold uint16) (*types.FedimintResponse, error) {
+	request := types.DiscoverVersionRequest{Threshold: threshold}
+	resp, err := fc.post("/admin/discover-version", request)
 	if err != nil {
 		return nil, err
 	}
@@ -183,13 +230,13 @@ func (fc *FedimintClient) DiscoverVersion(threshold *int) (*types.FedimintRespon
 	return &versionResp, nil
 }
 
-func (fc *FedimintClient) ListOperations(limit int, federationId *string) (*types.OperationOutput, error) {
+func (fc *FedimintClient) ListOperations(limit uint16, federationId *string) (*types.ListOperationsResponse, error) {
 	request := types.ListOperationsRequest{Limit: limit}
-	resp, err := fc.post("/admin/list-operations", request)
+	resp, err := fc.postWithFederationId("/admin/list-operations", request, federationId)
 	if err != nil {
 		return nil, err
 	}
-	var operationsResp types.OperationOutput
+	var operationsResp types.ListOperationsResponse
 	err = json.Unmarshal(resp, &operationsResp)
 	if err != nil {
 		return nil, err
@@ -217,16 +264,19 @@ func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, us
 
 	var response types.JoinResponse
 	responseBody, err := fc.post("/admin/join", request)
-
-	if setActiveFederationId {
-		fc.setActiveFederationId(response.ThisFederationId, useDefaultGateway)
-	}
-
 	if err != nil {
 		return response, err
 	}
 
 	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return response, err
+	}
+
+	if setActiveFederationId {
+		fc.SetActiveFederationId(response.ThisFederationId, useDefaultGateway)
+	}
+
 	if err != nil {
 		return response, err
 	}
@@ -239,7 +289,7 @@ func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, us
 
 func (onchain *OnchainModule) createDepositAddress(timeout int, federationId *string) (*modules.OnchainDepositAddressResponse, error) {
 	request := modules.OnchainDepositAddressRequest{Timeout: timeout}
-	resp, err := onchain.Client.postWithFederationId("/onchain/deposit-address", request, *federationId)
+	resp, err := onchain.Client.postWithFederationId("/onchain/deposit-address", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +303,7 @@ func (onchain *OnchainModule) createDepositAddress(timeout int, federationId *st
 
 func (onchain *OnchainModule) awaitDeposit(operationId string, federationId *string) (*modules.OnchainAwaitDepositResponse, error) {
 	request := modules.OnchainAwaitDepositRequest{OperationId: operationId}
-	resp, err := onchain.Client.postWithFederationId("/onchain/await-deposit", request, *federationId)
+	resp, err := onchain.Client.postWithFederationId("/onchain/await-deposit", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +317,7 @@ func (onchain *OnchainModule) awaitDeposit(operationId string, federationId *str
 
 func (onchain *OnchainModule) withdraw(address string, amountSat int, federationId *string) (*modules.OnchainWithdrawResponse, error) {
 	request := modules.OnchainWithdrawRequest{Address: address, AmountSat: amountSat}
-	resp, err := onchain.Client.postWithFederationId("/onchain/withdraw", request, *federationId)
+	resp, err := onchain.Client.postWithFederationId("/onchain/withdraw", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +335,7 @@ func (onchain *OnchainModule) withdraw(address string, amountSat int, federation
 
 func (mint *MintModule) DecodeNotes(notes string, federationId *string) (*modules.DecodeNotesResponse, error) {
 	request := modules.DecodeNotesRequest{Notes: notes}
-	resp, err := mint.Client.postWithFederationId("/mint/decode-notes", request, *federationId)
+	resp, err := mint.Client.postWithFederationId("/mint/decode-notes", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +353,7 @@ func (mint *MintModule) EncodeNotes(notesJson modules.NotesJson, federationId *s
 		return nil, err
 	}
 	request := modules.EncodeNotesRequest{NotesJsonStr: string(notesJsonStr)}
-	resp, err := mint.Client.postWithFederationId("/mint/encode-notes", request, *federationId)
+	resp, err := mint.Client.postWithFederationId("/mint/encode-notes", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -317,7 +367,7 @@ func (mint *MintModule) EncodeNotes(notesJson modules.NotesJson, federationId *s
 
 func (mint *MintModule) Reissue(notes string, federationId *string) (*modules.MintReissueResponse, error) {
 	request := modules.MintReissueRequest{Notes: notes}
-	resp, err := mint.Client.postWithFederationId("/mint/reissue", request, *federationId)
+	resp, err := mint.Client.postWithFederationId("/mint/reissue", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +386,7 @@ func (mint *MintModule) Spend(amountMsat uint64, allowOverpay bool, timeout uint
 		Timeout:       timeout,
 		IncludeInvite: includeInvite,
 	}
-	resp, err := mint.Client.postWithFederationId("/mint/spend", request, *federationId)
+	resp, err := mint.Client.postWithFederationId("/mint/spend", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +400,7 @@ func (mint *MintModule) Spend(amountMsat uint64, allowOverpay bool, timeout uint
 
 func (mint *MintModule) Validate(notes string, federationId *string) (*modules.MintValidateResponse, error) {
 	request := modules.MintValidateRequest{Notes: notes}
-	resp, err := mint.Client.postWithFederationId("/mint/validate", request, *federationId)
+	resp, err := mint.Client.postWithFederationId("/mint/validate", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -400,8 +450,7 @@ func (ln *LnModule) CreateInvoice(amountMsat uint64, description string, expiryT
 		Description: description,
 		ExpiryTime:  expiryTime,
 	}
-	fmt.Println("request: ", request)
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice", request, *gatewayId, *federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice", request, gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +470,7 @@ func (ln *LnModule) CreateInvoiceForPubkey(pubkey string, amountMsat uint64, des
 		ExternalPubkey: pubkey,
 	}
 	fmt.Println("request: ", request)
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice-external-pubkey", request, *gatewayId, *federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice-external-pubkey", request, gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -442,7 +491,7 @@ func (ln *LnModule) CreateInvoiceForPubkeyTweak(pubkey string, tweak uint64, amo
 		Tweak:          tweak,
 	}
 	fmt.Println("request: ", request)
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice-external-pubkey-tweaked", request, *gatewayId, *federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice-external-pubkey-tweaked", request, gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -456,7 +505,7 @@ func (ln *LnModule) CreateInvoiceForPubkeyTweak(pubkey string, tweak uint64, amo
 
 func (ln *LnModule) ClaimPubkeyReceive(privateKey string, federationId *string) (*types.InfoResponse, error) {
 	request := modules.LnClaimPubkeyReceiveRequest{PrivateKey: privateKey}
-	resp, err := ln.Client.postWithFederationId("/ln/claim-external-receive", request, *federationId)
+	resp, err := ln.Client.postWithFederationId("/ln/claim-external-receive", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +519,7 @@ func (ln *LnModule) ClaimPubkeyReceive(privateKey string, federationId *string) 
 
 func (ln *LnModule) ClaimPubkeyReceiveTweaked(privateKey string, tweaks []uint64, federationId *string) (*types.InfoResponse, error) {
 	request := modules.LnClaimPubkeyTweakedRequest{PrivateKey: privateKey, Tweaks: tweaks}
-	resp, err := ln.Client.postWithFederationId("/ln/claim-external-receive-tweaked", request, *federationId)
+	resp, err := ln.Client.postWithFederationId("/ln/claim-external-receive-tweaked", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -484,7 +533,7 @@ func (ln *LnModule) ClaimPubkeyReceiveTweaked(privateKey string, tweaks []uint64
 
 func (ln *LnModule) AwaitInvoice(operationId string, federationId *string) (*types.InfoResponse, error) {
 	request := modules.LnAwaitInvoiceRequest{OperationId: operationId}
-	resp, err := ln.Client.postWithFederationId("/ln/await-invoice", request, *federationId)
+	resp, err := ln.Client.postWithFederationId("/ln/await-invoice", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -503,7 +552,7 @@ func (ln *LnModule) Pay(paymentInfo string, amountMsat *uint64, lnurlComment *st
 		LnurlComment: lnurlComment,
 	}
 	fmt.Println("request: ", request)
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/pay", request, *gatewayId, *federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/pay", request, gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}

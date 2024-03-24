@@ -188,6 +188,8 @@ class FedimintClient {
    * @param body - The body of the request.
    */
   private async post<T>(endpoint: string, body: any): FedimintResponse<T> {
+    console.log("body: ", body);
+    console.log("endpoint: ", this.baseUrl + endpoint);
     const res = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "POST",
       headers: {
@@ -196,6 +198,8 @@ class FedimintClient {
       },
       body: JSON.stringify(body),
     });
+
+    console.log("res: ", res);
 
     if (!res.ok) {
       throw new Error(

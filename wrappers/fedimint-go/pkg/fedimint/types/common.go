@@ -1,5 +1,7 @@
 package types
 
+import "encoding/json"
+
 type Tiered map[int]interface{}
 
 type TieredSummary struct {
@@ -20,7 +22,21 @@ type BackupRequest struct {
 }
 
 type ListOperationsRequest struct {
-	Limit int `json:"limit"`
+	Limit uint16 `json:"limit"`
+}
+
+// OperationOutput mirrors the Rust OperationOutput struct for JSON unmarshalling
+type OperationOutput struct {
+	ID            string           `json:"id"`
+	CreationTime  string           `json:"creationTime"`
+	OperationKind string           `json:"operationKind"`
+	OperationMeta json.RawMessage  `json:"operationMeta"`     // Use json.RawMessage for arbitrary JSON
+	Outcome       *json.RawMessage `json:"outcome,omitempty"` // Pointer to handle optional field
+}
+
+// ListOperationsResponse represents the JSON response structure from the listOperations endpoint
+type ListOperationsResponse struct {
+	Operations []OperationOutput `json:"operations"`
 }
 
 type FederationIdsResponse struct {
@@ -37,12 +53,8 @@ type JoinResponse struct {
 	FederationIds    []string `json:"federationIds"`
 }
 
-type OperationOutput struct {
-	ID            string      `json:"id"`
-	CreationTime  string      `json:"creation_time"`
-	OperationKind string      `json:"operation_kind"`
-	OperationMeta interface{} `json:"operation_meta"`
-	Outcome       interface{} `json:"outcome,omitempty"`
+type DiscoverVersionRequest struct {
+	Threshold uint16 `json:"threshold"`
 }
 
 type FedimintResponse map[string]interface{}

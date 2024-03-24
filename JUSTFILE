@@ -10,6 +10,9 @@ mprocs:
 test-ts:
   bun run wrappers/fedimint-ts/test.ts
 
+test-go:
+  cd wrappers/fedimint-go && go run cmd/main.go
+
 alias b := build
 alias c := check
 alias t := test

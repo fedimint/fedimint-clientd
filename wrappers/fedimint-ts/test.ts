@@ -36,12 +36,16 @@ const newKeyPair = (): KeyPair => {
 };
 
 async function buildTestClient() {
-  const baseUrl = process.env.BASE_URL || "http://127.0.0.1:3333";
-  const password = process.env.PASSWORD || "password";
+  const baseUrl = process.env.FEDIMINT_CLIENTD_BASE_URL || "127.0.0.1:3333";
+  const password = process.env.FEDIMINT_CLIENTD_PASSWORD || "password";
+  const activeFederationId =
+    process.env.FEDIMINT_CLIENTD_ACTIVE_FEDERATION_ID ||
+    "15db8cb4f1ec8e484d73b889372bec94812580f929e8148b7437d359af422cd3";
   const builder = new FedimintClientBuilder();
-  builder.setBaseUrl(baseUrl).setPassword(password).setActiveFederationId(
-    "15db8cb4f1ec8e484d73b889372bec94812580f929e8148b7437d359af422cd3" // Fedi Alpha Mutinynet
-  );
+  builder
+    .setBaseUrl(baseUrl)
+    .setPassword(password)
+    .setActiveFederationId(activeFederationId);
 
   const client = await builder.build();
 
