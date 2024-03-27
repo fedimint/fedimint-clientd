@@ -4,10 +4,8 @@ version = "0.1.5"
 edition = "2021"
 description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin"
 repository = "https://github.com/fedimint/fedimint-clientd"
-keywords = ["fedimint", "fedimint-cli"]
+keywords = ["fedimint", "bitcoin", "lightning", "ecash"]
 license = "MIT"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.75"

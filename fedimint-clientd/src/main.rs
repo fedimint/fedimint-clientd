@@ -244,13 +244,13 @@ fn fedimint_v2_rest() -> Router<AppState> {
     let wallet_router = Router::new()
         .route(
             "/deposit-address",
-            post(fedimint::wallet::deposit_address::handle_rest),
+            post(fedimint::onchain::deposit_address::handle_rest),
         )
         .route(
             "/await-deposit",
-            post(fedimint::wallet::await_deposit::handle_rest),
+            post(fedimint::onchain::await_deposit::handle_rest),
         )
-        .route("/withdraw", post(fedimint::wallet::withdraw::handle_rest));
+        .route("/withdraw", post(fedimint::onchain::withdraw::handle_rest));
 
     let admin_router = Router::new()
         .route("/backup", post(fedimint::admin::backup::handle_rest))

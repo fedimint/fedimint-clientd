@@ -226,13 +226,13 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
             handlers::fedimint::ln::list_gateways::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::WalletDepositAddress => {
-            handlers::fedimint::wallet::deposit_address::handle_ws(state.clone(), req.params).await
+            handlers::fedimint::onchain::deposit_address::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::WalletAwaitDeposit => {
-            handlers::fedimint::wallet::await_deposit::handle_ws(state.clone(), req.params).await
+            handlers::fedimint::onchain::await_deposit::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::WalletWithdraw => {
-            handlers::fedimint::wallet::withdraw::handle_ws(state.clone(), req.params).await
+            handlers::fedimint::onchain::withdraw::handle_ws(state.clone(), req.params).await
         }
     }
 }
