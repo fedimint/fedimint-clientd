@@ -75,21 +75,31 @@ pub enum JsonRpcMethod {
 }
 
 async fn handle_socket(mut socket: WebSocket, state: AppState) {
-    while let Some(Ok(msg)) = socket.next().await {
-        if let Message::Text(text) = msg {
-            info!("Received: {}", text);
-            let req = match serde_json::from_str::<JsonRpcRequest>(&text) {
-                Ok(request) => request,
-                Err(err) => {
-                    send_err_invalid_req(&mut socket, err, &text).await;
-                    continue;
+    while let Some(message) = socket.next().await {
+        if let Ok(Message::Text(text)) = message {
+            if let Ok(req) = serde_json::from_str::<JsonRpcRequest>(&text) {
+                match req.method {
+                    JsonRpcMethod::WalletAwaitDeposit => {
+                        handlers::fedimint::onchain::await_deposit::handle_ws(socket, state.clone()).await;
+                        break; 
+                    },
+                    JsonRpcMethod::LnAwaitInvoice => {
+                        handlers::fedimint::ln::await_invoice::handle_ws(socket, state.clone()).await;
+                        break; 
+                    },
+                    _ => {
+                        // For other methods, use the match_method function to handle them accordingly.
+                        let response = match_method(req.clone(), state.clone()).await;
+                        let res_msg = create_json_rpc_response(response, req.id);
+                        if let Err(send_error) = socket.send(res_msg).await {
+                            eprintln!("Failed to send WebSocket message for method");
+                        }
+                    }
                 }
-            };
-
-            let res = match_method(req.clone(), state.clone()).await;
-
-            let res_msg = create_json_rpc_response(res, req.id);
-            socket.send(res_msg).await.unwrap();
+            } else {
+                // If the request couldn't be parsed, send an invalid request format error.
+                send_err_invalid_req(&mut socket, "Invalid request format", &text).await;
+            }
         }
     }
 }
@@ -121,26 +131,25 @@ fn create_json_rpc_response(res: Result<Value, AppError>, req_id: u64) -> Messag
     Message::Text(msg_text.unwrap())
 }
 
-async fn send_err_invalid_req(socket: &mut WebSocket, err: serde_json::Error, text: &str) {
-    // Try to extract the id from the request
-    let id = serde_json::from_str::<Value>(text)
+async fn send_err_invalid_req(socket: &mut WebSocket, err_message: &str, text: &str) {
+    let id = serde_json::from_str::<serde_json::Value>(text)
         .ok()
         .and_then(|v| v.get("id").cloned())
-        .and_then(|v| v.as_u64());
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
 
-    let err_msg = JsonRpcResponse {
-        jsonrpc: JSONRPC_VERSION.to_string(),
-        result: None,
-        error: Some(JsonRpcError {
-            code: JSONRPC_ERROR_INVALID_REQUEST,
-            message: err.to_string(),
-        }),
-        id: id.unwrap_or(0),
-    };
-    socket
-        .send(Message::Text(serde_json::to_string(&err_msg).unwrap()))
-        .await
-        .unwrap();
+    let err_msg = serde_json::json!({
+        "jsonrpc": "2.0",
+        "error": {
+            "code": JSONRPC_ERROR_INVALID_REQUEST,
+            "message": err_message,
+        },
+        "id": id,
+    }).to_string();
+
+    if let Err(send_error) = socket.send(Message::Text(err_msg)).await {
+        eprintln!("Failed to send error response for invalid request format {:?}", send_error);
+    }
 }
 
 async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, AppError> {
@@ -206,7 +215,7 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
             .await
         }
         JsonRpcMethod::LnAwaitInvoice => {
-            handlers::fedimint::ln::await_invoice::handle_ws(state.clone(), req.params).await
+            Ok(serde_json::Value::Null)
         }
         JsonRpcMethod::LnClaimExternalReceive => {
             handlers::fedimint::ln::claim_external_receive::handle_ws(state.clone(), req.params)
@@ -229,7 +238,7 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
             handlers::fedimint::onchain::deposit_address::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::WalletAwaitDeposit => {
-            handlers::fedimint::onchain::await_deposit::handle_ws(state.clone(), req.params).await
+            Ok(serde_json::Value::Null)
         }
         JsonRpcMethod::WalletWithdraw => {
             handlers::fedimint::onchain::withdraw::handle_ws(state.clone(), req.params).await
