@@ -9,3 +9,6 @@ test-ts:
 
 test-go:
   cd wrappers/fedimint-go && go run cmd/main.go
+
+wscat:
+  mprocs -c mprocs-wscat.yaml

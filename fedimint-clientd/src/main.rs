@@ -61,7 +61,7 @@ struct Cli {
     manual_secret: Option<String>,
 
     /// Mode: ws, rest
-    #[clap(long, default_value = "rest")]
+    #[clap(long, env = "FEDIMINT_CLIENTD_MODE", default_value = "rest")]
     mode: Mode,
 }
 
@@ -121,6 +121,7 @@ async fn main() -> Result<()> {
             .with_state(state)
             .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
     };
+    info!("Starting server in {:?} mode", cli.mode);
 
     let cors = CorsLayer::new()
         // allow `GET` and `POST` when accessing the resource
