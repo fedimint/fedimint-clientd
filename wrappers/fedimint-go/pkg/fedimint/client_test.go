@@ -26,17 +26,17 @@ func TestNewFedimintClient(t *testing.T) {
 
 	assert.Equal(t, fc.BaseURL, "http://localhost:3333/fedimint/v2")
 	assert.Equal(t, fc.Password, "password")
-	assert.Equal(t, fc.FederationId, "federation123")
+	assert.Equal(t, fc.ActiveFederationId, "federation123")
 
 	assert.Equal(t, fc, fc.Ln.Client)
-	assert.Equal(t, fc, fc.Wallet.Client)
+	assert.Equal(t, fc, fc.Onchain.Client)
 	assert.Equal(t, fc, fc.Mint.Client)
 }
 
 func TestGetActiveFederationId(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
-	fedId := fc.getActiveFederationId()
+	fedId := fc.GetActiveFederationId()
 	assert.Equal(t, fedId, "federation123")
 }
 
@@ -44,40 +44,40 @@ func TestSetActiveFederationId(t *testing.T) {
 	fc := CreateNewFedimintClient()
 	new_fedId := "New_federation123"
 
-	fedId_prev := fc.FederationId
-	fc.setActiveFederationId(new_fedId)
-	fedId_now := fc.FederationId
+	fedId_prev := fc.ActiveFederationId
+	fc.SetActiveFederationId(new_fedId, false)
+	fedId_now := fc.ActiveFederationId
 	assert.Equal(t, fedId_now, "New_federation123")
 	assert.NotEqual(t, fedId_now, fedId_prev)
 }
 
 ////////////
-// Wallet //
+// Onchain //
 ////////////
 
 func TestCreateDepositAddress(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
-	depositAddressRequest := modules.DepositAddressRequest{
+	depositAddressRequest := modules.OnchainDepositAddressRequest{
 		Timeout: 3600,
 	}
 
-	depositResponse, err := fc.Wallet.createDepositAddress(depositAddressRequest, &fc.FederationId)
+	depositResponse, err := fc.Onchain.createDepositAddress(depositAddressRequest.Timeout, &fc.ActiveFederationId)
 	if err != nil {
 		assert.Equal(t, depositResponse, nil)
-		assert.Equal(t, depositResponse.OperationID, nil)
+		assert.Equal(t, depositResponse.OperationId, nil)
 		assert.Equal(t, depositResponse.Address, nil)
 	} else {
 		assert.Equal(t, err, nil)
-		assert.NotEqual(t, depositResponse.OperationID, nil)
+		assert.NotEqual(t, depositResponse.OperationId, nil)
 		assert.NotEqual(t, depositResponse.Address, nil)
 	}
 
-	awaitDepositRequest := modules.AwaitDepositRequest{
-		OperationID: depositResponse.OperationID,
+	awaitDepositRequest := modules.OnchainAwaitDepositRequest{
+		OperationId: depositResponse.OperationId,
 	}
 
-	_, err = fc.Wallet.awaitDeposit(awaitDepositRequest, &fc.FederationId)
+	_, err = fc.Onchain.awaitDeposit(awaitDepositRequest.OperationId, &fc.ActiveFederationId)
 	if err != nil {
 		fmt.Println("Error awaiting deposit: ", err)
 		return
@@ -87,34 +87,34 @@ func TestCreateDepositAddress(t *testing.T) {
 func TestWithdraw(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
-	withdrawRequest := modules.WithdrawRequest{
-		Address:    "UNKNOWN",
-		AmountMsat: "10000",
+	withdrawRequest := modules.OnchainWithdrawRequest{
+		Address:   "UNKNOWN",
+		AmountSat: 10000,
 	}
 
-	withdrawResponse, _ := fc.Wallet.withdraw(withdrawRequest, &fc.FederationId)
+	withdrawResponse, _ := fc.Onchain.withdraw(withdrawRequest.Address, withdrawRequest.AmountSat, &fc.ActiveFederationId)
 
 	assert.NotEqual(t, withdrawResponse, nil)
 
-	// Intentionally make an error (like - wrong FederationId/request)
+	// Intentionally make an error (like - wrong ActiveFederationId/request)
 	wrong_fed_id := "12112"
-	_, err := fc.Wallet.withdraw(withdrawRequest, &wrong_fed_id)
+	_, err := fc.Onchain.withdraw(withdrawRequest.Address, withdrawRequest.AmountSat, &wrong_fed_id)
 	assert.NotEqual(t, err, nil)
 }
 
 func TestAwaitWithdraw(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
-	depositAddressRequest := modules.DepositAddressRequest{
+	depositAddressRequest := modules.OnchainDepositAddressRequest{
 		Timeout: 3600,
 	}
-	depositResponse, _ := fc.Wallet.createDepositAddress(depositAddressRequest, &fc.FederationId)
+	depositResponse, _ := fc.Onchain.createDepositAddress(depositAddressRequest.Timeout, &fc.ActiveFederationId)
 
-	awaitDepositRequest := modules.AwaitDepositRequest{
-		OperationID: depositResponse.OperationID,
+	awaitDepositRequest := modules.OnchainAwaitDepositRequest{
+		OperationId: depositResponse.OperationId,
 	}
 
-	awaitDepositResponse, err := fc.Wallet.awaitDeposit(awaitDepositRequest, &fc.FederationId)
+	awaitDepositResponse, err := fc.Onchain.awaitDeposit(awaitDepositRequest.OperationId, &fc.ActiveFederationId)
 	if err != nil {
 		assert.Equal(t, awaitDepositResponse, nil)
 		assert.Equal(t, awaitDepositResponse.Status, nil)
@@ -126,7 +126,7 @@ func TestAwaitWithdraw(t *testing.T) {
 
 	// intentionally giving wrong parameters
 	wrong_fed_id := "12112"
-	_, err1 := fc.Wallet.awaitDeposit(awaitDepositRequest, &wrong_fed_id)
+	_, err1 := fc.Onchain.awaitDeposit(awaitDepositRequest.OperationId, &wrong_fed_id)
 	assert.NotEqual(t, err1, nil)
 }
 
@@ -145,27 +145,27 @@ func TestAwaitWithdraw(t *testing.T) {
 func TestSpend(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
-	spendRequest := modules.SpendRequest{
+	spendRequest := modules.MintSpendRequest{
 		AmountMsat:   10000,
 		AllowOverpay: true,
 		Timeout:      3600,
 	}
 
-	spendResponse, err := fc.Mint.Spend(spendRequest, &fc.FederationId)
+	spendResponse, err := fc.Mint.Spend(spendRequest.AmountMsat, spendRequest.AllowOverpay, spendRequest.Timeout, true, &fc.ActiveFederationId)
 	if err != nil {
 		assert.Equal(t, spendResponse, nil)
-		assert.Equal(t, spendResponse.Operation, nil)
+		assert.Equal(t, spendResponse.OperationId, nil)
 		assert.Equal(t, spendResponse.Notes, nil)
 	} else {
 		assert.Equal(t, err, nil)
 		assert.NotEqual(t, spendResponse, nil)
-		assert.NotEqual(t, spendResponse.Operation, nil)
+		assert.NotEqual(t, spendResponse.OperationId, nil)
 		assert.NotEqual(t, spendResponse.Notes, nil)
 	}
 
 	// intentionally giving wrong parameters
 	wrong_fed_id := "12112"
-	_, err1 := fc.Mint.Spend(spendRequest, &wrong_fed_id)
+	_, err1 := fc.Mint.Spend(spendRequest.AmountMsat, spendRequest.AllowOverpay, spendRequest.Timeout, true, &wrong_fed_id)
 	assert.NotEqual(t, err1, nil)
 }
 
@@ -181,37 +181,40 @@ func TestSpend(t *testing.T) {
 func TestCreateInvoice(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
+	expiryTime := 3600
+	GatewayID := "test_GatewayID"
 	invoiceRequest := modules.LnInvoiceRequest{
 		AmountMsat:  10000,
 		Description: "test",
+		ExpiryTime:  &expiryTime,
 	}
 
-	invoiceResponse, err := fc.Ln.CreateInvoice(invoiceRequest, &fc.FederationId)
+	invoiceResponse, err := fc.Ln.CreateInvoice(invoiceRequest.AmountMsat, invoiceRequest.Description, invoiceRequest.ExpiryTime, &GatewayID, &fc.ActiveFederationId)
 	if err != nil {
 		assert.Equal(t, invoiceResponse, nil)
-		assert.Equal(t, invoiceResponse.OperationID, nil)
+		assert.Equal(t, invoiceResponse.OperationId, nil)
 		assert.Equal(t, invoiceResponse.Invoice, nil)
 	} else {
 		assert.Equal(t, err, nil)
 		assert.NotEqual(t, invoiceResponse, nil)
-		assert.NotEqual(t, invoiceResponse.OperationID, nil)
+		assert.NotEqual(t, invoiceResponse.OperationId, nil)
 		assert.NotEqual(t, invoiceResponse.Invoice, nil)
 	}
 
 	// intentionally giving wrong parameters
 	wrong_fed_id := "12112"
-	_, err1 := fc.Ln.CreateInvoice(invoiceRequest, &wrong_fed_id)
+	_, err1 := fc.Ln.CreateInvoice(invoiceRequest.AmountMsat, invoiceRequest.Description, invoiceRequest.ExpiryTime, &GatewayID, &wrong_fed_id)
 	assert.NotEqual(t, err1, nil)
 }
 
 func TestAwaitInvoice(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
-	awaitInvoiceRequest := modules.AwaitInvoiceRequest{
-		OperationID: "TestAwaitInvoice",
+	awaitInvoiceRequest := modules.LnAwaitInvoiceRequest{
+		OperationId: "TestAwaitInvoice",
 	}
 
-	infoResponse, err := fc.Ln.AwaitInvoice(awaitInvoiceRequest, &fc.FederationId)
+	infoResponse, err := fc.Ln.AwaitInvoice(awaitInvoiceRequest.OperationId, &fc.ActiveFederationId)
 	if err != nil {
 		assert.Equal(t, infoResponse, nil)
 		assert.Equal(t, infoResponse.DenominationsMsat, nil)
@@ -223,7 +226,7 @@ func TestAwaitInvoice(t *testing.T) {
 		assert.Equal(t, infoResponse.DenominationsMsat.Tiered, nil)
 	} else {
 		assert.Equal(t, err, nil)
-		assert.Equal(t, infoResponse.FederationID, fc.FederationId)
+		assert.Equal(t, infoResponse.FederationID, fc.ActiveFederationId)
 		assert.NotEqual(t, infoResponse, nil)
 		assert.NotEqual(t, infoResponse.Meta, nil)
 		assert.NotEqual(t, infoResponse.Network, nil)
@@ -234,68 +237,72 @@ func TestAwaitInvoice(t *testing.T) {
 
 	// intentionally giving wrong parameters
 	wrong_fed_id := ""
-	_, err1 := fc.Ln.AwaitInvoice(awaitInvoiceRequest, &wrong_fed_id)
+	_, err1 := fc.Ln.AwaitInvoice(awaitInvoiceRequest.OperationId, &wrong_fed_id)
 	assert.NotEqual(t, err1, nil)
 }
 
 func TestPay(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
+	LnurlComment := "test_LnurlComment"
+	GatewayID := "test_GatewayID"
+	AmountMsat := uint64(10000)
 	lnPayRequest := modules.LnPayRequest{
-		Payment_info:         "TestPayment",
-		Finish_in_background: true,
+		PaymentInfo:  "TestPayment",
+		AmountMsat:   &AmountMsat,
+		LnurlComment: &LnurlComment,
 	}
 
-	lnPayResponse, err := fc.Ln.Pay(lnPayRequest, &fc.FederationId)
+	lnPayResponse, err := fc.Ln.Pay(lnPayRequest.PaymentInfo, lnPayRequest.AmountMsat, lnPayRequest.LnurlComment, &GatewayID, &fc.ActiveFederationId)
 	if err != nil {
 		assert.Equal(t, lnPayResponse, nil)
-		assert.Equal(t, lnPayResponse.Contract_id, nil)
+		assert.Equal(t, lnPayResponse.ContractId, nil)
 		assert.Equal(t, lnPayResponse.Fee, nil)
-		assert.Equal(t, lnPayResponse.Payment_type, nil)
-		assert.Equal(t, lnPayResponse.Pperation_id, nil)
+		assert.Equal(t, lnPayResponse.PaymentType, nil)
+		assert.Equal(t, lnPayResponse.PperationId, nil)
 	} else {
 		assert.Equal(t, err, nil)
 		assert.NotEqual(t, lnPayResponse, nil)
-		assert.NotEqual(t, lnPayResponse.Contract_id, nil)
+		assert.NotEqual(t, lnPayResponse.ContractId, nil)
 		assert.NotEqual(t, lnPayResponse.Fee, nil)
-		assert.NotEqual(t, lnPayResponse.Payment_type, nil)
-		assert.NotEqual(t, lnPayResponse.Pperation_id, nil)
+		assert.NotEqual(t, lnPayResponse.PaymentType, nil)
+		assert.NotEqual(t, lnPayResponse.PperationId, nil)
 	}
 
 	// intentionally giving wrong parameters
 	wrong_fed_id := "12112"
-	_, err1 := fc.Ln.Pay(lnPayRequest, &wrong_fed_id)
+	_, err1 := fc.Ln.Pay(lnPayRequest.PaymentInfo, lnPayRequest.AmountMsat, lnPayRequest.LnurlComment, &GatewayID, &wrong_fed_id)
 	assert.NotEqual(t, err1, nil)
 }
 
-func TestAwaitPay(t *testing.T) {
-	fc := CreateNewFedimintClient()
+// func TestAwaitPay(t *testing.T) {
+// 	fc := CreateNewFedimintClient()
 
-	awaitLnPayRequest := modules.AwaitLnPayRequest{
-		Operation_id: "TestAwaitLnPay",
-	}
+// 	awaitLnPayRequest := modules.AwaitLnPayRequest{
+// 		OperationId: "TestAwaitLnPay",
+// 	}
 
-	lnPayResponse, err := fc.Ln.AwaitPay(awaitLnPayRequest, &fc.FederationId)
-	if err != nil {
-		assert.Equal(t, lnPayResponse, nil)
-		assert.Equal(t, lnPayResponse.Contract_id, nil)
-		assert.Equal(t, lnPayResponse.Fee, nil)
-		assert.Equal(t, lnPayResponse.Payment_type, nil)
-		assert.Equal(t, lnPayResponse.Pperation_id, nil)
-	} else {
-		assert.Equal(t, err, nil)
-		assert.NotEqual(t, lnPayResponse, nil)
-		assert.NotEqual(t, lnPayResponse.Contract_id, nil)
-		assert.NotEqual(t, lnPayResponse.Fee, nil)
-		assert.NotEqual(t, lnPayResponse.Payment_type, nil)
-		assert.NotEqual(t, lnPayResponse.Pperation_id, nil)
-	}
+// 	lnPayResponse, err := fc.Ln.AwaitPay(awaitLnPayRequest, &fc.ActiveFederationId)
+// 	if err != nil {
+// 		assert.Equal(t, lnPayResponse, nil)
+// 		assert.Equal(t, lnPayResponse.Contract_id, nil)
+// 		assert.Equal(t, lnPayResponse.Fee, nil)
+// 		assert.Equal(t, lnPayResponse.Payment_type, nil)
+// 		assert.Equal(t, lnPayResponse.Pperation_id, nil)
+// 	} else {
+// 		assert.Equal(t, err, nil)
+// 		assert.NotEqual(t, lnPayResponse, nil)
+// 		assert.NotEqual(t, lnPayResponse.Contract_id, nil)
+// 		assert.NotEqual(t, lnPayResponse.Fee, nil)
+// 		assert.NotEqual(t, lnPayResponse.Payment_type, nil)
+// 		assert.NotEqual(t, lnPayResponse.Pperation_id, nil)
+// 	}
 
-	// intentionally giving wrong parameters
-	wrong_fed_id := "12112"
-	_, err1 := fc.Ln.AwaitPay(awaitLnPayRequest, &wrong_fed_id)
-	assert.NotEqual(t, err1, nil)
-}
+// 	// intentionally giving wrong parameters
+// 	wrong_fed_id := "12112"
+// 	_, err1 := fc.Ln.AwaitPay(awaitLnPayRequest, &wrong_fed_id)
+// 	assert.NotEqual(t, err1, nil)
+// }
 
 func TestListGateways(t *testing.T) {
 	fc := CreateNewFedimintClient()
@@ -313,10 +320,10 @@ func TestSwitchGateway(t *testing.T) {
 	fc := CreateNewFedimintClient()
 
 	switchGatewayRequest := modules.SwitchGatewayRequest{
-		Gateway_id: "TestGateway1",
+		GatewayId: "TestGateway1",
 	}
 
-	gatewayResponse, err := fc.Ln.SwitchGateway(switchGatewayRequest, &fc.FederationId)
+	gatewayResponse, err := fc.Ln.SwitchGateway(switchGatewayRequest, &fc.ActiveFederationId)
 	if err != nil {
 		assert.Equal(t, gatewayResponse, nil)
 		assert.Equal(t, gatewayResponse.Active, true)
