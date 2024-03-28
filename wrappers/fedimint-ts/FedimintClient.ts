@@ -43,8 +43,19 @@ import type {
   JoinResponse,
 } from "./types";
 
+/**
+ * All the methods calling to fedimint clientd are asynchronous and return a Promise that resolves to the data returned by the API.
+ * @param T - The type of data that the API returns
+ * @returns - The data returned by the API
+ */
 type FedimintResponse<T> = Promise<T>;
 
+/**
+ * Builder pattern for creating a FedimintClient.
+ * @param baseUrl - The base URL of the Fedimint API
+ * @param password - The password of the Fedimint client
+ * @param activeFederationId - The ID of the active federation
+ */
 class FedimintClientBuilder {
   private baseUrl: string;
   private password: string;
@@ -98,6 +109,13 @@ class FedimintClientBuilder {
   }
 }
 
+/**
+ * FedimintClient provides methods for interacting with a fedimint-clientd's admin, mint, lightning, and onchain methods over HTTP.
+ * @param baseUrl - The base URL of the Fedimint Clientd instance, must be running and accessible e.g. http://localhost:3333
+ * @param password - The password of the Fedimint client, becomes the bearer token
+ * @param activeFederationId - The ID of the active federation to use for module methods
+ * @param activeGatewayId - Optional, the ID of the active gateway, if not provided, the first gateway in the active federation will be used
+ */
 class FedimintClient {
   private baseUrl: string;
   private password: string;
