@@ -349,5 +349,5 @@ fn cashu_v1_rest() -> Router<AppState> {
         )
         .route("/melt/:method", post(cashu::melt::method::handle_method))
         .route("/info", get(cashu::info::handle_info))
-        .route("/check", post(cashu::check::handle_check))
+        .route("/checkstate", post(cashu::checkstate::handle_checkstate))
 }

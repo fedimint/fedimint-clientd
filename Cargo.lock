@@ -1025,6 +1025,7 @@ dependencies = [
  "axum",
  "axum-macros",
  "axum-otel-metrics",
+ "base64 0.22.0",
  "bitcoin 0.29.2",
  "bitcoin_hashes 0.13.0",
  "chrono",
