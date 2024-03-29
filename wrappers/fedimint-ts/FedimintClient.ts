@@ -1,5 +1,5 @@
 import type {
-  BackupRequest,
+  // BackupRequest,
   InfoResponse,
   ListOperationsRequest,
   FederationIdsResponse,
@@ -94,8 +94,12 @@ class FedimintClientBuilder {
   }
 
   build(): FedimintClient {
-    if (this.baseUrl === "" || this.password === "") {
-      throw new Error("baseUrl, and password must be set");
+    if (
+      this.baseUrl === "" ||
+      this.password === "" ||
+      this.activeFederationId === ""
+    ) {
+      throw new Error("baseUrl, password, and activeFederationId must be set");
     }
 
     const client = new FedimintClient(
@@ -141,12 +145,19 @@ class FedimintClient {
     return this.activeFederationId;
   }
 
+  /**
+   * Set the active federation ID to use for module methods.
+   * If useDefaultGateway is true, the first gateway in the active federation will be used.
+   * Otherwise, the activeGatewayId must be set by picking a gateway from the list of gateways in the active federation.
+   * @param federationId - The ID of the active federation to use for module methods
+   * @param useDefaultGateway - Whether to just use the first gateway in the active federation or set the active gateway id manually
+   */
   setActiveFederationId(federationId: string, useDefaultGateway: boolean) {
     this.activeFederationId = federationId;
     console.log("Changed active federation id to: ", federationId);
 
     if (useDefaultGateway) {
-      this.ln.listGateways().then((gateways) => {
+      this.lightning.listGateways().then((gateways) => {
         this.activeGatewayId = gateways[0].info.gateway_id;
       });
     } else {
@@ -165,10 +176,13 @@ class FedimintClient {
     this.activeGatewayId = gatewayId;
   }
 
+  /**
+   * Use the first gateway in the active federation as the default gateway for lightning module methods.
+   */
   async useDefaultGateway() {
     // hits list_gateways and sets activeGatewayId to the first gateway
     try {
-      const gateways = await this.ln.listGateways();
+      const gateways = await this.lightning.listGateways();
       console.log("Gateways: ", gateways);
       this.activeGatewayId = gateways[0].info.gateway_id;
       console.log("Set active gateway id to: ", this.activeGatewayId);
@@ -228,6 +242,15 @@ class FedimintClient {
     return (await res.json()) as T;
   }
 
+  /**
+   * Makes a POST request to the `baseURL` at the given `endpoint` with the provided `body`.
+   * Receives a JSON response.
+   * Adds a federation ID to the request if provided or uses the active federation ID.
+   * Used for module methods that require a federation ID.
+   * @param endpoint - The endpoint to make the request to.
+   * @param body - The body of the request.
+   * @param federationId - The ID of the federation to use for the request.
+   */
   private async postWithFederationId<T>(
     endpoint: string,
     body: any,
@@ -241,6 +264,16 @@ class FedimintClient {
     });
   }
 
+  /**
+   * Makes a POST request to the `baseURL` at the given `endpoint` with the provided `body`.
+   * Receives a JSON response.
+   * Adds a gateway ID and federation ID to the request if provided or uses the active gateway ID and active federation ID.
+   * Used for lightning module methods that require a gateway ID for a specific federation.
+   * @param endpoint - The endpoint to make the request to.
+   * @param body - The body of the request.
+   * @param gatewayId - The ID of the gateway to use for the request.
+   * @param federationId - The ID of the federation to use for the request.
+   */
   private async postWithGatewayIdAndFederationId<T>(
     endpoint: string,
     body: any,
@@ -282,22 +315,26 @@ class FedimintClient {
     return await this.get<any>("/admin/config");
   }
 
-  /**
-   * Uploads the encrypted snapshot of mint notest to the federation
-   */
-  public async backup(
-    metadata: BackupRequest,
-    federationId?: string
-  ): FedimintResponse<void> {
-    await this.postWithFederationId<void>(
-      "/admin/backup",
-      metadata,
-      federationId
-    );
-  }
+  // --- TODO: UNSUPPORTED METHOD---
+  //
+  // /**
+  //  * Uploads an encrypted snapshot of mint notes to the federation
+  //  * @param metadata - The metadata to include in the snapshot
+  //  * @param federationId - The ID of the federation to upload the snapshot to
+  //  */
+  // public async backup(
+  //   metadata: BackupRequest,
+  //   federationId?: string
+  // ): FedimintResponse<void> {
+  //   await this.postWithFederationId<void>(
+  //     "/admin/backup",
+  //     metadata,
+  //     federationId
+  //   );
+  // }
 
   /**
-   * Returns the API version to use to communicate with the federation
+   * Returns the common API version to use to communicate with the federation and modules
    */
   public async discoverVersion(
     threshold?: number
@@ -312,7 +349,9 @@ class FedimintClient {
   }
 
   /**
-   * Outputs a list of operations that have been performed on the federation
+   * Outputs a list of the most recent operations performed by this client on the federation
+   * @param limit - The maximum number of operations to return
+   * @param federationId - The ID of the federation to list the operations for
    */
   public async listOperations(
     limit: number,
@@ -337,6 +376,12 @@ class FedimintClient {
   /**
    * Joins a federation with an inviteCode
    * Returns an array of federation IDs that the client is now connected to
+   * If already connected to the federation will just return 200
+   * Returns thisFederationId and the list of connected federation IDs in the response body
+   * @param inviteCode - The invite code to join the federation with
+   * @param setActiveFederationId - Whether to set the active federation ID to the one joined
+   * @param useDefaultGateway - Whether to use the first gateway in the active federation or set the active gateway id manually
+   * @param useManualSecret - Whether to use the manual secret to join the federation
    */
   public async join(
     inviteCode: string,
@@ -358,7 +403,7 @@ class FedimintClient {
   /**
    * A Module for interacting with Lightning
    */
-  public ln = {
+  public lightning = {
     /**
      * Creates a lightning invoice to receive payment via gateway
      */
@@ -380,36 +425,16 @@ class FedimintClient {
     },
 
     /**
-     * Creates a lightning invoice where the gateway contract locks the ecash to a specific pubkey
-     * Useful for creating invoices that pay to another user besides yourself
-     */
-    createInvoiceForPubkey: async (
-      pubkey: string,
-      amountMsat: number,
-      description: string,
-      expiryTime?: number,
-      gatewayId?: string,
-      federationId?: string
-    ): FedimintResponse<LnInvoiceResponse> => {
-      const request: LnInvoiceExternalPubkeyRequest = {
-        externalPubkey: pubkey,
-        amountMsat,
-        description,
-        expiryTime,
-      };
-
-      return await this.postWithGatewayIdAndFederationId<LnInvoiceExternalPubkeyResponse>(
-        "/ln/invoice-external-pubkey",
-        request,
-        gatewayId,
-        federationId
-      );
-    },
-
-    /**
      * Creates a lightning invoice where the gateway contract locks the ecash to a tweakedpubkey
-     * Fedimint-clientd tweaks the provided pubkey by the provided tweak, provide the pubkey and tweak
+     * Fedimint-clientd tweaks the provided pubkey by the provided tweak to create the lightning contract
      * Useful for creating invoices that pay to another user besides yourself
+     * @param pubkey - The pubkey to tweak
+     * @param tweak - The tweak to apply to the pubkey
+     * @param amountMsat - The amount of ecash to pay
+     * @param description - The description of the invoice
+     * @param expiryTime - The expiry time of the invoice in seconds
+     * @param gatewayId - The ID of the gateway to use for the invoice, if not provided will use the first gateway in the active federation
+     * @param federationId - The ID of the federation to use for the invoice, if not provided will use the active federation ID
      */
     createInvoiceForPubkeyTweak: async (
       pubkey: string,
@@ -437,29 +462,16 @@ class FedimintClient {
     },
 
     /**
-     * Claims a lightning contract that was paid to a specific pubkey
-     */
-    claimPubkeyReceive: async (
-      privateKey: string,
-      federationId?: string
-    ): FedimintResponse<InfoResponse> => {
-      const request: LnClaimPubkeyReceiveRequest = { privateKey };
-
-      return await this.postWithFederationId<InfoResponse>(
-        "/ln/claim-external-receive",
-        request,
-        federationId
-      );
-    },
-
-    /**
      * Claims lightning contracts paid to tweaks of a pubkey
      * Provide all the tweaks that were used to create the invoices
+     * @param privateKey - The private key of the pubkey to claim
+     * @param tweaks - The tweaks of the pubkey to claim
+     * @param federationId - The ID of the federation to claim the contracts in. Contracts are on specific federations so this is required.
      */
-    claimPubkeyReceiveTweaked: async (
+    claimPubkeyTweakReceive: async (
       privateKey: string,
       tweaks: number[],
-      federationId?: string
+      federationId: string
     ): FedimintResponse<InfoResponse> => {
       const request: LnClaimPubkeyReceiveTweakedRequest = {
         privateKey,
@@ -472,8 +484,11 @@ class FedimintClient {
         federationId
       );
     },
+
     /**
-     * Waits for a lightning invoice to be paid
+     * Blocking call that waits for a lightning invoice to be paid
+     * @param operationId - The contract id of the lightning invoice to wait for, normally the payment hash of the invoice
+     * @param federationId - The ID of the federation to wait for the invoice in, if not provided will use the active federation ID
      */
     awaitInvoice: async (
       operationId: string,
@@ -520,7 +535,7 @@ class FedimintClient {
   };
 
   /**
-   * A module for interacting with an ecash mint
+   * A module for interacting with the ecash mint
    */
   public mint = {
     /**
@@ -557,7 +572,9 @@ class FedimintClient {
     },
 
     /**
-     * Reissues an ecash note
+     * Reissues an ecash note. This is how the client receives notes.
+     * @param notes - The notes to reissue
+     * @param federationId - The ID of the federation to reissue the notes in, if not provided will use the active federation ID
      */
     reissue: async (
       notes: string,
@@ -573,7 +590,14 @@ class FedimintClient {
     },
 
     /**
-     * Spends an ecash note
+     * Pulls an ecash note string from the client's wallet and spends it.
+     * Once spent, the note is removed from the client's wallet.
+     * If a timeout is provided, the wallet will attempt to reissue the note after the timeout in case it wasn't spent.
+     * @param amountMsat - The amount of ecash to spend
+     * @param allowOverpay - Whether to allow overpaying the amountMsat
+     * @param timeout - The number of seconds to wait for the note to be spent, wallet's default timeout is 1 week if not provided
+     * @param includeInvite - Whether to include the invite in the note
+     * @param federationId - The ID of the federation to spend the note in, if not provided will use the active federation ID
      */
     spend: async (
       amountMsat: number,
@@ -597,7 +621,7 @@ class FedimintClient {
     },
 
     /**
-     * Validates an ecash note
+     * Validates an ecash note string.
      */
     validate: async (
       notes: string,
@@ -613,7 +637,8 @@ class FedimintClient {
     },
 
     /**
-     * Splits an ecash note into smaller notes
+     * Splits an ecash note string into its individual notes.
+     * @param notes - The notes to split
      */
     split: async (notes: string): FedimintResponse<MintSplitResponse> => {
       const request: MintSplitRequest = { notes };
@@ -622,7 +647,8 @@ class FedimintClient {
     },
 
     /**
-     * Combines ecash notes
+     * Combines ecash notes into a single note string.
+     * @param notesVec - The notes to combine
      */
     combine: async (
       notesVec: string[]
@@ -634,11 +660,19 @@ class FedimintClient {
   };
 
   /**
-   * A module for onchain bitcoin operations
+   * A module for onchain bitcoin operations.
+   * Fedimint's onchain wallet has several restrictions:
+   * - When you peg-in bitcoin, the federation will require additional confirmations (normally 6-10),
+   *   so you should wait for those confirmations before calling awaitDeposit, which is a blocking call.
+   * - Pegging out bitcoin will always be expensive because the Fedimint wallet always tries
+   *   to get the transaction confirmed in the next block.
+   * It is highly recommended to use the lightning module whenever possible
+   * and to only use the onchain module infrequently for major transactions.
    */
   public onchain = {
     /**
-     * Creates a new bitcoin deposit address
+     * Creates a new bitcoin deposit address to peg in bitcoin to the federation.
+     * @param timeout - The number of seconds for the fedimint-clientd to watch for a deposit to the created address
      */
     createDepositAddress: async (
       timeout: number,
@@ -654,7 +688,10 @@ class FedimintClient {
     },
 
     /**
-     * Waits for a bitcoin deposit to be confirmed
+     * Waits for a peg-in bitcoin deposit to be confirmed by the federation
+     * This is a blocking call, and the federation will require additional confirmations (normally 6-10), so you should wait for those confirmations before calling awaitDeposit.
+     * @param operationId - The contract id of the deposit to wait for, normally the transaction hash of the deposit
+     * @param federationId - The ID of the federation to wait for the deposit in, if not provided will use the active federation ID
      */
     awaitDeposit: async (
       operationId: string,
@@ -670,7 +707,14 @@ class FedimintClient {
     },
 
     /**
-     * Withdraws bitcoin from the federation
+     * Initiates a peg-out transaction to withdraw bitcoin onchain from the federation.
+     * Peg outs will always be expensive because the Fedimint wallet always tries
+     * to get the transaction confirmed in the next block. Improving the transaction efficiency and fees is on the roadmap.
+     * For now, it is recommended to use the lightning module whenever possible
+     * and to only use the onchain module infrequently for major transactions.
+     * @param address - The address to withdraw to
+     * @param amountSat - The amount of satoshis to withdraw
+     * @param federationId - The ID of the federation to withdraw from, if not provided will use the active federation ID
      */
     withdraw: async (
       address: string,
