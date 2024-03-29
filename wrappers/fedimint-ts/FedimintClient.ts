@@ -7,11 +7,8 @@ import type {
   DiscoverVersionRequest,
   DiscoverVersionResponse,
   JoinRequest,
-  LnInvoiceExternalPubkeyRequest,
-  LnInvoiceExternalPubkeyResponse,
   LnInvoiceExternalPubkeyTweakedRequest,
   LnInvoiceExternalPubkeyTweakedResponse,
-  LnClaimPubkeyReceiveRequest,
   LnClaimPubkeyReceiveTweakedRequest,
   LnAwaitInvoiceRequest,
   Gateway,
@@ -468,7 +465,7 @@ class FedimintClient {
      * @param tweaks - The tweaks of the pubkey to claim
      * @param federationId - The ID of the federation to claim the contracts in. Contracts are on specific federations so this is required.
      */
-    claimPubkeyTweakReceive: async (
+    claimPubkeyTweakReceives: async (
       privateKey: string,
       tweaks: number[],
       federationId: string
