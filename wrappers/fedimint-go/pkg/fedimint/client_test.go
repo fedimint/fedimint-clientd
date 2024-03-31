@@ -4,20 +4,103 @@ package fedimint
 import (
 	"fedimint-go-client/pkg/fedimint/types/modules"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+type KeyPair struct {
+	PrivateKey string
+	PublicKey  string
+}
+
+func logMethod(method string) {
+	fmt.Println("--------------------")
+	fmt.Println("Method:", method)
+}
+
+func logInputAndOutput(input interface{}, output interface{}) {
+	fmt.Println("Input: ", input)
+	fmt.Println("Output: ", output)
+	fmt.Println("--------------------")
+}
+
+// BIG ISSUE //
+// func newKeyPair() KeyPair {
+// 	var privateKey *big.Int
+// 	var err error
+
+// 	for {
+// 		privateKey, err = rand.Int(rand.Reader, secp256k1.S256().Params().N)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		if privateKey.Sign() > 0 && privateKey.Cmp(secp256k1.S256().Params().N) < 0 {
+// 			break
+// 		}
+// 	}
+
+// 	// publicKey := secp256k1.PublicKey{}
+// 	// secp256k1.S256().SerializePublicKey(publicKey[:], privateKey.Bytes())
+
+// 	publicKey := secp256k1.PublicKey{}
+// 	publicKey1 := secp256k1.PublicKey{
+// 		x: new(big.Int),
+// 		y: new(big.Int),
+// 	}
+// 	(publicKey1.x, publicKey1.y) = secp256k1.S256().ScalarBaseMult(privateKey.Bytes())
+
+// 	return KeyPair{
+// 		PrivateKey: hex.EncodeToString(privateKey.Bytes()),
+// 		PublicKey:  hex.EncodeToString(publicKey[:]),
+// 	}
+// }
+
+/*
+	async function buildTestClient() {
+	  const baseUrl = process.env.FEDIMINT_CLIENTD_BASE_URL || "127.0.0.1:3333";
+	  const password = process.env.FEDIMINT_CLIENTD_PASSWORD || "password";
+	  const activeFederationId =
+	    process.env.FEDIMINT_CLIENTD_ACTIVE_FEDERATION_ID ||
+	    "15db8cb4f1ec8e484d73b889372bec94812580f929e8148b7437d359af422cd3";
+	  const builder = new FedimintClientBuilder();
+	  builder
+	    .setBaseUrl(baseUrl)
+	    .setPassword(password)
+	    .setActiveFederationId(activeFederationId);
+
+	  const client = await builder.build();
+
+	  await client.useDefaultGateway();
+
+	  console.log("Default gateway id: ", client.getActiveGatewayId());
+
+	  return client;
+	}
+*/
 func CreateNewFedimintClient() *FedimintClient {
 	// Define test data
-	baseURL := "http://localhost:3333"
-	password := "password"
-	federationID := "federation123"
+	baseURL := os.Getenv("FEDIMINT_CLIENTD_BASE_URL")
+	if baseURL == "" {
+		baseURL = "127.0.0.1:3333"
+	}
+	password := os.Getenv("FEDIMINT_CLIENTD_PASSWORD")
+	if password == "" {
+		password = "password"
+	}
+	activeFederationID := os.Getenv("FEDIMINT_CLIENTD_ACTIVE_FEDERATION_ID")
+	if activeFederationID == "" {
+		activeFederationID = "15db8cb4f1ec8e484d73b889372bec94812580f929e8148b7437d359af422cd3"
+	}
 
-	fc := NewFedimintClient(baseURL, password, federationID)
-
-	return fc
+	done := make(chan *FedimintClient)
+	go func() {
+		fc := NewFedimintClient(baseURL, password, activeFederationID)
+		fc.UseDefaultGateway()
+		done <- fc
+	}()
+	return <-done
 }
 
 func TestNewFedimintClient(t *testing.T) {
