@@ -1,0 +1,23 @@
+procs:
+  user:
+    shell: zsh # if on macOS
+    # shell: bash # if on Linux
+    stop: SIGKILL
+  wscat:
+    shell: |
+      export $(cat .env | xargs)
+      while ! nc -z localhost 3333; do
+        echo "Waiting for fedimint-clientd to be ready..."
+        sleep 1
+      done
+      echo "fedimint-clientd is up - executing wscat"
+      wscat -c ws://localhost:3333/ws -H "Authorization: Bearer $FEDIMINT_CLIENTD_PASSWORD"
+    stop: SIGTERM
+  fedimint-clientd:
+    shell: FEDIMINT_CLIENTD_MODE=ws cargo run --manifest-path fedimint-clientd/Cargo.toml
+    stop: SIGTERM
+  ngrok:
+    shell: |
+      export $(cat .env | xargs)
+      ngrok http $FEDIMINT_CLIENTD_ADDR
+    stop: SIGTERM
