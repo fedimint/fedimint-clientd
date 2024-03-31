@@ -69,6 +69,104 @@
         "type": "github"
       }
     },
+<<<<<<< HEAD
+||||||| parent of cdebb0d (fix::> Added support func to tests and Updated CreateNewFedimintClient())
+    "devshell_2": {
+      "inputs": {
+        "nixpkgs": [
+          "flakebox",
+          "android-nixpkgs",
+          "nixpkgs"
+        ],
+        "systems": "systems_6"
+      },
+      "locked": {
+        "lastModified": 1695195896,
+        "narHash": "sha256-pq9q7YsGXnQzJFkR5284TmxrLNFc0wo4NQ/a5E93CQU=",
+        "owner": "numtide",
+        "repo": "devshell",
+        "rev": "05d40d17bf3459606316e3e9ec683b784ff28f16",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "devshell",
+        "type": "github"
+      }
+    },
+    "fedimint": {
+      "inputs": {
+        "advisory-db": "advisory-db",
+        "bundlers": "bundlers",
+        "fenix": "fenix",
+        "flake-utils": "flake-utils_2",
+        "flakebox": "flakebox",
+        "nixpkgs": "nixpkgs_4"
+      },
+      "locked": {
+        "lastModified": 1710534977,
+        "narHash": "sha256-RWzV+/NZkV87JnydefwRMwJ9tDkwDCg6m3pCxsVlKeY=",
+        "owner": "fedimint",
+        "repo": "fedimint",
+        "rev": "9d552fdf82f4af429165a1fd409615809ada4058",
+        "type": "github"
+      },
+      "original": {
+        "owner": "fedimint",
+        "repo": "fedimint",
+        "rev": "9d552fdf82f4af429165a1fd409615809ada4058",
+        "type": "github"
+      }
+    },
+=======
+    "devshell_2": {
+      "inputs": {
+        "nixpkgs": [
+          "flakebox",
+          "android-nixpkgs",
+          "nixpkgs"
+        ],
+        "systems": "systems_6"
+      },
+      "locked": {
+        "lastModified": 1695195896,
+        "narHash": "sha256-pq9q7YsGXnQzJFkR5284TmxrLNFc0wo4NQ/a5E93CQU=",
+        "owner": "numtide",
+        "repo": "devshell",
+        "rev": "05d40d17bf3459606316e3e9ec683b784ff28f16",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "devshell",
+        "type": "github"
+      }
+    },
+    "fedimint": {
+      "inputs": {
+        "advisory-db": "advisory-db",
+        "bundlers": "bundlers",
+        "fenix": "fenix",
+        "flake-utils": "flake-utils_2",
+        "flakebox": "flakebox",
+        "nixpkgs": "nixpkgs_4"
+      },
+      "locked": {
+        "lastModified": 1711405975,
+        "narHash": "sha256-I8uUhpqN5oGDkT+sN4jztzun/wD/mN/CtzCxlV3pdjY=",
+        "owner": "fedimint",
+        "repo": "fedimint",
+        "rev": "c32bbe8ed8d95ae420b5879e92dda6ce48f5c914",
+        "type": "github"
+      },
+      "original": {
+        "owner": "fedimint",
+        "repo": "fedimint",
+        "rev": "c32bbe8ed8d95ae420b5879e92dda6ce48f5c914",
+        "type": "github"
+      }
+    },
+>>>>>>> cdebb0d (fix::> Added support func to tests and Updated CreateNewFedimintClient())
     "fenix": {
       "inputs": {
         "nixpkgs": [
