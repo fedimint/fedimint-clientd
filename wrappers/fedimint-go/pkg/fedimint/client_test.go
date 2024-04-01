@@ -319,6 +319,37 @@ func TestFedimintGo(t *testing.T) {
 		return
 	}
 	logInputAndOutput(splitData.Notes, combineData)
+
+	/////////////////////
+	// ONCHAIN METHODS //
+	/////////////////////
+
+	// `/v2/onchain/deposit-address`
+	logMethod("/v2/onchain/deposit-address")
+	addr, err := fc.Onchain.createDepositAddress(1000, nil)
+	if err != nil {
+		fmt.Println("Error calling CREATE_DEPOSIT_ADDRESS: ", err)
+		return
+	}
+	logInputAndOutput(1000, addr)
+
+	// `/v2/onchain/withdraw`
+	logMethod("/v2/onchain/withdraw")
+	withdrawData, err := fc.Onchain.withdraw(addr.Address, 1000, nil)
+	if err != nil {
+		fmt.Println("Error calling WITHDRAW: ", err)
+		return
+	}
+	logInputAndOutput([]interface{}{addr.Address, 1000}, withdrawData)
+
+	// `/v2/onchain/await-deposit`
+	logMethod("/v2/onchain/await-deposit")
+	awaitDepositData, err := fc.Onchain.awaitDeposit(addr.OperationId, nil)
+	if err != nil {
+		fmt.Println("Error calling AWAIT_DEPOSIT: ", err)
+		return
+	}
+	logInputAndOutput(addr.Address, awaitDepositData)
 }
 
 // func TestNewFedimintClient(t *testing.T) {
