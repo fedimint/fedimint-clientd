@@ -24,7 +24,7 @@ func logMethod(method string) {
 func logInputAndOutput(input interface{}, output interface{}) {
 	fmt.Println("Input: ", input)
 	fmt.Println("Output: ", output)
-	fmt.Println("--------------------")
+	fmt.Println("====================")
 }
 
 // BIG ISSUE //
@@ -160,16 +160,91 @@ func TestFedimintGo(t *testing.T) {
 		fmt.Println("Error calling JOIN: ", err)
 		return
 	}
-	logInputAndOutput(nil, joinData)
+	logInputAndOutput(inviteCode, joinData)
 
 	// `/v2/admin/list-operations`
 	logMethod("/v2/admin/list-operations")
-	listOperationsData, err := fc.ListOperations(10, &fc.ActiveFederationId)
+	listOperationsData, err := fc.ListOperations(10, nil)
 	if err != nil {
 		fmt.Println("Error calling JOIN: ", err)
 		return
 	}
-	logInputAndOutput(nil, listOperationsData)
+	logInputAndOutput([]interface{}{10}, listOperationsData)
+
+	///////////////////////
+	// LIGHTNING METHODS //
+	///////////////////////
+
+	// `/v2/ln/list-gateways`
+	gatewayList, err := fc.Ln.ListGateways()
+	if err != nil {
+		fmt.Println("Error calling LIST_GATEWAYS: ", err)
+		return
+	}
+	logInputAndOutput(nil, gatewayList)
+
+	// `/v2/ln/invoice`
+	logMethod("/v2/ln/invoice")
+	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, nil, nil)
+	if err != nil {
+		fmt.Println("Error calling INVOICE: ", err)
+		return
+	}
+	logInputAndOutput([]interface{}{10000, "test_Invoice"}, invoiceData)
+
+	// `/v2/ln/pay`
+	logMethod("/v2/ln/pay")
+	payData, err := fc.Ln.Pay(invoiceData.Invoice, nil, nil, nil, nil)
+	if err != nil {
+		fmt.Println("Error calling PAY: ", err)
+		return
+	}
+	logInputAndOutput(invoiceData.Invoice, payData)
+
+	// /v2/ln/await-invoice
+	logMethod("/v2/ln/await-invoice")
+	awaitInvoiceData, err := fc.Ln.AwaitInvoice(invoiceData.OperationId, nil)
+	if err != nil {
+		fmt.Println("Error calling AWAIT_INVOICE: ", err)
+		return
+	}
+	logInputAndOutput(invoiceData.OperationId, awaitInvoiceData)
+
+	// `/v1/ln/invoice-external-pubkey-tweaked`
+	logMethod("/v1/ln/invoice-external-pubkey-tweaked")
+	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", nil, nil, nil)
+	if err != nil {
+		fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY_TWEAK: ", err)
+		return
+	}
+	logInputAndOutput([]interface{}{keyPair.PublicKey, 1, 10000, "test"}, tweakInvoice)
+
+	// `/v1/ln/claim-external-pubkey-tweaked`
+	logMethod("/v1/ln/claim-external-pubkey-tweaked")
+	claimInvoice, err := fc.Ln.ClaimPubkeyReceiveTweaked(keyPair.PrivateKey, []uint64{1}, nil)
+	if err != nil {
+		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
+		return
+	}
+	logInputAndOutput([]interface{}{keyPair.PrivateKey, []uint64{1}}, claimInvoice)
+
+	// `/v1/ln/invoice-external-pubkey`
+	logMethod("/v1/ln/invoice-external-pubkey")
+	invoiceInfo, err := fc.Ln.CreateInvoiceForPubkey(keyPair.PublicKey, 10000, "test", nil, nil, nil)
+	if err != nil {
+		fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY: ", err)
+		return
+	}
+	logInputAndOutput([]interface{}{keyPair.PublicKey, 10000, "test"}, invoiceInfo)
+
+	// `/v1/ln/claim-external-pubkey-tweaked`
+	logMethod("/v1/ln/claim-external-pubkey-tweaked")
+	claimInvoice, err = fc.Ln.ClaimPubkeyReceive(keyPair.PrivateKey, nil)
+	if err != nil {
+		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
+		return
+	}
+	logInputAndOutput([]interface{}{keyPair.PrivateKey}, claimInvoice)
 }
 
 // func TestNewFedimintClient(t *testing.T) {
