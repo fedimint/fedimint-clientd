@@ -245,6 +245,80 @@ func TestFedimintGo(t *testing.T) {
 		return
 	}
 	logInputAndOutput([]interface{}{keyPair.PrivateKey}, claimInvoice)
+
+	//////////////////
+	// MINT METHODS //
+	//////////////////
+
+	// `/v2/mint/spend`
+	logMethod("/v2/mint/spend")
+	mintData, err := fc.Mint.Spend(3000, true, 1000, false, nil)
+	if err != nil {
+		fmt.Println("Error calling SPEND: ", err)
+		return
+	}
+	logInputAndOutput([]interface{}{3000, true, 1000}, mintData)
+
+	// `/v2/mint/decode-notes`
+	logMethod("/v2/mint/decode-notes")
+	decodedData, err := fc.Mint.DecodeNotes(mintData.Notes, nil)
+	if err != nil {
+		fmt.Println("Error calling DECODE_NOTES: ", err)
+		return
+	}
+	logInputAndOutput(mintData.Notes, decodedData)
+
+	// `/v2/mint/encode-notes`
+	logMethod("/v2/mint/encode-notes")
+	encodedData, err := fc.Mint.EncodeNotes(decodedData.NotesJson, nil)
+	if err != nil {
+		fmt.Println("Error calling DECODE_NOTES: ", err)
+		return
+	}
+	logInputAndOutput(decodedData.NotesJson, encodedData)
+
+	// `/v2/mint/validate`
+	logMethod("/v2/mint/validate")
+	validateData, err := fc.Mint.Validate(mintData.Notes, nil)
+	if err != nil {
+		fmt.Println("Error calling VALIDATE: ", err)
+		return
+	}
+	logInputAndOutput(mintData.Notes, validateData)
+
+	// `/v2/mint/reissue`
+	logMethod("/v2/mint/reissue")
+	reissueData, err := fc.Mint.Reissue(mintData.Notes, nil)
+	if err != nil {
+		fmt.Println("Error calling REISSUE: ", err)
+		return
+	}
+	logInputAndOutput(mintData.Notes, reissueData)
+
+	// `/v2/mint/split`
+	logMethod("/v2/mint/split")
+	splitData, err := fc.Mint.Split(mintData.Notes)
+	if err != nil {
+		fmt.Println("Error calling SPLIT: ", err)
+		return
+	}
+	logInputAndOutput(mintData.Notes, splitData)
+
+	// `/v2/mint/combine`
+	logMethod("/v2/mint/combine")
+	notesVec := func() []string {
+		result := make([]string, 0, len(splitData.Notes))
+		for _, value := range splitData.Notes {
+			result = append(result, value)
+		}
+		return result
+	}()
+	combineData, err := fc.Mint.Combine(notesVec)
+	if err != nil {
+		fmt.Println("Error calling COMBINE: ", err)
+		return
+	}
+	logInputAndOutput(splitData.Notes, combineData)
 }
 
 // func TestNewFedimintClient(t *testing.T) {
