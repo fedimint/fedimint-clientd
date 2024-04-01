@@ -1,4 +1,4 @@
-import { FedimintClientBuilder } from "fedimint-ts";
+import { FedimintClientBuilder } from "./FedimintClient";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -19,14 +19,11 @@ async function main() {
 
   // You can update the federationId to call methods on a different federation
   const { federationIds } = await fedimintClient.federationIds();
-  await fedimintClient.setActiveFederationId(federationIds[0]);
+  await fedimintClient.setActiveFederationId(federationIds[0], true);
 
   // Any methods that call on a specific federation can optionally take a federationId as the last argument
   // If no federationId is passed, the default federationId is used
-  const _ = await fedimintClient.listOperations(
-    { limit: 10 },
-    federationIds[1]
-  );
+  const _ = await fedimintClient.listOperations(10, federationIds[1]);
 
   // Admin methods give summaries by federation
   const response = await fedimintClient.info();

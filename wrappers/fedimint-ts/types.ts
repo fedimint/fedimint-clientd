@@ -7,12 +7,13 @@ interface TieredSummary {
 }
 
 interface InfoResponse {
-  federationId: string;
-  network: string;
-  meta: { [key: string]: string };
-  totalAmountMsat: number;
-  totalNumNotes: number;
-  denominationsMsat: TieredSummary;
+  [federationId: string]: {
+    network: string;
+    meta: { [key: string]: string };
+    totalAmountMsat: number;
+    totalNumNotes: number;
+    denominationsMsat: TieredSummary;
+  };
 }
 
 interface FederationIdsResponse {
