@@ -85,7 +85,7 @@ func main() {
 
 	// `/v2/admin/discover-version`
 	logMethod("/v2/admin/discover-version")
-	data, err = fc.DiscoverVersion(1) // TS-mirror dont use any parameters
+	data, err = fc.DiscoverVersion(nil)
 	if err != nil {
 		fmt.Println("Error calling VERSION: ", err)
 		return
@@ -185,8 +185,7 @@ func main() {
 
 	// `/v1/ln/claim-external-pubkey-tweaked`
 	logMethod("/v1/ln/claim-external-pubkey-tweaked")
-	activeFederationID := fc.GetActiveFederationId()
-	claimInvoice, err := fc.Ln.ClaimPubkeyReceiveTweaked(keyPair.PrivateKey, []uint64{1}, &activeFederationID)
+	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, fc.GetActiveFederationId())
 	if err != nil {
 		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
 		return
@@ -226,7 +225,7 @@ func main() {
 
 	// `/v2/mint/decode-notes`
 	logMethod("/v2/mint/decode-notes")
-	decodedData, err := fc.Mint.DecodeNotes(mintData.Notes, nil)
+	decodedData, err := fc.Mint.DecodeNotes(mintData.Notes)
 	if err != nil {
 		fmt.Println("Error calling DECODE_NOTES: ", err)
 		return
@@ -235,7 +234,7 @@ func main() {
 
 	// `/v2/mint/encode-notes`
 	logMethod("/v2/mint/encode-notes")
-	encodedData, err := fc.Mint.EncodeNotes(decodedData.NotesJson, nil)
+	encodedData, err := fc.Mint.EncodeNotes(decodedData.NotesJson)
 	if err != nil {
 		fmt.Println("Error calling DECODE_NOTES: ", err)
 		return
