@@ -216,8 +216,8 @@ func (fc *FedimintClient) Backup(metadata *types.BackupRequest, federationId *st
 	return err
 }
 
-func (fc *FedimintClient) DiscoverVersion(threshold uint16) (*types.FedimintResponse, error) {
-	request := types.DiscoverVersionRequest{Threshold: threshold}
+func (fc *FedimintClient) DiscoverVersion(threshold *uint16) (*types.FedimintResponse, error) {
+	request := types.DiscoverVersionRequest{Threshold: *threshold}
 	resp, err := fc.post("/admin/discover-version", request)
 	if err != nil {
 		return nil, err
@@ -333,9 +333,9 @@ func (onchain *OnchainModule) Withdraw(address string, amountSat int, federation
 // mint //
 //////////
 
-func (mint *MintModule) DecodeNotes(notes string, federationId *string) (*modules.DecodeNotesResponse, error) {
+func (mint *MintModule) DecodeNotes(notes string) (*modules.DecodeNotesResponse, error) {
 	request := modules.DecodeNotesRequest{Notes: notes}
-	resp, err := mint.Client.postWithFederationId("/mint/decode-notes", request, federationId)
+	resp, err := mint.Client.post("/mint/decode-notes", request)
 	if err != nil {
 		return nil, err
 	}
@@ -347,13 +347,13 @@ func (mint *MintModule) DecodeNotes(notes string, federationId *string) (*module
 	return &decodeResp, nil
 }
 
-func (mint *MintModule) EncodeNotes(notesJson modules.NotesJson, federationId *string) (*modules.EncodeNotesResponse, error) {
+func (mint *MintModule) EncodeNotes(notesJson modules.NotesJson) (*modules.EncodeNotesResponse, error) {
 	notesJsonStr, err := json.Marshal(notesJson)
 	if err != nil {
 		return nil, err
 	}
 	request := modules.EncodeNotesRequest{NotesJsonStr: string(notesJsonStr)}
-	resp, err := mint.Client.postWithFederationId("/mint/encode-notes", request, federationId)
+	resp, err := mint.Client.post("/mint/encode-notes", request)
 	if err != nil {
 		return nil, err
 	}
@@ -517,9 +517,9 @@ func (ln *LnModule) ClaimPubkeyReceive(privateKey string, federationId *string) 
 	return &infoResp, nil
 }
 
-func (ln *LnModule) ClaimPubkeyReceiveTweaked(privateKey string, tweaks []uint64, federationId *string) (*types.InfoResponse, error) {
+func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, federationId string) (*types.InfoResponse, error) {
 	request := modules.LnClaimPubkeyTweakedRequest{PrivateKey: privateKey, Tweaks: tweaks}
-	resp, err := ln.Client.postWithFederationId("/ln/claim-external-receive-tweaked", request, federationId)
+	resp, err := ln.Client.postWithFederationId("/ln/claim-external-receive-tweaked", request, &federationId)
 	if err != nil {
 		return nil, err
 	}
