@@ -259,8 +259,8 @@ func (fc *FedimintClient) FederationIds() (types.FederationIdsResponse, error) {
 	return response, nil
 }
 
-func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, useDefaultGateway bool, useManualSecret bool) (types.JoinResponse, error) {
-	request := types.JoinRequest{InviteCode: inviteCode, UseManualSecret: useManualSecret}
+func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, useDefaultGateway bool, useManualSecret *bool) (types.JoinResponse, error) {
+	request := types.JoinRequest{InviteCode: inviteCode, UseManualSecret: *useManualSecret}
 
 	var response types.JoinResponse
 	responseBody, err := fc.post("/admin/join", request)
@@ -287,7 +287,7 @@ func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, us
 // Onchain //
 ////////////
 
-func (onchain *OnchainModule) createDepositAddress(timeout int, federationId *string) (*modules.OnchainDepositAddressResponse, error) {
+func (onchain *OnchainModule) CreateDepositAddress(timeout int, federationId *string) (*modules.OnchainDepositAddressResponse, error) {
 	request := modules.OnchainDepositAddressRequest{Timeout: timeout}
 	resp, err := onchain.Client.postWithFederationId("/onchain/deposit-address", request, federationId)
 	if err != nil {
@@ -301,7 +301,7 @@ func (onchain *OnchainModule) createDepositAddress(timeout int, federationId *st
 	return &depositAddressResp, nil
 }
 
-func (onchain *OnchainModule) awaitDeposit(operationId string, federationId *string) (*modules.OnchainAwaitDepositResponse, error) {
+func (onchain *OnchainModule) AwaitDeposit(operationId string, federationId *string) (*modules.OnchainAwaitDepositResponse, error) {
 	request := modules.OnchainAwaitDepositRequest{OperationId: operationId}
 	resp, err := onchain.Client.postWithFederationId("/onchain/await-deposit", request, federationId)
 	if err != nil {
@@ -315,7 +315,7 @@ func (onchain *OnchainModule) awaitDeposit(operationId string, federationId *str
 	return &depositResp, nil
 }
 
-func (onchain *OnchainModule) withdraw(address string, amountSat int, federationId *string) (*modules.OnchainWithdrawResponse, error) {
+func (onchain *OnchainModule) Withdraw(address string, amountSat int, federationId *string) (*modules.OnchainWithdrawResponse, error) {
 	request := modules.OnchainWithdrawRequest{Address: address, AmountSat: amountSat}
 	resp, err := onchain.Client.postWithFederationId("/onchain/withdraw", request, federationId)
 	if err != nil {
