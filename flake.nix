@@ -79,6 +79,8 @@
           default = fmLib.devShells.default.overrideAttrs (prev: {
             nativeBuildInputs = [
               pkgs.mprocs
+              pkgs.go
+              pkgs.bun
               fedimint.packages.${system}.devimint
               fedimint.packages.${system}.gateway-pkgs
               fedimint.packages.${system}.fedimint-pkgs
