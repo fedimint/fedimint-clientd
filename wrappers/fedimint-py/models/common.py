@@ -1,5 +1,5 @@
 from pydantic import RootModel, BaseModel
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 
 
 class Tiered(RootModel):
@@ -10,13 +10,16 @@ class TieredSummary(BaseModel):
     tiered: Tiered
 
 
-class InfoResponse(BaseModel):
-    federation_id: str
+class FederationInfo(BaseModel):
     network: str
     meta: Dict[str, str]
-    total_amount_msat: int
-    total_num_notes: int
-    denominations_msat: TieredSummary
+    totalAmountMsat: int
+    totalNumNotes: int
+    denominationsMsat: TieredSummary
+
+
+class InfoResponse(BaseModel):
+    __root__: Dict[str, FederationInfo]
 
 
 class BackupRequest(BaseModel):
@@ -29,7 +32,38 @@ class ListOperationsRequest(BaseModel):
 
 class OperationOutput(BaseModel):
     id: str
-    creation_time: str
-    operation_kind: str
-    operation_meta: Any
+    creationTime: str
+    operationKind: str
+    operationMeta: Any
+    outcome: Optional[Any]
+
+
+class DiscoverVersionRequest(BaseModel):
+    threshold: Optional[int]
+
+
+# Returns a dictionary of federation_ids and their api versions
+class DiscoverVersionResponse(BaseModel):
+    __root__: Dict[str, Any]
+
+
+class JoinRequest(BaseModel):
+    inviteCode: str
+    useManualSecret: bool
+
+
+class JoinResponse(BaseModel):
+    thisFederationId: str
+    federationIds: List[str]
+
+
+class ListOperationsRequest(BaseModel):
+    limit: int
+
+
+class OperationOutput(BaseModel):
+    id: str
+    creationTime: str
+    operationKind: str
+    operationMeta: Any
     outcome: Optional[Any]
