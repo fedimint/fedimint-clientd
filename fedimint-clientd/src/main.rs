@@ -9,7 +9,6 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-mod backup;
 mod config;
 mod error;
 mod router;
@@ -24,6 +23,8 @@ use router::handlers::*;
 use state::AppState;
 // use tower_http::cors::{Any, CorsLayer};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
+
+use crate::utils::start_backup_daemon;
 
 #[derive(Clone, Debug, ValueEnum, PartialEq)]
 enum Mode {
@@ -66,8 +67,56 @@ struct Cli {
     mode: Mode,
 
     /// Enable Google Cloud backup
-    #[clap(long, env = "GOOGLE_CLOUD_BACKUP_BUCKET_ID", required = false)]
+    #[clap(long, env = "USE_GOOGLE_CLOUD_BACKUP")]
+    use_google_cloud_backup: bool,
+
+    /// Google Cloud Storage Bucket ID
+    #[clap(
+        long,
+        env = "GOOGLE_CLOUD_BACKUP_BUCKET_ID",
+        required_if_eq("use_google_cloud_backup", "true")
+    )]
     google_cloud_backup_bucket_id: Option<String>,
+
+    /// Google Cloud Storage Credentials
+    #[clap(
+        long,
+        env = "GOOGLE_CLOUD_BACKUP_CREDENTIALS",
+        required_if_eq("use_google_cloud_backup", "true")
+    )]
+    google_cloud_backup_credentials: Option<String>,
+
+    /// Google Cloud Storage Backup Name
+    #[clap(
+        long,
+        env = "GOOGLE_CLOUD_BACKUP_NAME",
+        required_if_eq("use_google_cloud_backup", "true")
+    )]
+    google_cloud_backup_name: Option<String>,
+
+    /// Google Cloud Storage Backup Trigger
+    #[clap(
+        long,
+        env = "GOOGLE_CLOUD_BACKUP_TRIGGER",
+        required_if_eq("use_google_cloud_backup", "true")
+    )]
+    google_cloud_backup_trigger: Option<String>,
+
+    /// Google Cloud Backup Interval Type (seconds, minutes, hours, days)
+    #[clap(
+        long,
+        env = "GOOGLE_CLOUD_BACKUP_INTERVAL_TYPE",
+        required_if_eq("use_google_cloud_backup", "true")
+    )]
+    google_cloud_backup_interval_type: Option<String>,
+
+    /// Google Cloud Backup Interval Value
+    #[clap(
+        long,
+        env = "GOOGLE_CLOUD_BACKUP_INTERVAL_VALUE",
+        required_if_eq("use_google_cloud_backup", "true")
+    )]
+    google_cloud_backup_interval_value: Option<u64>,
 }
 
 // const PID_FILE: &str = "/tmp/fedimint_http.pid";
@@ -78,8 +127,9 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
     let cli: Cli = Cli::parse();
+    start_backup_daemon(&cli).await?;
 
-    let mut state = AppState::new(cli.db_path).await?;
+    let mut state = AppState::new(cli.db_path.clone()).await?;
 
     let manual_secret = match cli.manual_secret {
         Some(secret) => Some(secret),

@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "multimint",
-    "fedimint-clientd",
+    "fedimint-clientd", "gc_fs_backup",
 ]
 resolver = "2"

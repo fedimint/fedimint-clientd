@@ -42,3 +42,4 @@ multimint = { path = "../multimint" }
 axum-otel-metrics = "0.8.0"
 inotify = "0.10.2"
 google-cloud = { version = "0.2.1", features = ["storage"] }
+gc_fs_backup = { path = "../gc_fs_backup" }
