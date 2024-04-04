@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List
 import aiohttp
@@ -12,16 +13,14 @@ from models.common import (
 from models.lightning import (
     Gateway,
     LightningClaimPubkeReceivesRequest,
+    LightningAwaitInvoiceRequest,
     LightningCreateInvoiceRequest,
     LightningCreateInvoiceResponse,
-    LightningAwaitInvoiceRequest,
-    LightningAwaitInvoiceResponse,
+    LightningInvoiceForPubkeyTweakRequest,
+    LightningInvoiceForPubkeyTweakResponse,
     LightningPayRequest,
     LightningPayResponse,
     LightningAwaitPayRequest,
-    LightningAwaitPayResponse,
-    ListGatewaysResponse,
-    SwitchGatewayRequest,
 )
 
 from models.onchain import (
@@ -34,6 +33,10 @@ from models.onchain import (
 )
 
 from models.mint import (
+    MintDecodeNotesRequest,
+    MintDecodeNotesResponse,
+    MintEncodeNotesRequest,
+    MintEncodeNotesResponse,
     MintReissueRequest,
     MintReissueResponse,
     MintSpendRequest,
@@ -41,9 +44,8 @@ from models.mint import (
     MintValidateRequest,
     MintValidateResponse,
     MintSplitRequest,
-    MintSplitResponse,
     MintCombineRequest,
-    MintCombineResponse,
+    NotesJson,
 )
 
 
@@ -55,7 +57,7 @@ class AsyncFedimintClient:
         active_federationId: str,
         active_gatewayId: str = None,
     ):
-        self.base_url = f"{base_url}/fedimint/v2"
+        self.base_url = f"{base_url}/v2"
         self.password = password
         self.active_federationId = active_federationId
         self.active_gatewayId = active_gatewayId
@@ -211,8 +213,8 @@ class AsyncFedimintClient:
             expiry_time: int = None,
             gateway_id: str = None,
             federation_id: str = None,
-        ) -> LightningCreateInvoiceResponse:
-            request: LightningCreateInvoiceRequest = {
+        ) -> LightningInvoiceForPubkeyTweakResponse:
+            request: LightningInvoiceForPubkeyTweakRequest = {
                 "pubkey": pubkey,
                 "tweak": tweak,
                 "amountMsat": amount_msat,
@@ -268,56 +270,101 @@ class AsyncFedimintClient:
         async def list_gateways(self) -> List[Gateway]:
             return await self.client._post_with_federation_id("/ln/list-gateways")
 
-    class Onchain:
-        def __init__(self, client):
-            self.client = client
-
-        async def create_deposit_address(
-            self, request: OnchainDepositAddressRequest, federationId: str = None
-        ):
-            return self.client._post_with_id(
-                "/wallet/deposit-address", data=request, federationId=federationId
-            )
-
-        async def await_deposit(
-            self, request: OnchainAwaitDepositRequest, federationId: str = None
-        ):
-            return await self.client._post_with_id(
-                "/wallet/await-deposit", request, federationId
-            )
-
-        async def withdraw(
-            self, request: OnchainWithdrawRequest, federationId: str = None
-        ):
-            return await self.client._post_with_id(
-                "/wallet/withdraw", request, federationId
-            )
-
     class Mint:
         def __init__(self, client):
             self.client = client
 
-        async def reissue(self, request: MintReissueRequest, federationId: str = None):
-            return await self.client._post_with_id(
+        async def decode_notes(
+            self, notes: str, federationId: str = None
+        ) -> MintDecodeNotesResponse:
+            request = MintDecodeNotesRequest({"notes": notes})
+            return await self.client._post_with_federation_id(
+                "/mint/decode-notes", request, federationId
+            )
+
+        async def encode_notes(
+            self, notes_json: NotesJson, federationId: str = None
+        ) -> MintEncodeNotesResponse:
+            request = MintEncodeNotesRequest({"notesJsonStr": json.dumps(notes_json)})
+
+            return await self.client._post_with_federation_id(
+                "/mint/encode-notes", request, federationId
+            )
+
+        async def reissue(
+            self, notes: str, federationId: str = None
+        ) -> MintReissueResponse:
+            request = MintReissueRequest({"notes": notes})
+            return await self.client._post_with_federation_id(
                 "/mint/reissue", request, federationId
             )
 
-        async def spend(self, request: MintSpendRequest, federationId: str = None):
-            return await self.client._post_with_id("/mint/spend", request, federationId)
+        async def spend(
+            self,
+            amount_msat: int,
+            allow_overpay: bool,
+            timeout: int,
+            include_invite: bool,
+            federationId: str = None,
+        ) -> MintSpendResponse:
+            request = MintSpendRequest(
+                {
+                    "amountMsat": amount_msat,
+                    "allowOverpay": allow_overpay,
+                    "timeout": timeout,
+                    "includeInvite": include_invite,
+                }
+            )
+            return await self.client._post_with_federation_id(
+                "/mint/spend", request, federationId
+            )
 
         async def validate(
-            self, request: MintValidateRequest, federationId: str = None
-        ):
-            return await self.client._post_with_id(
+            self, notes: str, federationId: str = None
+        ) -> MintValidateResponse:
+            request = MintValidateRequest({"notes": notes})
+            return await self.client._post_with_federation_id(
                 "/mint/validate", request, federationId
             )
 
-        async def split(self, request: MintSplitRequest, federationId: str = None):
-            return await self.client._post_with_id("/mint/split", request, federationId)
+        async def split(self, notes: str, federationId: str = None):
+            request = MintSplitRequest({"notes": notes})
+            return await self.client._post_with_federation_id(
+                "/mint/split", request, federationId
+            )
 
-        async def combine(self, request: MintCombineRequest, federationId: str = None):
-            return await self.client._post_with_id(
+        async def combine(self, notes_vec: List[str], federationId: str = None):
+            request = MintCombineRequest({"notesVec": notes_vec})
+            return await self.client._post_with_federation_id(
                 "/mint/combine", request, federationId
+            )
+
+    class Onchain:
+        def __init__(self, client):
+            self.client = client
+
+        async def create_deposit_address(self, timeout: int, federationId: str = None):
+            request = OnchainDepositAddressRequest({"timeout": timeout})
+            return await self.client._post_with_federation_id(
+                "/wallet/deposit-address", request, federationId
+            )
+
+        async def await_deposit(
+            self, operation_id: str, federationId: str = None
+        ) -> OnchainAwaitDepositResponse:
+            request = OnchainAwaitDepositRequest({"operationId": operation_id})
+            return await self.client._post_with_federation_id(
+                "/wallet/await-deposit", request, federationId
+            )
+
+        async def withdraw(
+            self, address: str, amount_sat: int | "all", federationId: str = None
+        ) -> OnchainWithdrawResponse:
+            request = OnchainWithdrawRequest(
+                {"address": address, "amountSat": amount_sat}
+            )
+            return await self.client._post_with_federation_id(
+                "/wallet/withdraw", request, federationId
             )
 
     async def close(self):

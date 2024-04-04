@@ -2,18 +2,18 @@ from pydantic import BaseModel
 from typing import Any, List, Optional
 
 
-class LightningInvoiceRequest(BaseModel):
+class LightningCreateInvoiceRequest(BaseModel):
     amountMsat: int
     description: str
     expiryTime: Optional[int]
 
 
-class LightningInvoiceResponse(BaseModel):
+class LightningCreateInvoiceResponse(BaseModel):
     operationId: str
     invoice: str
 
 
-class LightningInvoicePubkeyTweakedRequest(BaseModel):
+class LightningInvoiceForPubkeyTweakRequest(BaseModel):
     amountMsat: int
     description: str
     externalPubkey: str
@@ -21,7 +21,7 @@ class LightningInvoicePubkeyTweakedRequest(BaseModel):
     expiryTime: Optional[int]
 
 
-class LightningInvoicePubkeyTweakedResponse(BaseModel):
+class LightningInvoiceForPubkeyTweakResponse(BaseModel):
     operationId: str
     invoice: str
 
