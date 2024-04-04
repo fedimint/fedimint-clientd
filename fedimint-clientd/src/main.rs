@@ -9,6 +9,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
+mod backup;
 mod config;
 mod error;
 mod router;
@@ -63,6 +64,10 @@ struct Cli {
     /// Mode: ws, rest
     #[clap(long, env = "FEDIMINT_CLIENTD_MODE", default_value = "rest")]
     mode: Mode,
+
+    /// Enable Google Cloud backup
+    #[clap(long, env = "GOOGLE_CLOUD_BACKUP_BUCKET_ID", required = false)]
+    google_cloud_backup_bucket_id: Option<String>,
 }
 
 // const PID_FILE: &str = "/tmp/fedimint_http.pid";
