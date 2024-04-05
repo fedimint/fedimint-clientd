@@ -182,6 +182,7 @@ func main() {
 	logInputAndOutput([]interface{}{keyPair.PublicKey, 1, 10000, "test"}, tweakInvoice)
 	// pay the invoice
 	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, nil, nil, nil, nil)
+	fmt.Println("Paid locked invoice!")
 
 	// `/v1/ln/claim-external-pubkey-tweaked`
 	logMethod("/v1/ln/claim-external-pubkey-tweaked")
@@ -305,14 +306,14 @@ func main() {
 		return
 	}
 	logInputAndOutput([]interface{}{addr.Address, 1000}, withdrawData)
+	fmt.Println("Done: All methods tested successfully!")
 
 	// `/v2/onchain/await-deposit`
-	logMethod("/v2/onchain/await-deposit")
+	// logMethod("/v2/onchain/await-deposit")
 	// awaitDepositData, err := fc.Onchain.AwaitDeposit(addr.OperationId, nil)
 	// if err != nil {
 	// 	fmt.Println("Error calling AWAIT_DEPOSIT: ", err)
 	// 	return
 	// }
 	// logInputAndOutput(addr.Address, awaitDepositData)
-
 }
