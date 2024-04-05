@@ -1,90 +1,72 @@
-from pydantic import BaseModel, RootModel
-from typing import Optional, Dict, List, Union
+from pydantic import BaseModel
+from typing import Dict, List
 
 
-class FederationIdPrefix(RootModel):
-    root: List[int]
+class MintDecodeNotesRequest(BaseModel):
+    notes: str
 
 
-class Fp(RootModel):
-    root: List[int]
+class Note(BaseModel):
+    signature: str
+    spendKey: str
 
 
-class Choice(RootModel):
-    root: int
+class NotesJson(BaseModel):
+    federation_id_prefix: str
+    notes: Dict[str, List[Note]]
 
 
-class G1Affine(BaseModel):
-    x: Fp
-    y: Fp
-    infinity: Choice
+class MintDecodeNotesResponse(BaseModel):
+    notesJson: NotesJson
 
 
-class Signature(RootModel):
-    root: G1Affine
+class MintEncodeNotesRequest(BaseModel):
+    notesJsonStr: str
 
 
-class KeyPair(RootModel):
-    root: List[int]
+class MintEncodeNotesResponse(BaseModel):
+    notes: str
 
 
-class SpendableNote(BaseModel):
-    signature: Signature
-    spend_key: KeyPair
+class MintReissueRequest(BaseModel):
+    notes: str
 
 
-class TieredMulti(RootModel):
-    root: Dict[int, List[SpendableNote]]
+class MintReissueResponse(BaseModel):
+    amountMsat: int
 
 
-class OOBNotesData(BaseModel):
-    Notes: Optional[TieredMulti]
-    FederationIdPrefix: Optional[FederationIdPrefix]
-    Default: Optional[Dict[str, Union[int, List[int]]]]
-
-
-class OOBNotes(RootModel):
-    root: List[OOBNotesData]
-
-
-class ReissueRequest(BaseModel):
-    notes: OOBNotes
-
-
-class ReissueResponse(BaseModel):
-    amount_msat: int
-
-
-class SpendRequest(BaseModel):
-    amount_msat: int
-    allow_overpay: bool
+class MintSpendRequest(BaseModel):
+    amountMsat: int
+    allowOverpay: bool
     timeout: int
+    includeInvite: bool
 
 
-class SpendResponse(BaseModel):
+class MintSpendResponse(BaseModel):
     operation: str
-    notes: OOBNotes
+    notes: str
 
 
-class ValidateRequest(BaseModel):
-    notes: OOBNotes
+class MintValidateRequest(BaseModel):
+    notes: str
 
 
-class ValidateResponse(BaseModel):
-    amount_msat: int
+class MintValidateResponse(BaseModel):
+    amountMsat: int
 
 
-class SplitRequest(BaseModel):
-    notes: OOBNotes
+class MintSplitRequest(BaseModel):
+    notes: str
 
 
-class SplitResponse(BaseModel):
-    notes: Dict[int, OOBNotes]
+class MintSplitResponse(BaseModel):
+    notes: Dict[int, str]
 
 
-class CombineRequest(BaseModel):
-    notes: List[OOBNotes]
+class MintCombineRequest(BaseModel):
+    notesVec: List[str]
 
 
-class CombineResponse(BaseModel):
-    notes: OOBNotes
+class MintCombineResponse(BaseModel):
+    notes: str

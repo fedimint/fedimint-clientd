@@ -10,10 +10,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    fedimint = {
-      url =
-        "github:fedimint/fedimint?rev=c32bbe8ed8d95ae420b5879e92dda6ce48f5c914";
-    };
+    fedimint = { url = "github:fedimint/fedimint?ref=v0.3.0"; };
 
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -82,6 +79,8 @@
           default = fmLib.devShells.default.overrideAttrs (prev: {
             nativeBuildInputs = [
               pkgs.mprocs
+              pkgs.go
+              pkgs.bun
               fedimint.packages.${system}.devimint
               fedimint.packages.${system}.gateway-pkgs
               fedimint.packages.${system}.fedimint-pkgs
