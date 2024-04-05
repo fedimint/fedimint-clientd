@@ -85,7 +85,7 @@ func main() {
 
 	// `/v2/admin/discover-version`
 	logMethod("/v2/admin/discover-version")
-	data, err = fc.DiscoverVersion(nil)
+	data, err = fc.DiscoverVersion(1)
 	if err != nil {
 		fmt.Println("Error calling VERSION: ", err)
 		return

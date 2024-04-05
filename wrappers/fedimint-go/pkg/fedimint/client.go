@@ -216,8 +216,8 @@ func (fc *FedimintClient) Backup(metadata *types.BackupRequest, federationId *st
 	return err
 }
 
-func (fc *FedimintClient) DiscoverVersion(threshold *uint16) (*types.FedimintResponse, error) {
-	request := types.DiscoverVersionRequest{Threshold: *threshold}
+func (fc *FedimintClient) DiscoverVersion(threshold uint16) (*types.FedimintResponse, error) {
+	request := types.DiscoverVersionRequest{Threshold: threshold}
 	resp, err := fc.post("/admin/discover-version", request)
 	if err != nil {
 		return nil, err
