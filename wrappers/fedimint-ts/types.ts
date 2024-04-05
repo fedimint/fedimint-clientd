@@ -105,30 +105,30 @@ interface OnchainWithdrawResponse {
   feesSat: number;
 }
 
-interface LnInvoiceRequest {
+interface LightningInvoiceRequest {
   amountMsat: number;
   description: string;
   expiryTime?: number;
 }
 
-interface LnInvoiceResponse {
+interface LightningInvoiceResponse {
   operationId: string;
   invoice: string;
 }
 
-interface LnInvoiceExternalPubkeyRequest {
+interface LightningInvoiceExternalPubkeyRequest {
   amountMsat: number;
   description: string;
   externalPubkey: string;
   expiryTime?: number;
 }
 
-interface LnInvoiceExternalPubkeyResponse {
+interface LightningInvoiceExternalPubkeyResponse {
   operationId: string;
   invoice: string;
 }
 
-interface LnInvoiceExternalPubkeyTweakedRequest {
+interface LightningInvoiceExternalPubkeyTweakedRequest {
   amountMsat: number;
   description: string;
   externalPubkey: string;
@@ -136,38 +136,38 @@ interface LnInvoiceExternalPubkeyTweakedRequest {
   expiryTime?: number;
 }
 
-interface LnInvoiceExternalPubkeyTweakedResponse {
+interface LightningInvoiceExternalPubkeyTweakedResponse {
   operationId: string;
   invoice: string;
 }
 
-interface LnClaimPubkeyReceiveRequest {
+interface LightningClaimPubkeyReceiveRequest {
   privateKey: string;
 }
 
-interface LnClaimPubkeyReceiveTweakedRequest {
+interface LightningClaimPubkeyReceiveTweakedRequest {
   privateKey: string;
   tweaks: number[];
 }
 
-interface LnAwaitInvoiceRequest {
+interface LightningAwaitInvoiceRequest {
   operationId: string;
 }
 
-interface LnPayRequest {
+interface LightningPayRequest {
   paymentInfo: string;
   amountMsat?: number;
-  lnurlComment?: string;
+  LightningurlComment?: string;
 }
 
-interface LnPayResponse {
+interface LightningPayResponse {
   operationId: string;
   paymentType: string;
   contractId: string;
   fee: number;
 }
 
-interface LnAwaitPayRequest {
+interface LightningAwaitPayRequest {
   operationId: string;
 }
 
@@ -184,8 +184,8 @@ interface GatewayInfo {
 }
 
 interface GatewayFees {
-  base_msat: number;
-  proportional_millionths: number;
+  baseMsat: number;
+  proportionalMillionths: number;
 }
 
 interface GatewayTTL {
@@ -198,16 +198,6 @@ interface Gateway {
   info: GatewayInfo;
   ttl: GatewayTTL;
   vetted: boolean;
-}
-
-interface SwitchGatewayRequest {
-  gatewayId: string;
-}
-
-type FederationIdPrefix = string;
-
-interface TieredMulti<T> {
-  [amount: number]: T[];
 }
 
 interface MintDecodeNotesRequest {
@@ -270,13 +260,15 @@ interface MintCombineResponse {
   notes: string;
 }
 
+interface Note {
+  signature: string;
+  spend_key: string;
+}
+
 interface NotesJson {
   federation_id_prefix: string;
   notes: {
-    [denomination: string]: Array<{
-      signature: string;
-      spend_key: string;
-    }>;
+    [denomination: string]: Note[];
   };
 }
 
@@ -298,21 +290,20 @@ export type {
   OnchainAwaitDepositResponse,
   OnchainWithdrawRequest,
   OnchainWithdrawResponse,
-  LnInvoiceRequest,
-  LnInvoiceResponse,
-  LnInvoiceExternalPubkeyRequest,
-  LnInvoiceExternalPubkeyResponse,
-  LnInvoiceExternalPubkeyTweakedRequest,
-  LnInvoiceExternalPubkeyTweakedResponse,
-  LnClaimPubkeyReceiveRequest,
-  LnClaimPubkeyReceiveTweakedRequest,
-  LnAwaitInvoiceRequest,
-  LnPayRequest,
-  LnPayResponse,
-  LnAwaitPayRequest,
+  LightningInvoiceRequest,
+  LightningInvoiceResponse,
+  LightningInvoiceExternalPubkeyRequest,
+  LightningInvoiceExternalPubkeyResponse,
+  LightningInvoiceExternalPubkeyTweakedRequest,
+  LightningInvoiceExternalPubkeyTweakedResponse,
+  LightningClaimPubkeyReceiveRequest,
+  LightningClaimPubkeyReceiveTweakedRequest,
+  LightningAwaitInvoiceRequest,
+  LightningPayRequest,
+  LightningPayResponse,
+  LightningAwaitPayRequest,
   Gateway,
   NotesJson,
-  SwitchGatewayRequest,
   MintDecodeNotesRequest,
   MintDecodeNotesResponse,
   MintEncodeNotesRequest,

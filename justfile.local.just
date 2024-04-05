@@ -7,6 +7,12 @@ mprocs:
 test-ts:
   bun run wrappers/fedimint-ts/test.ts
 
+test-py:
+  python3.11 wrappers/fedimint-py/test.py
+
+test-py-async:
+  python3.11 wrappers/fedimint-py/test_async.py
+
 test-go:
   cd wrappers/fedimint-go && go run cmd/main.go
 

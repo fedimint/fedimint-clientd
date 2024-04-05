@@ -7,15 +7,12 @@ import type {
   DiscoverVersionRequest,
   DiscoverVersionResponse,
   JoinRequest,
-  LnInvoiceExternalPubkeyTweakedRequest,
-  LnInvoiceExternalPubkeyTweakedResponse,
-  LnClaimPubkeyReceiveTweakedRequest,
-  LnAwaitInvoiceRequest,
+  LightningInvoiceExternalPubkeyTweakedRequest,
+  LightningClaimPubkeyReceiveTweakedRequest as LightningClaimPubkeyTweakReceivesRequest,
+  LightningAwaitInvoiceRequest,
   Gateway,
-  LnInvoiceRequest,
-  LnInvoiceResponse,
-  LnPayRequest,
-  LnPayResponse,
+  LightningInvoiceRequest,
+  LightningPayRequest,
   MintCombineRequest,
   MintCombineResponse,
   MintReissueRequest,
@@ -38,6 +35,9 @@ import type {
   MintEncodeNotesResponse,
   MintDecodeNotesResponse,
   JoinResponse,
+  LightningInvoiceResponse,
+  LightningInvoiceExternalPubkeyTweakedResponse,
+  LightningPayResponse,
 } from "./types";
 
 /**
@@ -217,8 +217,6 @@ class FedimintClient {
    * @param body - The body of the request.
    */
   private async post<T>(endpoint: string, body: any): FedimintResponse<T> {
-    console.log("body: ", body);
-    console.log("endpoint: ", this.baseUrl + endpoint);
     const res = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "POST",
       headers: {
@@ -227,8 +225,6 @@ class FedimintClient {
       },
       body: JSON.stringify(body),
     });
-
-    console.log("res: ", res);
 
     if (!res.ok) {
       throw new Error(
@@ -337,7 +333,6 @@ class FedimintClient {
     threshold?: number
   ): FedimintResponse<DiscoverVersionResponse> {
     const request: DiscoverVersionRequest = threshold ? { threshold } : {};
-    console.log("request", request);
 
     return this.post<DiscoverVersionResponse>(
       "/admin/discover-version",
@@ -410,10 +405,14 @@ class FedimintClient {
       expiryTime?: number,
       gatewayId?: string,
       federationId?: string
-    ): FedimintResponse<LnInvoiceResponse> => {
-      const request: LnInvoiceRequest = { amountMsat, description, expiryTime };
+    ): FedimintResponse<LightningInvoiceResponse> => {
+      const request: LightningInvoiceRequest = {
+        amountMsat,
+        description,
+        expiryTime,
+      };
 
-      return await this.postWithGatewayIdAndFederationId<LnInvoiceResponse>(
+      return await this.postWithGatewayIdAndFederationId<LightningInvoiceResponse>(
         "/ln/invoice",
         request,
         gatewayId,
@@ -441,8 +440,8 @@ class FedimintClient {
       expiryTime?: number,
       gatewayId?: string,
       federationId?: string
-    ): FedimintResponse<LnInvoiceResponse> => {
-      const request: LnInvoiceExternalPubkeyTweakedRequest = {
+    ): FedimintResponse<LightningInvoiceResponse> => {
+      const request: LightningInvoiceExternalPubkeyTweakedRequest = {
         externalPubkey: pubkey,
         tweak,
         amountMsat,
@@ -450,7 +449,7 @@ class FedimintClient {
         expiryTime,
       };
 
-      return await this.postWithGatewayIdAndFederationId<LnInvoiceExternalPubkeyTweakedResponse>(
+      return await this.postWithGatewayIdAndFederationId<LightningInvoiceExternalPubkeyTweakedResponse>(
         "/ln/invoice-external-pubkey-tweaked",
         request,
         gatewayId,
@@ -470,7 +469,7 @@ class FedimintClient {
       tweaks: number[],
       federationId: string
     ): FedimintResponse<InfoResponse> => {
-      const request: LnClaimPubkeyReceiveTweakedRequest = {
+      const request: LightningClaimPubkeyTweakReceivesRequest = {
         privateKey,
         tweaks,
       };
@@ -491,7 +490,7 @@ class FedimintClient {
       operationId: string,
       federationId?: string
     ): FedimintResponse<InfoResponse> => {
-      const request: LnAwaitInvoiceRequest = { operationId };
+      const request: LightningAwaitInvoiceRequest = { operationId };
 
       return await this.postWithFederationId<InfoResponse>(
         "/ln/await-invoice",
@@ -501,22 +500,22 @@ class FedimintClient {
     },
 
     /**
-     * Pays a lightning invoice or lnurl via a gateway
+     * Pays a lightning invoice or Lightningurl via a gateway
      */
     pay: async (
       paymentInfo: string,
       amountMsat?: number,
-      lnurlComment?: string,
+      LightningurlComment?: string,
       gatewayId?: string,
       federationId?: string
-    ): FedimintResponse<LnPayResponse> => {
-      const request: LnPayRequest = {
+    ): FedimintResponse<LightningPayResponse> => {
+      const request: LightningPayRequest = {
         paymentInfo,
         amountMsat,
-        lnurlComment,
+        LightningurlComment,
       };
 
-      return await this.postWithGatewayIdAndFederationId<LnPayResponse>(
+      return await this.postWithGatewayIdAndFederationId<LightningPayResponse>(
         "/ln/pay",
         request,
         gatewayId,
