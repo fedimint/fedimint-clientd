@@ -1,7 +1,9 @@
 import json
 import logging
-from typing import List
+from typing import List, Literal, Optional, Union
+import asyncio
 import aiohttp
+import atexit
 
 from models.common import (
     DiscoverVersionRequest,
@@ -50,18 +52,20 @@ from models.mint import (
 
 
 class AsyncFedimintClient:
+
     def __init__(
         self,
         base_url: str,
         password: str,
-        active_federationId: str,
-        active_gatewayId: str = None,
+        active_federation_id: str,
+        active_gateway_id: str = None,
     ):
         self.base_url = f"{base_url}/v2"
         self.password = password
-        self.active_federationId = active_federationId
-        self.active_gatewayId = active_gatewayId
+        self.active_federation_id = active_federation_id
+        self.active_gateway_id = active_gateway_id
         self.session = aiohttp.ClientSession()
+        atexit.register(self.close_sync)  # Register the cleanup function
 
         self.lightning = self.Lightning(self)
         self.onchain = self.Onchain(self)
@@ -70,25 +74,41 @@ class AsyncFedimintClient:
             "Initialized fedimint client, must set active gateway id after intitalization to use lightning module methods or manually pass in gateways"
         )
 
-    def get_active_federationId(self):
-        return self.active_federationId
+    async def close(self):
+        await self.session.close()
 
-    def set_active_federationId(self, federationId: str):
-        self.active_federationId = federationId
+    def close_sync(self):
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError as e:
+            # If no event loop is available, create a new one for cleanup
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
-    def get_active_gatewayId(self):
-        return self.active_gatewayId
+        if loop.is_running():
+            loop.create_task(self.close())
+        else:
+            loop.run_until_complete(self.close())
 
-    def set_active_gatewayId(self, gatewayId: str):
-        self.active_gatewayId = gatewayId
+    def get_active_federation_id(self):
+        return self.active_federation_id
 
-    def use_default_gateway(self):
+    def set_active_federation_id(self, federation_id: str):
+        self.active_federation_id = federation_id
+
+    def get_active_gateway_id(self):
+        return self.active_gateway_id
+
+    def set_active_gateway_id(self, gateway_id: str):
+        self.active_gateway_id = gateway_id
+
+    async def use_default_gateway(self):
         # hits list_gateways and sets active_gatewayId to the first gateway
         try:
-            gateways = self.lightning.list_gateways()
+            gateways = await self.lightning.list_gateways()
             logging.info("Gateways: ", gateways)
-            self.active_gateway_id = gateways[0].info.gatewayId
-            logging.info("Set active gateway id to: ", self.active_gatewayId)
+            self.active_gateway_id = gateways[0]["info"]["gateway_id"]
+            logging.info("Set active gateway id to: ", self.active_gateway_id)
         except Exception as e:
             logging.error("Error setting default gateway id: ", e)
 
@@ -117,14 +137,14 @@ class AsyncFedimintClient:
             return await response.json()
 
     async def _post_with_federation_id(
-        self, endpoint: str, data=None, federationId: str = None
+        self, endpoint: str, data=None, federation_id: str = None
     ):
-        if federationId is None:
-            federationId = self.get_active_federation_id()
+        if federation_id is None:
+            federation_id = self.get_active_federation_id()
 
         if data is None:
             data = {}
-        data["federationId"] = federationId
+        data["federationId"] = federation_id
 
         return await self._post(endpoint, data)
 
@@ -132,25 +152,25 @@ class AsyncFedimintClient:
         self,
         endpoint: str,
         data=None,
-        gatewayId: str = None,
-        federationId: str = None,
+        gateway_id: str = None,
+        federation_id: str = None,
     ):
 
-        if gatewayId is None:
-            gatewayId = self.get_active_gateway_id()
+        if gateway_id is None:
+            gateway_id = self.get_active_gateway_id()
 
-        if federationId is None:
-            federationId = self.get_active_federation_id()
+        if federation_id is None:
+            federation_id = self.get_active_federation_id()
 
-        if federationId is None or gatewayId is None:
+        if federation_id is None or gateway_id is None:
             raise Exception(
                 "Must set active gateway id and active federation id before calling this method"
             )
 
         if data is None:
             data = {}
-        data["gatewayId"] = gatewayId
-        data["federationId"] = federationId
+        data["gatewayId"] = gateway_id
+        data["federationId"] = federation_id
 
         return await self._post(endpoint, data)
 
@@ -174,9 +194,10 @@ class AsyncFedimintClient:
     async def list_operations(self, request: ListOperationsRequest):
         return await self._post_with_federation_id("/admin/list-operations", request)
 
-    async def join(self, invite_code: str, set_default: bool = False):
+    async def join(self, invite_code: str, use_manual_secret: bool = False):
         return await self._post(
-            "/admin/join", {"inviteCode": invite_code, "setDefault": set_default}
+            "/admin/join",
+            {"inviteCode": invite_code, "useManualSecret": use_manual_secret},
         )
 
     class Lightning:
@@ -215,7 +236,7 @@ class AsyncFedimintClient:
             federation_id: str = None,
         ) -> LightningInvoiceForPubkeyTweakResponse:
             request: LightningInvoiceForPubkeyTweakRequest = {
-                "pubkey": pubkey,
+                "externalPubkey": pubkey,
                 "tweak": tweak,
                 "amountMsat": amount_msat,
                 "description": description,
@@ -241,30 +262,45 @@ class AsyncFedimintClient:
             }
 
             return await self.client._post_with_federation_id(
-                "/ln/claim-external-pubkey-tweaked",
+                "/ln/claim-external-receive-tweaked",
                 data=request,
                 federation_id=federation_id,
             )
 
         async def await_invoice(
-            self, request: LightningAwaitInvoiceRequest, federationId: str = None
+            self, operation_id: str, federation_id: str = None
         ) -> InfoResponse:
+            request: LightningAwaitInvoiceRequest = {"operationId": operation_id}
             return await self.client._post_with_gateway_id_and_federation_id(
-                "/ln/await-invoice", request, federationId
+                "/ln/await-invoice", request, federation_id=federation_id
             )
 
         async def pay(
-            self, request: LightningPayRequest, federationId: str = None
+            self,
+            payment_info: str,
+            amount_msat: Optional[int],
+            lightning_url_comment: Optional[str],
+            gateway_id: str = None,
+            federation_id: str = None,
         ) -> LightningPayResponse:
+            request: LightningPayRequest = {
+                "paymentInfo": payment_info,
+                "amountMsat": amount_msat,
+                "lightningUrlComment": lightning_url_comment,
+            }
             return await self.client._post_with_gateway_id_and_federation_id(
-                "/ln/pay", request, federationId
+                "/ln/pay", request, gateway_id=gateway_id, federation_id=federation_id
             )
 
         async def await_pay(
-            self, request: LightningAwaitPayRequest, federationId: str = None
+            self, operation_id: str, gateway_id: str = None, federation_id: str = None
         ):
+            request: LightningAwaitPayRequest = {"operationId": operation_id}
             return await self.client._post_with_gateway_id_and_federation_id(
-                "/ln/await-pay", request, federationId
+                "/ln/await-pay",
+                request,
+                gateway_id=gateway_id,
+                federation_id=federation_id,
             )
 
         async def list_gateways(self) -> List[Gateway]:
@@ -275,28 +311,28 @@ class AsyncFedimintClient:
             self.client = client
 
         async def decode_notes(
-            self, notes: str, federationId: str = None
+            self, notes: str, federation_id: str = None
         ) -> MintDecodeNotesResponse:
-            request = MintDecodeNotesRequest({"notes": notes})
+            request: MintDecodeNotesRequest = {"notes": notes}
             return await self.client._post_with_federation_id(
-                "/mint/decode-notes", request, federationId
+                "/mint/decode-notes", request, federation_id
             )
 
         async def encode_notes(
-            self, notes_json: NotesJson, federationId: str = None
+            self, notes_json: NotesJson, federation_id: str = None
         ) -> MintEncodeNotesResponse:
-            request = MintEncodeNotesRequest({"notesJsonStr": json.dumps(notes_json)})
+            request: MintEncodeNotesRequest = {"notesJsonStr": json.dumps(notes_json)}
 
             return await self.client._post_with_federation_id(
-                "/mint/encode-notes", request, federationId
+                "/mint/encode-notes", request, federation_id
             )
 
         async def reissue(
-            self, notes: str, federationId: str = None
+            self, notes: str, federation_id: str = None
         ) -> MintReissueResponse:
-            request = MintReissueRequest({"notes": notes})
+            request: MintReissueRequest = {"notes": notes}
             return await self.client._post_with_federation_id(
-                "/mint/reissue", request, federationId
+                "/mint/reissue", request, federation_id
             )
 
         async def spend(
@@ -305,67 +341,66 @@ class AsyncFedimintClient:
             allow_overpay: bool,
             timeout: int,
             include_invite: bool,
-            federationId: str = None,
+            federation_id: str = None,
         ) -> MintSpendResponse:
-            request = MintSpendRequest(
-                {
-                    "amountMsat": amount_msat,
-                    "allowOverpay": allow_overpay,
-                    "timeout": timeout,
-                    "includeInvite": include_invite,
-                }
-            )
+            request: MintSpendRequest = {
+                "amountMsat": amount_msat,
+                "allowOverpay": allow_overpay,
+                "timeout": timeout,
+                "includeInvite": include_invite,
+            }
             return await self.client._post_with_federation_id(
-                "/mint/spend", request, federationId
+                "/mint/spend", request, federation_id
             )
 
         async def validate(
-            self, notes: str, federationId: str = None
+            self, notes: str, federation_id: str = None
         ) -> MintValidateResponse:
-            request = MintValidateRequest({"notes": notes})
+            request: MintValidateRequest = {"notes": notes}
             return await self.client._post_with_federation_id(
-                "/mint/validate", request, federationId
+                "/mint/validate", request, federation_id
             )
 
-        async def split(self, notes: str, federationId: str = None):
-            request = MintSplitRequest({"notes": notes})
+        async def split(self, notes: str, federation_id: str = None):
+            request: MintSplitRequest = {"notes": notes}
             return await self.client._post_with_federation_id(
-                "/mint/split", request, federationId
+                "/mint/split", request, federation_id
             )
 
-        async def combine(self, notes_vec: List[str], federationId: str = None):
-            request = MintCombineRequest({"notesVec": notes_vec})
+        async def combine(self, notes_vec: List[str], federation_id: str = None):
+            request: MintCombineRequest = {"notesVec": notes_vec}
             return await self.client._post_with_federation_id(
-                "/mint/combine", request, federationId
+                "/mint/combine", request, federation_id
             )
 
     class Onchain:
         def __init__(self, client):
             self.client = client
 
-        async def create_deposit_address(self, timeout: int, federationId: str = None):
-            request = OnchainDepositAddressRequest({"timeout": timeout})
+        async def create_deposit_address(self, timeout: int, federation_id: str = None):
+            request: OnchainDepositAddressRequest = {"timeout": timeout}
             return await self.client._post_with_federation_id(
-                "/wallet/deposit-address", request, federationId
+                "/wallet/deposit-address", request, federation_id
             )
 
         async def await_deposit(
-            self, operation_id: str, federationId: str = None
+            self, operation_id: str, federation_id: str = None
         ) -> OnchainAwaitDepositResponse:
-            request = OnchainAwaitDepositRequest({"operationId": operation_id})
+            request: OnchainAwaitDepositRequest = {"operationId": operation_id}
             return await self.client._post_with_federation_id(
-                "/wallet/await-deposit", request, federationId
+                "/wallet/await-deposit", request, federation_id
             )
 
         async def withdraw(
-            self, address: str, amount_sat: int | "all", federationId: str = None
+            self,
+            address: str,
+            amount_sat: Union[int, Literal["all"]],
+            federationId: str = None,
         ) -> OnchainWithdrawResponse:
-            request = OnchainWithdrawRequest(
-                {"address": address, "amountSat": amount_sat}
-            )
+            request: OnchainWithdrawRequest = {
+                "address": address,
+                "amountSat": amount_sat,
+            }
             return await self.client._post_with_federation_id(
                 "/wallet/withdraw", request, federationId
             )
-
-    async def close(self):
-        await self.session.close()

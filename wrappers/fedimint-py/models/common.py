@@ -2,8 +2,7 @@ from pydantic import RootModel, BaseModel
 from typing import List, Optional, Dict, Any
 
 
-class Tiered(RootModel):
-    root: Dict[int, Any]
+Tiered = RootModel[Dict[int, Any]]
 
 
 class TieredSummary(BaseModel):
@@ -18,8 +17,7 @@ class FederationInfo(BaseModel):
     denominationsMsat: TieredSummary
 
 
-class InfoResponse(BaseModel):
-    __root__: Dict[str, FederationInfo]
+InfoResponse = RootModel[Dict[str, FederationInfo]]
 
 
 class BackupRequest(BaseModel):
@@ -43,8 +41,7 @@ class DiscoverVersionRequest(BaseModel):
 
 
 # Returns a dictionary of federation_ids and their api versions
-class DiscoverVersionResponse(BaseModel):
-    __root__: Dict[str, Any]
+DiscoverVersionResponse = RootModel[Dict[str, Any]]
 
 
 class JoinRequest(BaseModel):

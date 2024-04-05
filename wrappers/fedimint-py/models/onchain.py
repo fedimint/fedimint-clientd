@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List, Literal, Union
 from pydantic import BaseModel
 
 
@@ -45,7 +45,7 @@ class OnchainAwaitDepositResponse(BaseModel):
 
 class OnchainWithdrawRequest(BaseModel):
     address: str
-    amount_sat: int | "all"
+    amount_sat: Union[int, Literal["all"]]
 
 
 class OnchainWithdrawResponse(BaseModel):
