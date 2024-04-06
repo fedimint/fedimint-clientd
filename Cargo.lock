@@ -2463,7 +2463,7 @@ dependencies = [
 
 [[package]]
 name = "multimint"
-version = "0.1.13"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "fedimint-client",
