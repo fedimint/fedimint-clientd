@@ -1,6 +1,6 @@
 [package]
 name = "fedimint-clientd"
-version = "0.1.6"
+version = "0.3.0"
 edition = "2021"
 description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin"
 repository = "https://github.com/fedimint/fedimint-clientd"
