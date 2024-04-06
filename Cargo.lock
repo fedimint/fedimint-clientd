@@ -340,6 +340,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "backuplit"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee2dae796e5f2385c46b9dcb7ac25ec6d3929a05b98953a98bec3bc5cc9bf319"
+dependencies = [
+ "anyhow",
+ "clap",
+ "flate2",
+ "google-cloud",
+ "inotify",
+ "tar",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "base64"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1093,6 +1110,7 @@ dependencies = [
  "axum",
  "axum-macros",
  "axum-otel-metrics",
+ "backuplit",
  "bitcoin 0.29.2",
  "bitcoin_hashes 0.13.0",
  "chrono",
@@ -1106,7 +1124,6 @@ dependencies = [
  "fedimint-rocksdb",
  "fedimint-wallet-client",
  "futures-util",
- "gc_fs_backup",
  "google-cloud",
  "inotify",
  "itertools 0.12.1",
@@ -1634,19 +1651,6 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "slab",
-]
-
-[[package]]
-name = "gc_fs_backup"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "flate2",
- "google-cloud",
- "inotify",
- "tar",
- "tokio",
 ]
 
 [[package]]

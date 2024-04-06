@@ -1,6 +1,3 @@
 [workspace]
-members = [
-    "multimint",
-    "fedimint-clientd", "gc_fs_backup",
-]
+members = ["multimint", "fedimint-clientd"]
 resolver = "2"

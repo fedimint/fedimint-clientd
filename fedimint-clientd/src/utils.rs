@@ -1,7 +1,7 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Result};
-use gc_fs_backup::{BackupTrigger, GcFsBackupBuilder};
+use backuplit::{BackupTrigger, BackuplitBuilder};
 
 use crate::Cli;
 
@@ -34,8 +34,8 @@ pub async fn start_backup_daemon(cli: &Cli) -> Result<(), anyhow::Error> {
                         }
                         _ => BackupTrigger::default(),
                     };
-                    let backup = GcFsBackupBuilder::new()
-                        .db_path(cli.db_path.clone())
+                    let backup = BackuplitBuilder::new()
+                        .dir_path(cli.db_path.clone())
                         .bucket_id(bucket_id)
                         .credential(credential)
                         .backup_name(name)
