@@ -1,6 +1,3 @@
 [workspace]
-members = [
-    "multimint",
-    "fedimint-clientd",
-]
+members = ["multimint", "fedimint-clientd"]
 resolver = "2"

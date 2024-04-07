@@ -29,7 +29,7 @@
         rustSrc = flakeboxLib.filterSubPaths {
           root = builtins.path {
             name = "fedimint-clientd";
-            path = ./.;
+            path = ./fedimint-clientd;
           };
           paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
         };
@@ -75,17 +75,16 @@
       in {
         legacyPackages = outputs;
         packages = { default = outputs.fedimint-clientd; };
-        devShells = fmLib.devShells // {
-          default = fmLib.devShells.default.overrideAttrs (prev: {
-            nativeBuildInputs = [
-              pkgs.mprocs
-              pkgs.go
-              pkgs.bun
-              fedimint.packages.${system}.devimint
-              fedimint.packages.${system}.gateway-pkgs
-              fedimint.packages.${system}.fedimint-pkgs
-            ] ++ prev.nativeBuildInputs;
-          });
+        devShells = flakeboxLib.mkShells {
+          packages = [ ];
+          nativeBuildInputs = [
+            pkgs.mprocs
+            pkgs.go
+            pkgs.bun
+            fedimint.packages.${system}.devimint
+            fedimint.packages.${system}.gateway-pkgs
+            fedimint.packages.${system}.fedimint-pkgs
+          ];
         };
       });
 }
