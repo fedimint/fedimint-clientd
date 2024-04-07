@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fedimint-go-client/pkg/fedimint"
 	"fmt"
 	"os"
@@ -85,12 +86,25 @@ func main() {
 
 	// `/v2/admin/discover-version`
 	logMethod("/v2/admin/discover-version")
-	data, err = fc.DiscoverVersion(1)
+	discoverResponseData, err := fc.DiscoverVersion(1)
 	if err != nil {
 		fmt.Println("Error calling VERSION: ", err)
 		return
 	}
-	logInputAndOutput(1, data)
+
+	jsonBytes, err := json.Marshal(discoverResponseData)
+	if err != nil {
+		fmt.Println("Error marshaling JSON(discover-version):", err)
+		return
+	}
+	var fedimintResponseData interface{}
+	err = json.Unmarshal(jsonBytes, &fedimintResponseData)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON(discover-version):", err)
+		return
+	}
+
+	logInputAndOutput(1, fedimintResponseData)
 
 	// `/v2/admin/federation-ids
 	logMethod("/v2/admin/federation-ids")
@@ -103,12 +117,13 @@ func main() {
 
 	// `/v2/admin/info`
 	logMethod("/v2/admin/info")
-	infoData, err := fc.Info()
+	infoDataResponse, err := fc.Info()
 	if err != nil {
 		fmt.Println("Error calling INFO: ", err)
 		return
 	}
-	logInputAndOutput(nil, infoData)
+
+	logInputAndOutput(nil, infoDataResponse)
 
 	// `/v2/admin/join`
 	inviteCode := os.Getenv("FEDIMINT_CLIENTD_BASE_URL")
@@ -116,7 +131,7 @@ func main() {
 		inviteCode = "fed11qgqrgvnhwden5te0v9k8q6rp9ekh2arfdeukuet595cr2ttpd3jhq6rzve6zuer9wchxvetyd938gcewvdhk6tcqqysptkuvknc7erjgf4em3zfh90kffqf9srujn6q53d6r056e4apze5cw27h75"
 	}
 	logMethod("/v2/admin/join")
-	joinData, err := fc.Join(inviteCode, true, true, nil)
+	joinData, err := fc.Join(inviteCode, true, true, false)
 	if err != nil {
 		fmt.Println("Error calling JOIN: ", err)
 		return

@@ -259,8 +259,8 @@ func (fc *FedimintClient) FederationIds() (types.FederationIdsResponse, error) {
 	return response, nil
 }
 
-func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, useDefaultGateway bool, useManualSecret *bool) (types.JoinResponse, error) {
-	request := types.JoinRequest{InviteCode: inviteCode, UseManualSecret: *useManualSecret}
+func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, useDefaultGateway bool, useManualSecret bool) (types.JoinResponse, error) {
+	request := types.JoinRequest{InviteCode: inviteCode, UseManualSecret: useManualSecret}
 
 	var response types.JoinResponse
 	responseBody, err := fc.post("/admin/join", request)
