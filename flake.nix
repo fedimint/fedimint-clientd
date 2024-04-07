@@ -29,7 +29,7 @@
         rustSrc = flakeboxLib.filterSubPaths {
           root = builtins.path {
             name = "fedimint-clientd";
-            path = ./fedimint-clientd;
+            path = ./.;
           };
           paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
         };
