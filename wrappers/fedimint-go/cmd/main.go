@@ -193,24 +193,6 @@ func main() {
 	}
 	logInputAndOutput([]interface{}{keyPair.PrivateKey, []uint64{1}}, claimInvoice)
 
-	// // `/v1/ln/invoice-external-pubkey`
-	// logMethod("/v1/ln/invoice-external-pubkey")
-	// invoiceInfo, err := fc.Ln.CreateInvoiceForPubkey(keyPair.PublicKey, 10000, "test", nil, nil, nil)
-	// if err != nil {
-	// 	fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY: ", err)
-	// 	return
-	// }
-	// logInputAndOutput([]interface{}{keyPair.PublicKey, 10000, "test"}, invoiceInfo)
-
-	// // `/v1/ln/claim-external-pubkey-tweaked`
-	// logMethod("/v1/ln/claim-external-pubkey-tweaked")
-	// claimInvoice, err = fc.Ln.ClaimPubkeyReceive(keyPair.PrivateKey, nil)
-	// if err != nil {
-	// 	fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
-	// 	return
-	// }
-	// logInputAndOutput([]interface{}{keyPair.PrivateKey}, claimInvoice)
-
 	//////////////////
 	// MINT METHODS //
 	//////////////////
@@ -307,13 +289,4 @@ func main() {
 	}
 	logInputAndOutput([]interface{}{addr.Address, 1000}, withdrawData)
 	fmt.Println("Done: All methods tested successfully!")
-
-	// `/v2/onchain/await-deposit`
-	// logMethod("/v2/onchain/await-deposit")
-	// awaitDepositData, err := fc.Onchain.AwaitDeposit(addr.OperationId, nil)
-	// if err != nil {
-	// 	fmt.Println("Error calling AWAIT_DEPOSIT: ", err)
-	// 	return
-	// }
-	// logInputAndOutput(addr.Address, awaitDepositData)
 }
