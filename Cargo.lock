@@ -1062,7 +1062,7 @@ dependencies = [
 
 [[package]]
 name = "fedimint-clientd"
-version = "0.1.6"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-utility",
@@ -1086,7 +1086,7 @@ dependencies = [
  "lazy_static",
  "lightning-invoice",
  "lnurl-rs",
- "multimint",
+ "multimint 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest",
  "serde",
  "serde_json",
@@ -2463,7 +2463,29 @@ dependencies = [
 
 [[package]]
 name = "multimint"
-version = "0.1.13"
+version = "0.3.0"
+dependencies = [
+ "anyhow",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-ln-client",
+ "fedimint-mint-client",
+ "fedimint-rocksdb",
+ "fedimint-wallet-client",
+ "futures-util",
+ "hex",
+ "rand",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "multimint"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a926e1ecf3b97aa2bf98d30de76032c7dcfa12b04ba957c985bd7a11c612f0be"
 dependencies = [
  "anyhow",
  "fedimint-client",

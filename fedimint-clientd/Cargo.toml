@@ -1,6 +1,6 @@
 [package]
 name = "fedimint-clientd"
-version = "0.1.6"
+version = "0.3.0"
 edition = "2021"
 description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin"
 repository = "https://github.com/fedimint/fedimint-clientd"
@@ -38,5 +38,6 @@ time = { version = "0.3.25", features = ["formatting"] }
 chrono = "0.4.31"
 futures-util = "0.3.30"
 clap = { version = "4.4.13", features = ["derive", "env"] }
-multimint = { path = "../multimint" }
+multimint = { version = "0.3.0" }
+# multimint = { path = "../multimint" }
 axum-otel-metrics = "0.8.0"
