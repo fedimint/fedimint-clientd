@@ -31,6 +31,19 @@ enum Mode {
     Cashu,
 }
 
+impl FromStr for Mode {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "rest" => Ok(Mode::Rest),
+            "ws" => Ok(Mode::Ws),
+            "cashu" => Ok(Mode::Cashu),
+            _ => Err(anyhow::anyhow!("Invalid mode")),
+        }
+    }
+}
+
 #[derive(Subcommand)]
 enum Commands {
     Start,

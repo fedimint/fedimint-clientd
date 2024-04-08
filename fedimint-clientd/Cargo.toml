@@ -37,7 +37,7 @@ bitcoin_hashes = "0.13.0"
 time = { version = "0.3.25", features = ["formatting"] }
 chrono = "0.4.31"
 futures-util = "0.3.30"
-clap = { version = "4.4.13", features = ["derive", "env"] }
+clap = { version = "3", features = ["derive", "env"] }
 multimint = { version = "0.3.0" }
 # multimint = { path = "../multimint" }
 axum-otel-metrics = "0.8.0"

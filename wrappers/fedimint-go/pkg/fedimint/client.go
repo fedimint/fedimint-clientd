@@ -91,7 +91,7 @@ func (fc *FedimintClient) SetActiveGatewayId(gatewayId string) {
 
 func (fc *FedimintClient) UseDefaultGateway() error {
 	// hits list_gateways and sets activeGatewayId to the first gateway
-	gateways, err := fc.Ln.ListGateways()
+	gateways, err := fc.Ln.ListGateways(&fc.ActiveFederationId)
 	if err != nil {
 		return fmt.Errorf("error getting gateways: %w", err)
 	}
@@ -117,33 +117,38 @@ func (fc *FedimintClient) post(endpoint string, body interface{}) ([]byte, error
 }
 
 func (fc *FedimintClient) postWithFederationId(endpoint string, body interface{}, federationId *string) ([]byte, error) {
-	// Marshal the original body to JSON
-	originalBodyJSON, err := json.Marshal(body)
+	// Marshal the body to JSON
+	bodyJSON, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 
-	// Unmarshal the JSON into a map to add federationId
-	var bodyMap map[string]interface{}
-	err = json.Unmarshal(originalBodyJSON, &bodyMap)
-	if err != nil {
+	// Initialize and convert JSON to map for manipulation
+	var bodyMap map[string]interface{} = make(map[string]interface{}) // Initialize the map here
+	if err := json.Unmarshal(bodyJSON, &bodyMap); err != nil {
 		return nil, err
 	}
 
-	// Add federationId to the map
-	effectiveFederationId := fc.ActiveFederationId
+	// If bodyMap is nil after unmarshaling, initialize it
+	if bodyMap == nil {
+		println("bodyMap is nil")
+		bodyMap = make(map[string]interface{})
+	}
+
+	// Set federationId in the body map
 	if federationId != nil {
-		effectiveFederationId = *federationId
+		bodyMap["federationId"] = *federationId
+	} else {
+		bodyMap["federationId"] = fc.ActiveFederationId
 	}
-	bodyMap["federationId"] = effectiveFederationId
 
-	// Marshal the modified map back to JSON
+	// Marshal the modified body back to JSON
 	modifiedBodyJSON, err := json.Marshal(bodyMap)
 	if err != nil {
 		return nil, err
 	}
 
-	// Use the modified JSON as the body for the POST request
+	// Make the POST request with the modified body
 	return fc.fetchWithAuth(endpoint, "POST", modifiedBodyJSON)
 }
 
@@ -154,19 +159,19 @@ func (fc *FedimintClient) postWithGatewayIdAndFederationId(endpoint string, body
 		return nil, err
 	}
 
-	// Unmarshal the JSON into a map to add federationId
-	var bodyMap map[string]interface{}
-	err = json.Unmarshal(originalBodyJSON, &bodyMap)
-	if err != nil {
-		return nil, err
-	}
-
+	var bodyMap = make(map[string]interface{})
 	// Add federationId to the map
 	effectiveFederationId := fc.ActiveFederationId
 	if federationId != nil {
 		effectiveFederationId = *federationId
 	}
 	bodyMap["federationId"] = effectiveFederationId
+
+	// Unmarshal the JSON into a map to add federationId
+	err = json.Unmarshal(originalBodyJSON, &bodyMap)
+	if err != nil {
+		return nil, err
+	}
 
 	// Add gatewayId to the map
 	effectiveGatewayId := fc.ActiveGatewayId
@@ -564,8 +569,8 @@ func (ln *LnModule) Pay(paymentInfo string, amountMsat *uint64, lnurlComment *st
 	return &payResp, nil
 }
 
-func (ln *LnModule) ListGateways() ([]modules.Gateway, error) {
-	resp, err := ln.Client.get("/ln/list-gateways")
+func (ln *LnModule) ListGateways(federationId *string) ([]modules.Gateway, error) {
+	resp, err := ln.Client.postWithFederationId("/ln/list-gateways", nil, nil)
 	if err != nil {
 		return nil, err
 	}

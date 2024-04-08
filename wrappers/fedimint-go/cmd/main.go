@@ -191,7 +191,7 @@ func main() {
 
 	// `/v2/ln/list-gateways`
 	logMethod("/v2/ln/list-gateways")
-	gatewayList, err := fc.Ln.ListGateways()
+	gatewayList, err := fc.Ln.ListGateways(&fc.ActiveFederationId)
 	if err != nil {
 		fmt.Println("Error calling LIST_GATEWAYS: ", err)
 		return
