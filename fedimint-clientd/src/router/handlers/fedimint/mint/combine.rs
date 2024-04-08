@@ -56,7 +56,8 @@ async fn _combine(req: CombineRequest) -> Result<CombineResponse, AppError> {
 }
 
 pub async fn handle_ws(v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
+    let v = serde_json::from_value(v)
+        .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let combine = _combine(v).await?;
     let combine_json = json!(combine);
     Ok(combine_json)

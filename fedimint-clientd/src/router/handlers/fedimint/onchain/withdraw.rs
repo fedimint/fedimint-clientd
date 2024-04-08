@@ -45,13 +45,17 @@ async fn _withdraw(
                 .get_withdraw_fees(req.address.clone(), balance)
                 .await?;
             let amount = balance.checked_sub(fees.amount());
-            if amount.is_none() {
-                Err(AppError::new(
-                    StatusCode::BAD_REQUEST,
-                    anyhow!("Insufficient balance to pay fees"),
-                ))?;
-            }
-            (amount.unwrap(), fees)
+            let amount = match amount {
+                Some(amount) => amount,
+                None => {
+                    return Err(AppError::new(
+                        StatusCode::BAD_REQUEST,
+                        anyhow!("Insufficient balance to pay fees"),
+                    ))
+                }
+            };
+
+            (amount, fees)
         }
         BitcoinAmountOrAll::Amount(amount) => (
             amount,

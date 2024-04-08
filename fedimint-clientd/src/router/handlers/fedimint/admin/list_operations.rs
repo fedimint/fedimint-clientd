@@ -44,26 +44,33 @@ async fn _list_operations(
         .list_operations(req.limit, None)
         .await
         .into_iter()
-        .map(|(k, v)| {
+        .map(|(k, v)| -> Result<OperationOutput, anyhow::Error> {
             let creation_time = OffsetDateTime::from_unix_timestamp(
                 k.creation_time
                     .duration_since(UNIX_EPOCH)
-                    .expect("Couldn't convert time from SystemTime to timestamp")
+                    .map_err(|e| {
+                        anyhow::anyhow!("Couldn't convert time from SystemTime to timestamp: {}", e)
+                    })?
                     .as_secs() as i64,
             )
-            .expect("Couldn't convert time from SystemTime to OffsetDateTime")
+            .map_err(|e| {
+                anyhow::anyhow!(
+                    "Couldn't convert time from SystemTime to OffsetDateTime: {}",
+                    e
+                )
+            })?
             .format(&iso8601::Iso8601::<ISO8601_CONFIG>)
-            .expect("Couldn't format OffsetDateTime as ISO8601");
+            .map_err(|e| anyhow::anyhow!("Couldn't format OffsetDateTime as ISO8601: {}", e))?;
 
-            OperationOutput {
+            Ok(OperationOutput {
                 id: k.operation_id,
                 creation_time,
                 operation_kind: v.operation_module_kind().to_owned(),
                 operation_meta: v.meta(),
                 outcome: v.outcome(),
-            }
+            })
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>, anyhow::Error>>()?;
 
     Ok(json!({
         "operations": operations,

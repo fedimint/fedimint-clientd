@@ -134,7 +134,7 @@ async fn melt_onchain(
     amount_sat: bitcoin::Amount,
 ) -> Result<PostMeltQuoteMethodResponse, AppError> {
     let address = bitcoin::Address::from_str(&request)
-        .expect("Onchain request must be a valid bitcoin address");
+        .map_err(|e| anyhow::anyhow!("Onchain request must be a valid bitcoin address: {e}"))?;
     let wallet_module = client.get_first_module::<WalletClientModule>();
     let fees = wallet_module
         .get_withdraw_fees(address.clone(), amount_sat)

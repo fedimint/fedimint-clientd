@@ -10,21 +10,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    fedimint = { url = "github:fedimint/fedimint?ref=v0.3.0"; };
-
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flakebox, flake-utils, fedimint }:
+  outputs = { self, nixpkgs, flakebox, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        nixpkgs = fedimint.inputs.nixpkgs;
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = fedimint.overlays.fedimint;
-        };
+        pkgs = import nixpkgs { inherit system; };
         lib = pkgs.lib;
-        fmLib = fedimint.lib.${system};
         flakeboxLib = flakebox.lib.${system} { };
         rustSrc = flakeboxLib.filterSubPaths {
           root = builtins.path {
@@ -77,14 +70,12 @@
         packages = { default = outputs.fedimint-clientd; };
         devShells = flakeboxLib.mkShells {
           packages = [ ];
-          nativeBuildInputs = [
-            pkgs.mprocs
-            pkgs.go
-            pkgs.bun
-            fedimint.packages.${system}.devimint
-            fedimint.packages.${system}.gateway-pkgs
-            fedimint.packages.${system}.fedimint-pkgs
-          ];
+          nativeBuildInputs = [ pkgs.mprocs pkgs.go pkgs.bun ];
+          shellHook = ''
+            export RUSTFLAGS="--cfg tokio_unstable"
+            export RUSTDOCFLAGS="--cfg tokio_unstable"
+            export RUST_LOG="info"
+          '';
         };
       });
 }

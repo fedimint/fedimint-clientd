@@ -139,7 +139,7 @@ func main() {
 
 	// `/v2/ln/invoice`
 	logMethod("/v2/ln/invoice")
-	invoiceData, err := client.Ln.CreateInvoice(10000, "test")
+	invoiceData, err := client.Ln.CreateInvoice(10000, "test", nil, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling createInvoice: ", err)
 		return
@@ -148,7 +148,7 @@ func main() {
 
 	// `/v2/ln/pay`
 	logMethod("/v2/ln/pay")
-	payData, err := client.Ln.Pay(invoiceData.Invoice, nil)
+	payData, err := client.Ln.Pay(invoiceData.Invoice, nil, nil, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling pay: ", err)
 		return

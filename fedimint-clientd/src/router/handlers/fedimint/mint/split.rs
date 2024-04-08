@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+use axum::http::StatusCode;
 use axum::Json;
 use fedimint_core::{Amount, TieredMulti};
 use fedimint_mint_client::OOBNotes;
@@ -45,7 +46,12 @@ async fn _split(req: SplitRequest) -> Result<SplitResponse, AppError> {
 }
 
 pub async fn handle_ws(v: Value) -> Result<Value, AppError> {
-    let v = serde_json::from_value(v).unwrap();
+    let v = serde_json::from_value(v).map_err(|e| {
+        AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow::anyhow!("Invalid request: {}", e),
+        )
+    })?;
     let split = _split(v).await?;
     let split_json = json!(split);
     Ok(split_json)

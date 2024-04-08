@@ -21,19 +21,22 @@ async fn _list_gateways(client: ClientHandleArc) -> Result<Value, AppError> {
     let lightning_module = client.get_first_module::<LightningClientModule>();
     let gateways = lightning_module.list_gateways().await;
     if gateways.is_empty() {
-        return Ok(serde_json::to_value(Vec::<String>::new()).unwrap());
+        return Ok(serde_json::to_value(Vec::<String>::new())?);
     }
 
     let mut gateways_json = json!(&gateways);
-    gateways_json
+    let gateways_json_array = gateways_json
         .as_array_mut()
-        .expect("gateways_json is not an array")
-        .iter_mut()
-        .for_each(|gateway| {
-            let gateway = gateway.as_object_mut().expect("gateway is not an object");
-            gateway.insert("federation_id".to_string(), json!(client.federation_id()));
-        });
-    Ok(serde_json::to_value(gateways_json).unwrap())
+        .ok_or_else(|| anyhow!("gateways_json is not an array"))?;
+
+    for gateway in gateways_json_array.iter_mut() {
+        let gateway_obj = gateway
+            .as_object_mut()
+            .ok_or_else(|| anyhow!("gateway is not an object"))?;
+        gateway_obj.insert("federation_id".to_string(), json!(client.federation_id()));
+    }
+
+    Ok(serde_json::to_value(gateways_json_array)?)
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {

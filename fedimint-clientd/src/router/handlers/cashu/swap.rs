@@ -36,8 +36,7 @@ pub async fn handle_swap(
     let operation_id = mint.reissue_external_notes(req.notes, ()).await?;
     let mut updates = mint
         .subscribe_reissue_external_notes(operation_id)
-        .await
-        .unwrap()
+        .await?
         .into_stream();
 
     while let Some(update) = updates.next().await {

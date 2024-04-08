@@ -37,7 +37,7 @@ async fn _reissue(
     let mut updates = mint
         .subscribe_reissue_external_notes(operation_id)
         .await
-        .unwrap()
+        .map_err(|e| anyhow::anyhow!("Failed to subscribe to reissue operation: {}", e))?
         .into_stream();
 
     while let Some(update) = updates.next().await {
