@@ -33,12 +33,24 @@
           paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
         };
 
-        toolchainArgs = {
+        toolchainArgs = let llvmPackages = pkgs.llvmPackages_11;
+        in {
           extraRustFlags = "--cfg tokio_unstable";
+
+          components = [ "rustc" "cargo" "clippy" "rust-analyzer" "rust-src" ];
+
+          args = {
+            nativeBuildInputs =
+              [ pkgs.wasm-bindgen-cli pkgs.geckodriver pkgs.wasm-pack ]
+              ++ lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.firefox ];
+          };
         } // lib.optionalAttrs pkgs.stdenv.isDarwin {
           # on Darwin newest stdenv doesn't seem to work
           # linking rocksdb
           stdenv = pkgs.clang11Stdenv;
+          clang = llvmPackages.clang;
+          libclang = llvmPackages.libclang.lib;
+          clang-unwrapped = llvmPackages.clang-unwrapped;
         };
 
         # all standard toolchains provided by flakebox
