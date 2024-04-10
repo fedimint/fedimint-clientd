@@ -1,0 +1,337 @@
+{
+  "dist_version": "0.12.2",
+  "announcement_tag": "v0.3.1",
+  "announcement_tag_is_implicit": true,
+  "announcement_is_prerelease": false,
+  "announcement_title": "v0.3.1",
+  "announcement_github_body": "## Install fedimint-clientd 0.3.1\n\n### Install prebuilt binaries via shell script\n\n```sh\ncurl --proto '=https' --tlsv1.2 -LsSf https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-installer.sh | sh\n```\n\n## Download fedimint-clientd 0.3.1\n\n|  File  | Platform | Checksum |\n|--------|----------|----------|\n| [fedimint-clientd-aarch64-apple-darwin.tar.xz](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-aarch64-apple-darwin.tar.xz) | Apple Silicon macOS | [checksum](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-aarch64-apple-darwin.tar.xz.sha256) |\n| [fedimint-clientd-x86_64-apple-darwin.tar.xz](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-x86_64-apple-darwin.tar.xz) | Intel macOS | [checksum](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-x86_64-apple-darwin.tar.xz.sha256) |\n| [fedimint-clientd-x86_64-pc-windows-msvc.zip](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-x86_64-pc-windows-msvc.zip) | x64 Windows | [checksum](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-x86_64-pc-windows-msvc.zip.sha256) |\n| [fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz) | x64 Linux | [checksum](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz.sha256) |\n| [fedimint-clientd-x86_64-unknown-linux-musl.tar.xz](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-x86_64-unknown-linux-musl.tar.xz) | x64 MUSL Linux | [checksum](https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-x86_64-unknown-linux-musl.tar.xz.sha256) |\n\n",
+  "system_info": {
+    "cargo_version_line": "cargo 1.79.0-nightly (28e7b2bc0 2024-04-05)"
+  },
+  "releases": [
+    {
+      "app_name": "fedimint-clientd",
+      "app_version": "0.3.1",
+      "artifacts": [
+        "source.tar.gz",
+        "source.tar.gz.sha256",
+        "fedimint-clientd-installer.sh",
+        "fedimint-clientd-aarch64-apple-darwin-update",
+        "fedimint-clientd-aarch64-apple-darwin.tar.xz",
+        "fedimint-clientd-aarch64-apple-darwin.tar.xz.sha256",
+        "fedimint-clientd-x86_64-apple-darwin-update",
+        "fedimint-clientd-x86_64-apple-darwin.tar.xz",
+        "fedimint-clientd-x86_64-apple-darwin.tar.xz.sha256",
+        "fedimint-clientd-x86_64-pc-windows-msvc-update",
+        "fedimint-clientd-x86_64-pc-windows-msvc.zip",
+        "fedimint-clientd-x86_64-pc-windows-msvc.zip.sha256",
+        "fedimint-clientd-x86_64-unknown-linux-gnu-update",
+        "fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz",
+        "fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz.sha256",
+        "fedimint-clientd-x86_64-unknown-linux-musl-update",
+        "fedimint-clientd-x86_64-unknown-linux-musl.tar.xz",
+        "fedimint-clientd-x86_64-unknown-linux-musl.tar.xz.sha256"
+      ],
+      "hosting": {
+        "github": {
+          "artifact_download_url": "https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1"
+        }
+      }
+    }
+  ],
+  "artifacts": {
+    "fedimint-clientd-aarch64-apple-darwin-update": {
+      "name": "fedimint-clientd-aarch64-apple-darwin-update",
+      "kind": "updater",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ]
+    },
+    "fedimint-clientd-aarch64-apple-darwin.tar.xz": {
+      "name": "fedimint-clientd-aarch64-apple-darwin.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "fedimint-clientd",
+          "path": "fedimint-clientd",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "fedimint-clientd-aarch64-apple-darwin.tar.xz.sha256"
+    },
+    "fedimint-clientd-aarch64-apple-darwin.tar.xz.sha256": {
+      "name": "fedimint-clientd-aarch64-apple-darwin.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "aarch64-apple-darwin"
+      ]
+    },
+    "fedimint-clientd-installer.sh": {
+      "name": "fedimint-clientd-installer.sh",
+      "kind": "installer",
+      "target_triples": [
+        "aarch64-apple-darwin",
+        "x86_64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+        "x86_64-unknown-linux-musl"
+      ],
+      "install_hint": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/fedimint/fedimint-clientd/releases/download/v0.3.1/fedimint-clientd-installer.sh | sh",
+      "description": "Install prebuilt binaries via shell script"
+    },
+    "fedimint-clientd-x86_64-apple-darwin-update": {
+      "name": "fedimint-clientd-x86_64-apple-darwin-update",
+      "kind": "updater",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ]
+    },
+    "fedimint-clientd-x86_64-apple-darwin.tar.xz": {
+      "name": "fedimint-clientd-x86_64-apple-darwin.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "fedimint-clientd",
+          "path": "fedimint-clientd",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "fedimint-clientd-x86_64-apple-darwin.tar.xz.sha256"
+    },
+    "fedimint-clientd-x86_64-apple-darwin.tar.xz.sha256": {
+      "name": "fedimint-clientd-x86_64-apple-darwin.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-apple-darwin"
+      ]
+    },
+    "fedimint-clientd-x86_64-pc-windows-msvc-update": {
+      "name": "fedimint-clientd-x86_64-pc-windows-msvc-update",
+      "kind": "updater",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ]
+    },
+    "fedimint-clientd-x86_64-pc-windows-msvc.zip": {
+      "name": "fedimint-clientd-x86_64-pc-windows-msvc.zip",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "fedimint-clientd",
+          "path": "fedimint-clientd.exe",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "fedimint-clientd-x86_64-pc-windows-msvc.zip.sha256"
+    },
+    "fedimint-clientd-x86_64-pc-windows-msvc.zip.sha256": {
+      "name": "fedimint-clientd-x86_64-pc-windows-msvc.zip.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-pc-windows-msvc"
+      ]
+    },
+    "fedimint-clientd-x86_64-unknown-linux-gnu-update": {
+      "name": "fedimint-clientd-x86_64-unknown-linux-gnu-update",
+      "kind": "updater",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ]
+    },
+    "fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz": {
+      "name": "fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "fedimint-clientd",
+          "path": "fedimint-clientd",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz.sha256"
+    },
+    "fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz.sha256": {
+      "name": "fedimint-clientd-x86_64-unknown-linux-gnu.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-unknown-linux-gnu"
+      ]
+    },
+    "fedimint-clientd-x86_64-unknown-linux-musl-update": {
+      "name": "fedimint-clientd-x86_64-unknown-linux-musl-update",
+      "kind": "updater",
+      "target_triples": [
+        "x86_64-unknown-linux-musl"
+      ]
+    },
+    "fedimint-clientd-x86_64-unknown-linux-musl.tar.xz": {
+      "name": "fedimint-clientd-x86_64-unknown-linux-musl.tar.xz",
+      "kind": "executable-zip",
+      "target_triples": [
+        "x86_64-unknown-linux-musl"
+      ],
+      "assets": [
+        {
+          "name": "CHANGELOG.md",
+          "path": "CHANGELOG.md",
+          "kind": "changelog"
+        },
+        {
+          "name": "LICENSE",
+          "path": "LICENSE",
+          "kind": "license"
+        },
+        {
+          "name": "README.md",
+          "path": "README.md",
+          "kind": "readme"
+        },
+        {
+          "name": "fedimint-clientd",
+          "path": "fedimint-clientd",
+          "kind": "executable"
+        }
+      ],
+      "checksum": "fedimint-clientd-x86_64-unknown-linux-musl.tar.xz.sha256"
+    },
+    "fedimint-clientd-x86_64-unknown-linux-musl.tar.xz.sha256": {
+      "name": "fedimint-clientd-x86_64-unknown-linux-musl.tar.xz.sha256",
+      "kind": "checksum",
+      "target_triples": [
+        "x86_64-unknown-linux-musl"
+      ]
+    },
+    "source.tar.gz": {
+      "name": "source.tar.gz",
+      "kind": "source-tarball",
+      "checksum": "source.tar.gz.sha256"
+    },
+    "source.tar.gz.sha256": {
+      "name": "source.tar.gz.sha256",
+      "kind": "checksum"
+    }
+  },
+  "publish_prereleases": false,
+  "ci": {
+    "github": {
+      "artifacts_matrix": {
+        "include": [
+          {
+            "targets": [
+              "aarch64-apple-darwin"
+            ],
+            "runner": "macos-12",
+            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.12.2/cargo-dist-installer.sh | sh",
+            "dist_args": "--artifacts=local --target=aarch64-apple-darwin"
+          },
+          {
+            "targets": [
+              "x86_64-apple-darwin"
+            ],
+            "runner": "macos-12",
+            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.12.2/cargo-dist-installer.sh | sh",
+            "dist_args": "--artifacts=local --target=x86_64-apple-darwin"
+          },
+          {
+            "targets": [
+              "x86_64-pc-windows-msvc"
+            ],
+            "runner": "windows-2019",
+            "install_dist": "powershell -c \"irm https://github.com/axodotdev/cargo-dist/releases/download/v0.12.2/cargo-dist-installer.ps1 | iex\"",
+            "dist_args": "--artifacts=local --target=x86_64-pc-windows-msvc"
+          },
+          {
+            "targets": [
+              "x86_64-unknown-linux-gnu"
+            ],
+            "runner": "ubuntu-20.04",
+            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.12.2/cargo-dist-installer.sh | sh",
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-gnu"
+          },
+          {
+            "targets": [
+              "x86_64-unknown-linux-musl"
+            ],
+            "runner": "ubuntu-20.04",
+            "install_dist": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.12.2/cargo-dist-installer.sh | sh",
+            "dist_args": "--artifacts=local --target=x86_64-unknown-linux-musl",
+            "packages_install": "sudo apt-get install musl-tools"
+          }
+        ]
+      },
+      "pr_run_mode": "plan"
+    }
+  },
+  "linkage": []
+}
