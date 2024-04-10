@@ -5,15 +5,21 @@
   inputs = {
     nixpkgs = { url = "github:nixos/nixpkgs/nixos-23.11"; };
 
-    flakebox = {
-      url = "github:rustshop/flakebox";
+    fenix = {
+      url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    flakebox = {
+      url = "github:dpc/flakebox?rev=34ce1b8f8c60661e06dc54ce07deb1ff0ed2b7f5";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.fenix.follows = "fenix";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flakebox, flake-utils }:
+  outputs = { self, nixpkgs, flakebox, fenix, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
