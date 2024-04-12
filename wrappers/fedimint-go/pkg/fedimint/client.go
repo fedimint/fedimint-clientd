@@ -276,10 +276,6 @@ func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, us
 	if setActiveFederationId {
 		fc.SetActiveFederationId(response.ThisFederationId, useDefaultGateway)
 	}
-
-	if err != nil {
-		return response, err
-	}
 	return response, nil
 }
 
@@ -444,13 +440,13 @@ func (mint *MintModule) Combine(notesVec []string) (*modules.MintCombineResponse
 // Ln //
 ////////
 
-func (ln *LnModule) CreateInvoice(amountMsat uint64, description string, expiryTime *int, gatewayId *string, federationId *string) (*modules.LnInvoiceResponse, error) {
+func (ln *LnModule) CreateInvoice(amountMsat uint64, description string, gatewayId string, expiryTime *int, federationId *string) (*modules.LnInvoiceResponse, error) {
 	request := modules.LnInvoiceRequest{
 		AmountMsat:  amountMsat,
 		Description: description,
 		ExpiryTime:  expiryTime,
 	}
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice", request, gatewayId, federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice", request, &gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -462,7 +458,7 @@ func (ln *LnModule) CreateInvoice(amountMsat uint64, description string, expiryT
 	return &invoiceResp, nil
 }
 
-func (ln *LnModule) CreateInvoiceForPubkey(pubkey string, amountMsat uint64, description string, expiryTime *int, gatewayId *string, federationId *string) (*modules.LnInvoiceResponse, error) {
+func (ln *LnModule) CreateInvoiceForPubkey(pubkey string, amountMsat uint64, description string, gatewayId string, expiryTime *int, federationId *string) (*modules.LnInvoiceResponse, error) {
 	request := modules.LnInvoiceExternalPubkeyRequest{
 		AmountMsat:     amountMsat,
 		Description:    description,
@@ -470,7 +466,7 @@ func (ln *LnModule) CreateInvoiceForPubkey(pubkey string, amountMsat uint64, des
 		ExternalPubkey: pubkey,
 	}
 	fmt.Println("request: ", request)
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice-external-pubkey", request, gatewayId, federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice-external-pubkey", request, &gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -482,7 +478,7 @@ func (ln *LnModule) CreateInvoiceForPubkey(pubkey string, amountMsat uint64, des
 	return &invoiceResp, nil
 }
 
-func (ln *LnModule) CreateInvoiceForPubkeyTweak(pubkey string, tweak uint64, amountMsat uint64, description string, expiryTime *int, gatewayId *string, federationId *string) (*modules.LnInvoiceResponse, error) {
+func (ln *LnModule) CreateInvoiceForPubkeyTweak(pubkey string, tweak uint64, amountMsat uint64, description string, gatewayId string, expiryTime *int, federationId *string) (*modules.LnInvoiceResponse, error) {
 	request := modules.LnInvoiceExternalPubkeyTweakedRequest{
 		AmountMsat:     amountMsat,
 		Description:    description,
@@ -491,7 +487,7 @@ func (ln *LnModule) CreateInvoiceForPubkeyTweak(pubkey string, tweak uint64, amo
 		Tweak:          tweak,
 	}
 	fmt.Println("request: ", request)
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice-external-pubkey-tweaked", request, gatewayId, federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice-external-pubkey-tweaked", request, &gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -503,9 +499,9 @@ func (ln *LnModule) CreateInvoiceForPubkeyTweak(pubkey string, tweak uint64, amo
 	return &invoiceResp, nil
 }
 
-func (ln *LnModule) ClaimPubkeyReceive(privateKey string, federationId *string) (*types.InfoResponse, error) {
+func (ln *LnModule) ClaimPubkeyReceive(privateKey string, gatewayId string, federationId *string) (*types.InfoResponse, error) {
 	request := modules.LnClaimPubkeyReceiveRequest{PrivateKey: privateKey}
-	resp, err := ln.Client.postWithFederationId("/ln/claim-external-receive", request, federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/claim-external-receive", request, &gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -517,9 +513,9 @@ func (ln *LnModule) ClaimPubkeyReceive(privateKey string, federationId *string) 
 	return &infoResp, nil
 }
 
-func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, federationId string) (*types.InfoResponse, error) {
+func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, gatewayId string, federationId string) (*types.InfoResponse, error) {
 	request := modules.LnClaimPubkeyTweakedRequest{PrivateKey: privateKey, Tweaks: tweaks}
-	resp, err := ln.Client.postWithFederationId("/ln/claim-external-receive-tweaked", request, &federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/claim-external-receive-tweaked", request, &gatewayId, &federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -531,9 +527,9 @@ func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, 
 	return &infoResp, nil
 }
 
-func (ln *LnModule) AwaitInvoice(operationId string, federationId *string) (*types.InfoResponse, error) {
+func (ln *LnModule) AwaitInvoice(operationId string, gatewayId string, federationId *string) (*types.InfoResponse, error) {
 	request := modules.LnAwaitInvoiceRequest{OperationId: operationId}
-	resp, err := ln.Client.postWithFederationId("/ln/await-invoice", request, federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/await-invoice", request, &gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -545,14 +541,14 @@ func (ln *LnModule) AwaitInvoice(operationId string, federationId *string) (*typ
 	return &infoResp, nil
 }
 
-func (ln *LnModule) Pay(paymentInfo string, amountMsat *uint64, lnurlComment *string, gatewayId *string, federationId *string) (*modules.LnPayResponse, error) {
+func (ln *LnModule) Pay(paymentInfo string, gatewayId string, amountMsat *uint64, lnurlComment *string, federationId *string) (*modules.LnPayResponse, error) {
 	request := modules.LnPayRequest{
 		PaymentInfo:  paymentInfo,
 		AmountMsat:   amountMsat,
 		LnurlComment: lnurlComment,
 	}
 	fmt.Println("request: ", request)
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/pay", request, gatewayId, federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/pay", request, &gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -564,7 +560,7 @@ func (ln *LnModule) Pay(paymentInfo string, amountMsat *uint64, lnurlComment *st
 	return &payResp, nil
 }
 
-func (ln *LnModule) ListGateways() ([]modules.Gateway, error) {
+func (ln *LnModule) ListGateways(gatewayId string) ([]modules.Gateway, error) {
 	resp, err := ln.Client.get("/ln/list-gateways")
 	if err != nil {
 		return nil, err
