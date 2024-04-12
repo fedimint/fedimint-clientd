@@ -191,7 +191,7 @@ func main() {
 
 	// `/v2/ln/list-gateways`
 	logMethod("/v2/ln/list-gateways")
-	gatewayList, err := fc.Ln.ListGateways()
+	gatewayList, err := fc.Ln.ListGateways(nil)
 	if err != nil {
 		fmt.Println("Error calling LIST_GATEWAYS: ", err)
 		return
@@ -235,7 +235,7 @@ func main() {
 
 	// `/v2/ln/pay`
 	logMethod("/v2/ln/pay")
-	payData, err := fc.Ln.Pay(invoiceData.Invoice, nil, nil, nil, nil)
+	payData, err := fc.Ln.Pay(invoiceData.Invoice, fc.GetActiveGatewayId(), nil, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling PAY: ", err)
 		return
@@ -257,7 +257,7 @@ func main() {
 
 	// /v2/ln/await-invoice
 	logMethod("/v2/ln/await-invoice")
-	awaitInvoiceData, err := fc.Ln.AwaitInvoice(invoiceData.OperationId, nil)
+	awaitInvoiceData, err := fc.Ln.AwaitInvoice(invoiceData.OperationId, fc.GetActiveGatewayId(), nil)
 	if err != nil {
 		fmt.Println("Error calling AWAIT_INVOICE: ", err)
 		return
@@ -279,7 +279,7 @@ func main() {
 
 	// `/v1/ln/invoice-external-pubkey-tweaked`
 	logMethod("/v1/ln/invoice-external-pubkey-tweaked")
-	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", nil, nil, nil)
+	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", fc.GetActiveGatewayId(), nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY_TWEAK: ", err)
 		return
@@ -299,12 +299,12 @@ func main() {
 
 	logInputAndOutput([]interface{}{keyPair.PublicKey, 1, 10000, "test"}, tweakInvoiceResponseData)
 	// pay the invoice
-	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, nil, nil, nil, nil)
+	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, fc.GetActiveGatewayId(), nil, nil, nil)
 	fmt.Println("Paid locked invoice!")
 
 	// `/v1/ln/claim-external-pubkey-tweaked`
 	logMethod("/v1/ln/claim-external-pubkey-tweaked")
-	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, fc.GetActiveFederationId())
+	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, fc.GetActiveFederationId(), fc.GetActiveFederationId())
 	if err != nil {
 		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
 		return
