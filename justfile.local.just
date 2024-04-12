@@ -14,7 +14,7 @@ test-py-async:
   python3.11 wrappers/fedimint-py/test_async.py
 
 test-go:
-  cd wrappers/fedimint-go && go run cmd/main.go
+  go run wrappers/fedimint-go/cmd/main.go
 
 wscat:
   mprocs -c mprocs-wscat.yaml

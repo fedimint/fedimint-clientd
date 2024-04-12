@@ -91,7 +91,7 @@ func (fc *FedimintClient) SetActiveGatewayId(gatewayId string) {
 
 func (fc *FedimintClient) UseDefaultGateway() error {
 	// hits list_gateways and sets activeGatewayId to the first gateway
-	gateways, err := fc.Ln.ListGateways()
+	gateways, err := fc.Ln.ListGateways(nil)
 	if err != nil {
 		return fmt.Errorf("error getting gateways: %w", err)
 	}
@@ -440,13 +440,13 @@ func (mint *MintModule) Combine(notesVec []string) (*modules.MintCombineResponse
 // Ln //
 ////////
 
-func (ln *LnModule) CreateInvoice(amountMsat uint64, description string, gatewayId string, expiryTime *int, federationId *string) (*modules.LnInvoiceResponse, error) {
+func (ln *LnModule) CreateInvoice(amountMsat uint64, description string, gatewayId *string, expiryTime *int, federationId *string) (*modules.LnInvoiceResponse, error) {
 	request := modules.LnInvoiceRequest{
 		AmountMsat:  amountMsat,
 		Description: description,
 		ExpiryTime:  expiryTime,
 	}
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice", request, &gatewayId, federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/invoice", request, gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -560,7 +560,7 @@ func (ln *LnModule) Pay(paymentInfo string, gatewayId string, amountMsat *uint64
 	return &payResp, nil
 }
 
-func (ln *LnModule) ListGateways(gatewayId string) ([]modules.Gateway, error) {
+func (ln *LnModule) ListGateways(gatewayId *string) ([]modules.Gateway, error) {
 	resp, err := ln.Client.get("/ln/list-gateways")
 	if err != nil {
 		return nil, err

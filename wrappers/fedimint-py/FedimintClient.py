@@ -69,7 +69,7 @@ class FedimintClient:
 
     def get_active_federation_id(self):
         return self.active_federation_id
-
+# ***
     def set_active_federation_id(self, federation_id: str):
         self.active_federation_id = federation_id
 
@@ -161,10 +161,10 @@ class FedimintClient:
 
     def federation_ids(self):
         return self._get("/admin/federation-ids")
-
+# ***
     def list_operations(self, request: ListOperationsRequest):
         return self._post_with_federation_id("/admin/list-operations", request)
-
+# ***
     def join(self, invite_code: str, use_manual_secret: bool = False):
         return self._post(
             "/admin/join",
