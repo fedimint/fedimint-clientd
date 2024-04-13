@@ -101,7 +101,7 @@ func main() {
 	var fedimintResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &fedimintResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(discover-version):", err)
+		fmt.Println("Error unmarshalling JSON(discover-version):", err)
 		return
 	}
 
@@ -132,7 +132,7 @@ func main() {
 	var infoResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &infoResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(discover-version):", err)
+		fmt.Println("Error unmarshalling JSON(discover-version):", err)
 		return
 	}
 
@@ -158,7 +158,7 @@ func main() {
 	var joinResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &joinResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(join):", err)
+		fmt.Println("Error unmarshalling JSON(join):", err)
 		return
 	}
 
@@ -180,7 +180,7 @@ func main() {
 	var listOperationsResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &listOperationsResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(list-operations):", err)
+		fmt.Println("Error unmarshalling JSON(list-operations):", err)
 		return
 	}
 
@@ -206,7 +206,7 @@ func main() {
 	var gatewayListResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &gatewayListResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(list-gateways):", err)
+		fmt.Println("Error unmarshalling JSON(list-gateways):", err)
 		return
 	}
 
@@ -228,7 +228,7 @@ func main() {
 	var invoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &invoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(invoice):", err)
+		fmt.Println("Error unmarshalling JSON(invoice):", err)
 		return
 	}
 
@@ -250,7 +250,7 @@ func main() {
 	var payResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &payResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(pay):", err)
+		fmt.Println("Error unmarshalling JSON(pay):", err)
 		return
 	}
 
@@ -272,7 +272,7 @@ func main() {
 	var awaitInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &awaitInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(await-invoice):", err)
+		fmt.Println("Error unmarshalling JSON(await-invoice):", err)
 		return
 	}
 
@@ -294,7 +294,7 @@ func main() {
 	var tweakInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &tweakInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(await-invoice):", err)
+		fmt.Println("Error unmarshalling JSON(await-invoice):", err)
 		return
 	}
 
@@ -319,7 +319,7 @@ func main() {
 	var claimInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &claimInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(claim-external-pubkey-tweaked):", err)
+		fmt.Println("Error unmarshalling JSON(claim-external-pubkey-tweaked):", err)
 		return
 	}
 
@@ -345,7 +345,7 @@ func main() {
 	var mintResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &mintResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(spend):", err)
+		fmt.Println("Error unmarshalling JSON(spend):", err)
 		return
 	}
 
@@ -367,7 +367,7 @@ func main() {
 	var decodedResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &decodedResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(decode-notes):", err)
+		fmt.Println("Error unmarshalling JSON(decode-notes):", err)
 		return
 	}
 
@@ -389,7 +389,7 @@ func main() {
 	var encodedResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &encodedResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(encode-notes):", err)
+		fmt.Println("Error unmarshalling JSON(encode-notes):", err)
 		return
 	}
 
@@ -411,7 +411,7 @@ func main() {
 	var validateResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &validateResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(validate):", err)
+		fmt.Println("Error unmarshalling JSON(validate):", err)
 		return
 	}
 
@@ -433,7 +433,7 @@ func main() {
 	var reissueResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &reissueResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(reissue):", err)
+		fmt.Println("Error unmarshalling JSON(reissue):", err)
 		return
 	}
 
@@ -455,7 +455,7 @@ func main() {
 	var splitResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &splitResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(split):", err)
+		fmt.Println("Error unmarshalling JSON(split):", err)
 		return
 	}
 
@@ -484,7 +484,7 @@ func main() {
 	var combineResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &combineResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(split):", err)
+		fmt.Println("Error unmarshalling JSON(split):", err)
 		return
 	}
 
@@ -510,7 +510,7 @@ func main() {
 	var addrResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &addrResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(deposit-address):", err)
+		fmt.Println("Error unmarshalling JSON(deposit-address):", err)
 		return
 	}
 
@@ -532,7 +532,7 @@ func main() {
 	var withdrawResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &withdrawResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(withdraw):", err)
+		fmt.Println("Error unmarshalling JSON(withdraw):", err)
 		return
 	}
 

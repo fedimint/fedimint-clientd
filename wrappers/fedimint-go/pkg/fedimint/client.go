@@ -591,8 +591,8 @@ func (ln *LnModule) Pay(paymentInfo string, gatewayId string, amountMsat *uint64
 	return &payResp, nil
 }
 
-func (ln *LnModule) ListGateways(gatewayId *string) ([]modules.Gateway, error) {
-	resp, err := ln.Client.get("/ln/list-gateways")
+func (ln *LnModule) ListGateways(federationId *string) ([]modules.Gateway, error) {
+	resp, err := ln.Client.postWithFederationId("/ln/list-gateways", nil, federationId)
 	if err != nil {
 		return nil, err
 	}
