@@ -88,7 +88,9 @@
         packages = { default = outputs.fedimint-clientd; };
         devShells = flakeboxLib.mkShells {
           packages = [ ];
-          nativeBuildInputs = [ pkgs.mprocs pkgs.go pkgs.bun ];
+          buildInputs = commonArgs.buildInputs;
+          nativeBuildInputs =
+            [ pkgs.mprocs pkgs.go pkgs.bun commonArgs.nativeBuildInputs ];
           shellHook = ''
             export RUSTFLAGS="--cfg tokio_unstable"
             export RUSTDOCFLAGS="--cfg tokio_unstable"

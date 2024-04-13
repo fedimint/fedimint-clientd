@@ -25,3 +25,9 @@ install-updater = true
 [profile.dist]
 inherits = "release"
 lto = "thin"
+
+[profile.ci]
+inherits = "dev"
+incremental = false
+debug = "line-tables-only"
+lto = "off"
