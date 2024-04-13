@@ -66,6 +66,7 @@ func buildTestClient() *fedimint.FedimintClient {
 
 func main() {
 	fc := buildTestClient()
+	fc.UseDefaultGateway()
 	keyPair := newKeyPair()
 	fmt.Printf("Generated Key Pair: ")
 	fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)

@@ -107,82 +107,110 @@ func (fc *FedimintClient) get(endpoint string) ([]byte, error) {
 	return fc.fetchWithAuth(endpoint, "GET", nil)
 }
 
+// Post performs a POST request with JSON body, handling JSON marshalling within.
 func (fc *FedimintClient) post(endpoint string, body interface{}) ([]byte, error) {
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error marshaling request body: %w", err)
 	}
-	fmt.Println("jsonBody: ", string(jsonBody))
+
+	fmt.Printf("jsonBody: %s\n", jsonBody)
+	// Assuming fetchWithAuth is correctly implemented.
 	return fc.fetchWithAuth(endpoint, "POST", jsonBody)
 }
 
-func (fc *FedimintClient) postWithFederationId(endpoint string, body interface{}, federationId *string) ([]byte, error) {
-	// Marshal the original body to JSON
-	originalBodyJSON, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
+// postWithFederationId takes any request object, marshals it to JSON, optionally adds a federationId, and makes a POST request.
+func (fc *FedimintClient) postWithFederationId(endpoint string, requestBody interface{}, federationId *string) ([]byte, error) {
+	// Initialize an empty map for the request body.
+	requestMap := make(map[string]interface{})
+
+	// If the requestBody is not nil and not empty, marshal and unmarshal it into the map.
+	if requestBody != nil {
+		requestJSON, err := json.Marshal(requestBody)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal request body: %w", err)
+		}
+
+		// Unmarshal the JSON into the map only if it's not empty to avoid overwriting the initialized map.
+		if string(requestJSON) != "{}" {
+			err = json.Unmarshal(requestJSON, &requestMap)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal request JSON into map: %w", err)
+			}
+		}
 	}
 
-	// Unmarshal the JSON into a map to add federationId
-	var bodyMap map[string]interface{}
-	err = json.Unmarshal(originalBodyJSON, &bodyMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add federationId to the map
+	// Determine the effective federationId to use
 	effectiveFederationId := fc.ActiveFederationId
+	fmt.Printf("effectiveFederationId: %s\n", effectiveFederationId)
 	if federationId != nil {
 		effectiveFederationId = *federationId
 	}
-	bodyMap["federationId"] = effectiveFederationId
+	fmt.Printf("effectiveFederationId: %s\n", effectiveFederationId)
 
-	// Marshal the modified map back to JSON
-	modifiedBodyJSON, err := json.Marshal(bodyMap)
+	// Add federationId to the map, which is now guaranteed to be initialized.
+	requestMap["federationId"] = effectiveFederationId
+
+	// Marshal the request map back to JSON to use as the request body.
+	modifiedRequestJSON, err := json.Marshal(requestMap)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal modified request map: %w", err)
 	}
 
-	// Use the modified JSON as the body for the POST request
-	return fc.fetchWithAuth(endpoint, "POST", modifiedBodyJSON)
+	fmt.Printf("modifiedRequestJSON: %s\n", modifiedRequestJSON)
+
+	// Proceed to make the POST request with the modified JSON body.
+	return fc.fetchWithAuth(endpoint, "POST", modifiedRequestJSON)
 }
 
-func (fc *FedimintClient) postWithGatewayIdAndFederationId(endpoint string, body interface{}, gatewayId *string, federationId *string) ([]byte, error) {
-	// Marshal the original body to JSON
-	originalBodyJSON, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
+func (fc *FedimintClient) postWithGatewayIdAndFederationId(endpoint string, requestBody interface{}, gatewayId *string, federationId *string) ([]byte, error) {
+	// Initialize an empty map for the request body.
+	requestMap := make(map[string]interface{})
+
+	// If the requestBody is not nil and not empty, marshal and unmarshal it into the map.
+	if requestBody != nil {
+		requestJSON, err := json.Marshal(requestBody)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal request body: %w", err)
+		}
+
+		// Unmarshal the JSON into the map only if it's not empty to avoid overwriting the initialized map.
+		if string(requestJSON) != "{}" {
+			err = json.Unmarshal(requestJSON, &requestMap)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal request JSON into map: %w", err)
+			}
+		}
 	}
 
-	// Unmarshal the JSON into a map to add federationId
-	var bodyMap map[string]interface{}
-	err = json.Unmarshal(originalBodyJSON, &bodyMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add federationId to the map
+	// Determine the effective federationId to use
 	effectiveFederationId := fc.ActiveFederationId
 	if federationId != nil {
 		effectiveFederationId = *federationId
 	}
-	bodyMap["federationId"] = effectiveFederationId
+	fmt.Printf("effectiveFederationId: %s\n", effectiveFederationId)
+	requestMap["federationId"] = effectiveFederationId
 
-	// Add gatewayId to the map
+	// Determine the effective gatewayId to use
 	effectiveGatewayId := fc.ActiveGatewayId
 	if gatewayId != nil {
 		effectiveGatewayId = *gatewayId
 	}
-	bodyMap["gatewayId"] = effectiveGatewayId
+	fmt.Printf("effectiveGatewayId: %s\n", effectiveGatewayId)
 
-	// Marshal the modified map back to JSON
-	modifiedBodyJSON, err := json.Marshal(bodyMap)
+	// Add gatewayId to the map, which is now guaranteed to be initialized.
+	requestMap["gatewayId"] = effectiveGatewayId
+
+	// Marshal the request map back to JSON to use as the request body.
+	modifiedRequestJSON, err := json.Marshal(requestMap)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal modified request map: %w", err)
 	}
 
-	// Use the modified JSON as the body for the POST request
-	return fc.fetchWithAuth(endpoint, "POST", modifiedBodyJSON)
+	fmt.Printf("modifiedRequestJSON: %s\n", modifiedRequestJSON)
+
+	// Proceed to make the POST request with the modified JSON body.
+	return fc.fetchWithAuth(endpoint, "POST", modifiedRequestJSON)
 }
 
 func (fc *FedimintClient) Info() (*types.InfoResponse, error) {
@@ -440,7 +468,7 @@ func (mint *MintModule) Combine(notesVec []string) (*modules.MintCombineResponse
 // Ln //
 ////////
 
-func (ln *LnModule) CreateInvoice(amountMsat uint64, description string, gatewayId *string, expiryTime *int, federationId *string) (*modules.LnInvoiceResponse, error) {
+func (ln *LnModule) CreateInvoice(amountMsat uint64, description string, expiryTime *int, gatewayId *string, federationId *string) (*modules.LnInvoiceResponse, error) {
 	request := modules.LnInvoiceRequest{
 		AmountMsat:  amountMsat,
 		Description: description,
@@ -552,6 +580,9 @@ func (ln *LnModule) Pay(paymentInfo string, gatewayId string, amountMsat *uint64
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("Raw response body: %s\n", string(resp))
+
 	var payResp modules.LnPayResponse
 	err = json.Unmarshal(resp, &payResp)
 	if err != nil {

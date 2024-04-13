@@ -69,7 +69,8 @@ class FedimintClient:
 
     def get_active_federation_id(self):
         return self.active_federation_id
-# ***
+
+    # ***
     def set_active_federation_id(self, federation_id: str):
         self.active_federation_id = federation_id
 
@@ -161,10 +162,12 @@ class FedimintClient:
 
     def federation_ids(self):
         return self._get("/admin/federation-ids")
-# ***
+
+    # ***
     def list_operations(self, request: ListOperationsRequest):
         return self._post_with_federation_id("/admin/list-operations", request)
-# ***
+
+    # ***
     def join(self, invite_code: str, use_manual_secret: bool = False):
         return self._post(
             "/admin/join",
@@ -342,7 +345,7 @@ class FedimintClient:
         def create_deposit_address(self, timeout: int, federation_id: str = None):
             request: OnchainDepositAddressRequest = {"timeout": timeout}
             return self.client._post_with_federation_id(
-                "/wallet/deposit-address", request, federation_id
+                "/onchain/deposit-address", request, federation_id
             )
 
         def await_deposit(
@@ -350,7 +353,7 @@ class FedimintClient:
         ) -> OnchainAwaitDepositResponse:
             request: OnchainAwaitDepositRequest = {"operationId": operation_id}
             return self.client._post_with_federation_id(
-                "/wallet/await-deposit", request, federation_id
+                "/onchain/await-deposit", request, federation_id
             )
 
         def withdraw(
@@ -364,5 +367,5 @@ class FedimintClient:
                 "amountSat": amount_sat,
             }
             return self.client._post_with_federation_id(
-                "/wallet/withdraw", request, federation_id
+                "/onchain/withdraw", request, federation_id
             )

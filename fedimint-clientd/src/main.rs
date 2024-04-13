@@ -254,7 +254,7 @@ fn fedimint_v2_rest() -> Router<AppState> {
             post(fedimint::ln::list_gateways::handle_rest),
         );
 
-    let wallet_router = Router::new()
+    let onchain_router = Router::new()
         .route(
             "/deposit-address",
             post(fedimint::onchain::deposit_address::handle_rest),
@@ -291,7 +291,7 @@ fn fedimint_v2_rest() -> Router<AppState> {
         .nest("/admin", admin_router)
         .nest("/mint", mint_router)
         .nest("/ln", ln_router)
-        .nest("/wallet", wallet_router)
+        .nest("/onchain", onchain_router)
 }
 
 /// Implements Cashu V1 API Routes:
