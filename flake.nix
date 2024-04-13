@@ -62,7 +62,7 @@
           flakeboxLib.mkFenixMultiToolchain { toolchains = toolchainsNative; };
 
         commonArgs = {
-          buildInputs = [ pkgs.openssl ] ++ lib.optionals pkgs.stdenv.isDarwin
+          buildInputs = [ ] ++ lib.optionals pkgs.stdenv.isDarwin
             [ pkgs.darwin.apple_sdk.frameworks.SystemConfiguration ];
           nativeBuildInputs = [ pkgs.pkg-config ];
         };
