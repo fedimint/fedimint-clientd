@@ -380,7 +380,7 @@ class AsyncFedimintClient:
         async def create_deposit_address(self, timeout: int, federation_id: str = None):
             request: OnchainDepositAddressRequest = {"timeout": timeout}
             return await self.client._post_with_federation_id(
-                "/wallet/deposit-address", request, federation_id
+                "/onchain/deposit-address", request, federation_id
             )
 
         async def await_deposit(
@@ -388,7 +388,7 @@ class AsyncFedimintClient:
         ) -> OnchainAwaitDepositResponse:
             request: OnchainAwaitDepositRequest = {"operationId": operation_id}
             return await self.client._post_with_federation_id(
-                "/wallet/await-deposit", request, federation_id
+                "/onchain/await-deposit", request, federation_id
             )
 
         async def withdraw(
@@ -402,5 +402,5 @@ class AsyncFedimintClient:
                 "amountSat": amount_sat,
             }
             return await self.client._post_with_federation_id(
-                "/wallet/withdraw", request, federationId
+                "/onchain/withdraw", request, federationId
             )

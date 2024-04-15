@@ -45,11 +45,16 @@ type LnPayRequest struct {
 	LnurlComment *string `json:"lnurlComment"`
 }
 
+type PaymentTypeInfo struct {
+	Internal  *string `json:"internal,omitempty"`
+	Lightning *string `json:"lightning,omitempty"`
+}
+
 type LnPayResponse struct {
-	PperationId string `json:"operationId"`
-	PaymentType string `json:"paymentType"`
-	ContractId  string `json:"contractId"`
-	Fee         int    `json:"fee"`
+	OperationId string          `json:"operationId"`
+	PaymentType PaymentTypeInfo `json:"paymentType"`
+	ContractId  string          `json:"contractId"`
+	Fee         int             `json:"fee"`
 }
 
 type AwaitLnPayRequest struct {
@@ -59,13 +64,13 @@ type AwaitLnPayRequest struct {
 type GatewayInfo struct {
 	API                     string        `json:"api"`
 	Fees                    GatewayFees   `json:"fees"`
-	GatewayID               string        `json:"gatewayId"`
-	GatewayRedeemKey        string        `json:"gatewayRedeemKey"`
-	LightningAlias          string        `json:"lightningAlias"`
-	MintChannelID           int           `json:"mintChannelId"`
-	NodePubKey              string        `json:"nodePubKey"`
-	RouteHints              []interface{} `json:"routeHints"` // Adjust the type according to the actual structure of route hints
-	SupportsPrivatePayments bool          `json:"supportsPrivatePayments"`
+	GatewayID               string        `json:"gateway_id"`
+	GatewayRedeemKey        string        `json:"gateway_redeem_key"`
+	LightningAlias          string        `json:"lightning_alias"`
+	MintChannelID           int           `json:"mint_channel_id"`
+	NodePubKey              string        `json:"node_pub_key"`
+	RouteHints              []interface{} `json:"route_hints"` // Consider defining a more specific type if possible
+	SupportsPrivatePayments bool          `json:"supports_private_payments"`
 }
 
 type GatewayFees struct {
@@ -79,15 +84,10 @@ type GatewayTTL struct {
 }
 
 type Gateway struct {
-	FederationID string      `json:"federationId"`
+	FederationID string      `json:"federation_id"`
 	Info         GatewayInfo `json:"info"`
 	TTL          GatewayTTL  `json:"ttl"`
 	Vetted       bool        `json:"vetted"`
 }
 
-// string::> FederationId
 type ListGatewaysResponse map[string][]Gateway
-
-type SwitchGatewayRequest struct {
-	GatewayId string `json:"gatewayId"`
-}

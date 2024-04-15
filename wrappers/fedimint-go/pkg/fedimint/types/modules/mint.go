@@ -63,7 +63,7 @@ type DecodeNotesRequest struct {
 }
 
 type DecodeNotesResponse struct {
-	NotesJson string `json:"notesJson"`
+	NotesJson NotesJson `json:"notesJson"`
 }
 
 type EncodeNotesRequest struct {
@@ -89,8 +89,8 @@ type MintSpendRequest struct {
 }
 
 type MintSpendResponse struct {
-	OperationId string   `json:"operationId"`
-	Notes       OOBNotes `json:"notes"`
+	OperationId string `json:"operationId"`
+	Notes       string `json:"notes"`
 }
 
 type MintValidateRequest struct {
