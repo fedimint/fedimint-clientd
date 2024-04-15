@@ -126,13 +126,13 @@ func main() {
 
 	jsonBytes, err = json.Marshal(infoDataResponse)
 	if err != nil {
-		fmt.Println("Error marshaling JSON(discover-version):", err)
+		fmt.Println("Error marshaling JSON(info):", err)
 		return
 	}
 	var infoResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &infoResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON(discover-version):", err)
+		fmt.Println("Error unmarshalling JSON(info):", err)
 		return
 	}
 
@@ -168,7 +168,7 @@ func main() {
 	logMethod("/v2/admin/list-operations")
 	listOperationsData, err := fc.ListOperations(10, nil)
 	if err != nil {
-		fmt.Println("Error calling JOIN: ", err)
+		fmt.Println("Error calling LIST OPERATIONS: ", err)
 		return
 	}
 
@@ -214,7 +214,7 @@ func main() {
 
 	// `/v2/ln/invoice`
 	logMethod("/v2/ln/invoice")
-	invoiceData, err := fc.Ln.CreateInvoice(10000, "test", nil, nil, nil)
+	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, fc.GetActiveGatewayId(), nil)
 	if err != nil {
 		fmt.Println("Error calling INVOICE: ", err)
 		return
@@ -236,6 +236,9 @@ func main() {
 
 	// `/v2/ln/pay`
 	logMethod("/v2/ln/pay")
+  if invoiceData == nil {
+		fmt.Println("invoice data is empty")
+	}
 	payData, err := fc.Ln.Pay(invoiceData.Invoice, fc.GetActiveGatewayId(), nil, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling PAY: ", err)
@@ -258,6 +261,9 @@ func main() {
 
 	// /v2/ln/await-invoice
 	logMethod("/v2/ln/await-invoice")
+  if invoiceData == nil {
+		fmt.Println("invoice data is empty")
+	}
 	awaitInvoiceData, err := fc.Ln.AwaitInvoice(invoiceData.OperationId, fc.GetActiveGatewayId(), nil)
 	if err != nil {
 		fmt.Println("Error calling AWAIT_INVOICE: ", err)
@@ -305,7 +311,7 @@ func main() {
 
 	// `/v1/ln/claim-external-pubkey-tweaked`
 	logMethod("/v1/ln/claim-external-pubkey-tweaked")
-	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, fc.GetActiveFederationId(), fc.GetActiveFederationId())
+	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, fc.GetActiveGatewayId(), fc.GetActiveFederationId())
 	if err != nil {
 		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
 		return
@@ -353,6 +359,10 @@ func main() {
 
 	// `/v2/mint/decode-notes`
 	logMethod("/v2/mint/decode-notes")
+  if mintData == nil {
+		fmt.Println("mintData is nil.")
+		return
+	}
 	decodedData, err := fc.Mint.DecodeNotes(mintData.Notes)
 	if err != nil {
 		fmt.Println("Error calling DECODE_NOTES: ", err)
@@ -375,6 +385,10 @@ func main() {
 
 	// `/v2/mint/encode-notes`
 	logMethod("/v2/mint/encode-notes")
+  if decodedData == nil {
+		fmt.Println("decodedData is nil.")
+		return
+	}
 	encodedData, err := fc.Mint.EncodeNotes(decodedData.NotesJson)
 	if err != nil {
 		fmt.Println("Error calling DECODE_NOTES: ", err)
@@ -397,6 +411,11 @@ func main() {
 
 	// `/v2/mint/validate`
 	logMethod("/v2/mint/validate")
+	if mintData == nil {
+		fmt.Println("mintData is nil.")
+		return
+	}
+
 	validateData, err := fc.Mint.Validate(mintData.Notes, nil)
 	if err != nil {
 		fmt.Println("Error calling VALIDATE: ", err)
@@ -419,6 +438,11 @@ func main() {
 
 	// `/v2/mint/reissue`
 	logMethod("/v2/mint/reissue")
+	if mintData == nil {
+		fmt.Println("mintData is nil.")
+		return
+	}
+
 	reissueData, err := fc.Mint.Reissue(mintData.Notes, nil)
 	if err != nil {
 		fmt.Println("Error calling REISSUE: ", err)
@@ -441,6 +465,11 @@ func main() {
 
 	// `/v2/mint/split`
 	logMethod("/v2/mint/split")
+	if mintData == nil {
+		fmt.Println("mintData is nil.")
+		return
+	}
+
 	splitData, err := fc.Mint.Split(mintData.Notes)
 	if err != nil {
 		fmt.Println("Error calling SPLIT: ", err)
@@ -464,6 +493,10 @@ func main() {
 	// `/v2/mint/combine`
 	logMethod("/v2/mint/combine")
 	notesVec := func() []string {
+		if splitData == nil || splitData.Notes == nil {
+			fmt.Println("splitData or splitData.Notes is nil")
+			return nil
+		}
 		result := make([]string, 0, len(splitData.Notes))
 		for _, value := range splitData.Notes {
 			result = append(result, value)
@@ -478,13 +511,13 @@ func main() {
 
 	jsonBytes, err = json.Marshal(combineData)
 	if err != nil {
-		fmt.Println("Error marshaling JSON(split):", err)
+		fmt.Println("Error marshaling JSON(combine-data):", err)
 		return
 	}
 	var combineResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &combineResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON(split):", err)
+		fmt.Println("Error unmarshalling JSON(combine-data):", err)
 		return
 	}
 

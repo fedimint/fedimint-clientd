@@ -72,6 +72,7 @@
     "fenix": {
       "inputs": {
         "nixpkgs": [
+          "flakebox",
           "nixpkgs"
         ],
         "rust-analyzer-src": "rust-analyzer-src"

@@ -96,6 +96,7 @@
             export RUSTDOCFLAGS="--cfg tokio_unstable"
             export RUST_LOG="info"
           '';
+
         };
       });
 }
