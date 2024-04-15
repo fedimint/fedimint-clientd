@@ -46,7 +46,7 @@ type LnPayRequest struct {
 }
 
 type LnPayResponse struct {
-	PperationId string `json:"operationId"`
+	OperationId string `json:"operationId"`
 	PaymentType string `json:"paymentType"`
 	ContractId  string `json:"contractId"`
 	Fee         int    `json:"fee"`
