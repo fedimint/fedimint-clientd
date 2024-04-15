@@ -289,7 +289,6 @@ class FedimintClient {
         gatewayId: effectiveGatewayId,
       });
     } catch (error) {
-      console.error("Error posting with federation and gateway id: ", error);
       throw error;
     }
   }
@@ -559,7 +558,6 @@ class FedimintClient {
       const request: MintEncodeNotesRequest = {
         notesJsonStr: JSON.stringify(notesJson),
       };
-      console.log("request: ", request);
 
       return await this.post<MintEncodeNotesResponse>(
         "/mint/encode-notes",
@@ -677,7 +675,7 @@ class FedimintClient {
       const request: OnchainDepositAddressRequest = { timeout };
 
       return await this.postWithFederationId<OnchainDepositAddressResponse>(
-        "/wallet/deposit-address",
+        "/onchain/deposit-address",
         request,
         federationId
       );
@@ -696,7 +694,7 @@ class FedimintClient {
       const request: OnchainAwaitDepositRequest = { operationId };
 
       return await this.postWithFederationId<OnchainAwaitDepositResponse>(
-        "/wallet/await-deposit",
+        "/onchain/await-deposit",
         request,
         federationId
       );
@@ -720,7 +718,7 @@ class FedimintClient {
       const request: OnchainWithdrawRequest = { address, amountSat };
 
       return await this.postWithFederationId<OnchainWithdrawResponse>(
-        "/wallet/withdraw",
+        "/onchain/withdraw",
         request,
         federationId
       );

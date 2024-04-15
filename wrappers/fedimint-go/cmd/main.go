@@ -66,6 +66,7 @@ func buildTestClient() *fedimint.FedimintClient {
 
 func main() {
 	fc := buildTestClient()
+	fc.UseDefaultGateway()
 	keyPair := newKeyPair()
 	fmt.Printf("Generated Key Pair: ")
 	fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
@@ -125,13 +126,13 @@ func main() {
 
 	jsonBytes, err = json.Marshal(infoDataResponse)
 	if err != nil {
-		fmt.Println("Error marshaling JSON(discover-version):", err)
+		fmt.Println("Error marshaling JSON(info):", err)
 		return
 	}
 	var infoResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &infoResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON(discover-version):", err)
+		fmt.Println("Error unmarshalling JSON(info):", err)
 		return
 	}
 
@@ -167,7 +168,7 @@ func main() {
 	logMethod("/v2/admin/list-operations")
 	listOperationsData, err := fc.ListOperations(10, nil)
 	if err != nil {
-		fmt.Println("Error calling JOIN: ", err)
+		fmt.Println("Error calling LIST OPERATIONS: ", err)
 		return
 	}
 
@@ -191,7 +192,7 @@ func main() {
 
 	// `/v2/ln/list-gateways`
 	logMethod("/v2/ln/list-gateways")
-	gatewayList, err := fc.Ln.ListGateways(&fc.ActiveFederationId)
+	gatewayList, err := fc.Ln.ListGateways(nil)
 	if err != nil {
 		fmt.Println("Error calling LIST_GATEWAYS: ", err)
 		return
@@ -213,9 +214,7 @@ func main() {
 
 	// `/v2/ln/invoice`
 	logMethod("/v2/ln/invoice")
-
-	gatewayId := "035f2f7912e0f570841d5c0d8976a40af0dcca5609198436f596e78d2c851ee58a"
-	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, &gatewayId, nil)
+	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, fc.GetActiveGatewayId(), nil)
 	if err != nil {
 		fmt.Println("Error calling INVOICE: ", err)
 		return
@@ -237,11 +236,10 @@ func main() {
 
 	// `/v2/ln/pay`
 	logMethod("/v2/ln/pay")
-	comment := "Test for services"
-	if invoiceData == nil {
+  if invoiceData == nil {
 		fmt.Println("invoice data is empty")
 	}
-	payData, err := fc.Ln.Pay(invoiceData.Invoice, nil, &comment, &gatewayId, nil)
+	payData, err := fc.Ln.Pay(invoiceData.Invoice, fc.GetActiveGatewayId(), nil, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling PAY: ", err)
 		return
@@ -263,10 +261,10 @@ func main() {
 
 	// /v2/ln/await-invoice
 	logMethod("/v2/ln/await-invoice")
-	if invoiceData == nil {
+  if invoiceData == nil {
 		fmt.Println("invoice data is empty")
 	}
-	awaitInvoiceData, err := fc.Ln.AwaitInvoice(invoiceData.OperationId, nil)
+	awaitInvoiceData, err := fc.Ln.AwaitInvoice(invoiceData.OperationId, fc.GetActiveGatewayId(), nil)
 	if err != nil {
 		fmt.Println("Error calling AWAIT_INVOICE: ", err)
 		return
@@ -288,7 +286,7 @@ func main() {
 
 	// `/v1/ln/invoice-external-pubkey-tweaked`
 	logMethod("/v1/ln/invoice-external-pubkey-tweaked")
-	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", nil, &gatewayId, nil)
+	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", fc.GetActiveGatewayId(), nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY_TWEAK: ", err)
 		return
@@ -308,12 +306,12 @@ func main() {
 
 	logInputAndOutput([]interface{}{keyPair.PublicKey, 1, 10000, "test"}, tweakInvoiceResponseData)
 	// pay the invoice
-	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, nil, nil, nil, nil)
+	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, fc.GetActiveGatewayId(), nil, nil, nil)
 	fmt.Println("Paid locked invoice!")
 
 	// `/v1/ln/claim-external-pubkey-tweaked`
 	logMethod("/v1/ln/claim-external-pubkey-tweaked")
-	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, fc.GetActiveFederationId())
+	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, fc.GetActiveGatewayId(), fc.GetActiveFederationId())
 	if err != nil {
 		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
 		return
@@ -361,7 +359,7 @@ func main() {
 
 	// `/v2/mint/decode-notes`
 	logMethod("/v2/mint/decode-notes")
-	if mintData == nil {
+  if mintData == nil {
 		fmt.Println("mintData is nil.")
 		return
 	}
@@ -387,13 +385,13 @@ func main() {
 
 	// `/v2/mint/encode-notes`
 	logMethod("/v2/mint/encode-notes")
-	if decodedData == nil {
+  if decodedData == nil {
 		fmt.Println("decodedData is nil.")
 		return
 	}
 	encodedData, err := fc.Mint.EncodeNotes(decodedData.NotesJson)
 	if err != nil {
-		fmt.Println("Error calling ENCODE_NOTES: ", err)
+		fmt.Println("Error calling DECODE_NOTES: ", err)
 		return
 	}
 
@@ -417,6 +415,7 @@ func main() {
 		fmt.Println("mintData is nil.")
 		return
 	}
+
 	validateData, err := fc.Mint.Validate(mintData.Notes, nil)
 	if err != nil {
 		fmt.Println("Error calling VALIDATE: ", err)
@@ -443,6 +442,7 @@ func main() {
 		fmt.Println("mintData is nil.")
 		return
 	}
+
 	reissueData, err := fc.Mint.Reissue(mintData.Notes, nil)
 	if err != nil {
 		fmt.Println("Error calling REISSUE: ", err)
@@ -469,6 +469,7 @@ func main() {
 		fmt.Println("mintData is nil.")
 		return
 	}
+
 	splitData, err := fc.Mint.Split(mintData.Notes)
 	if err != nil {
 		fmt.Println("Error calling SPLIT: ", err)
@@ -527,7 +528,7 @@ func main() {
 	/////////////////////
 
 	// `/v2/onchain/deposit-address`
-	logMethod("/v2/wallet/deposit-address")
+	logMethod("/v2/onchain/deposit-address")
 	addr, err := fc.Onchain.CreateDepositAddress(1000, nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_DEPOSIT_ADDRESS: ", err)
@@ -549,7 +550,7 @@ func main() {
 	logInputAndOutput(1000, addrResponseData)
 
 	// `/v2/onchain/withdraw`
-	logMethod("/v2/wallet/withdraw")
+	logMethod("/v2/onchain/withdraw")
 	withdrawData, err := fc.Onchain.Withdraw(addr.Address, 1000, nil)
 	if err != nil {
 		fmt.Println("Error calling WITHDRAW: ", err)
