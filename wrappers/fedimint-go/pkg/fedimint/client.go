@@ -124,12 +124,12 @@ func (fc *FedimintClient) postWithFederationId(endpoint string, body interface{}
 	}
 
 	// Initialize and convert JSON to map for manipulation
-	var bodyMap map[string]interface{} = make(map[string]interface{}) // Initialize the map here
+	var bodyMap = make(map[string]interface{}) // Initialize the map here
 	if err := json.Unmarshal(bodyJSON, &bodyMap); err != nil {
 		return nil, err
 	}
 
-	// If bodyMap is nil after unmarshaling, initialize it
+	// If bodyMap is nil after unmarshalling, initialize it
 	if bodyMap == nil {
 		println("bodyMap is nil")
 		bodyMap = make(map[string]interface{})
@@ -294,7 +294,7 @@ func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, us
 
 func (onchain *OnchainModule) CreateDepositAddress(timeout int, federationId *string) (*modules.OnchainDepositAddressResponse, error) {
 	request := modules.OnchainDepositAddressRequest{Timeout: timeout}
-	resp, err := onchain.Client.postWithFederationId("/onchain/deposit-address", request, federationId)
+	resp, err := onchain.Client.postWithFederationId("/wallet/deposit-address", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +308,7 @@ func (onchain *OnchainModule) CreateDepositAddress(timeout int, federationId *st
 
 func (onchain *OnchainModule) AwaitDeposit(operationId string, federationId *string) (*modules.OnchainAwaitDepositResponse, error) {
 	request := modules.OnchainAwaitDepositRequest{OperationId: operationId}
-	resp, err := onchain.Client.postWithFederationId("/onchain/await-deposit", request, federationId)
+	resp, err := onchain.Client.postWithFederationId("/wallet/await-deposit", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +322,7 @@ func (onchain *OnchainModule) AwaitDeposit(operationId string, federationId *str
 
 func (onchain *OnchainModule) Withdraw(address string, amountSat int, federationId *string) (*modules.OnchainWithdrawResponse, error) {
 	request := modules.OnchainWithdrawRequest{Address: address, AmountSat: amountSat}
-	resp, err := onchain.Client.postWithFederationId("/onchain/withdraw", request, federationId)
+	resp, err := onchain.Client.postWithFederationId("/wallet/withdraw", request, federationId)
 	if err != nil {
 		return nil, err
 	}
