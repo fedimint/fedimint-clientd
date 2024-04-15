@@ -100,7 +100,7 @@ func main() {
 	var fedimintResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &fedimintResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(discover-version):", err)
+		fmt.Println("Error unmarshalling JSON(discover-version):", err)
 		return
 	}
 
@@ -131,7 +131,7 @@ func main() {
 	var infoResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &infoResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(discover-version):", err)
+		fmt.Println("Error unmarshalling JSON(discover-version):", err)
 		return
 	}
 
@@ -157,7 +157,7 @@ func main() {
 	var joinResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &joinResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(join):", err)
+		fmt.Println("Error unmarshalling JSON(join):", err)
 		return
 	}
 
@@ -179,7 +179,7 @@ func main() {
 	var listOperationsResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &listOperationsResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(list-operations):", err)
+		fmt.Println("Error unmarshalling JSON(list-operations):", err)
 		return
 	}
 
@@ -205,7 +205,7 @@ func main() {
 	var gatewayListResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &gatewayListResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(list-gateways):", err)
+		fmt.Println("Error unmarshalling JSON(list-gateways):", err)
 		return
 	}
 
@@ -213,7 +213,8 @@ func main() {
 
 	// `/v2/ln/invoice`
 	logMethod("/v2/ln/invoice")
-	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, nil, nil)
+	gatewayId := "035f2f7912e0f570841d5c0d8976a40af0dcca5609198436f596e78d2c851ee58a"
+	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, &gatewayId, nil)
 	if err != nil {
 		fmt.Println("Error calling INVOICE: ", err)
 		return
@@ -227,7 +228,7 @@ func main() {
 	var invoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &invoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(invoice):", err)
+		fmt.Println("Error unmarshalling JSON(invoice):", err)
 		return
 	}
 
@@ -235,7 +236,11 @@ func main() {
 
 	// `/v2/ln/pay`
 	logMethod("/v2/ln/pay")
-	payData, err := fc.Ln.Pay(invoiceData.Invoice, nil, nil, nil, nil)
+	comment := "Test for services"
+	if invoiceData == nil {
+		fmt.Println("invoice data is empty")
+	}
+	payData, err := fc.Ln.Pay(invoiceData.Invoice, nil, &comment, &gatewayId, nil)
 	if err != nil {
 		fmt.Println("Error calling PAY: ", err)
 		return
@@ -249,7 +254,7 @@ func main() {
 	var payResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &payResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(pay):", err)
+		fmt.Println("Error unmarshalling JSON(pay):", err)
 		return
 	}
 
@@ -257,6 +262,9 @@ func main() {
 
 	// /v2/ln/await-invoice
 	logMethod("/v2/ln/await-invoice")
+	if invoiceData == nil {
+		fmt.Println("invoice data is empty")
+	}
 	awaitInvoiceData, err := fc.Ln.AwaitInvoice(invoiceData.OperationId, nil)
 	if err != nil {
 		fmt.Println("Error calling AWAIT_INVOICE: ", err)
@@ -271,7 +279,7 @@ func main() {
 	var awaitInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &awaitInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(await-invoice):", err)
+		fmt.Println("Error unmarshalling JSON(await-invoice):", err)
 		return
 	}
 
@@ -279,7 +287,7 @@ func main() {
 
 	// `/v1/ln/invoice-external-pubkey-tweaked`
 	logMethod("/v1/ln/invoice-external-pubkey-tweaked")
-	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", nil, nil, nil)
+	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", nil, &gatewayId, nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY_TWEAK: ", err)
 		return
@@ -293,7 +301,7 @@ func main() {
 	var tweakInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &tweakInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(await-invoice):", err)
+		fmt.Println("Error unmarshalling JSON(await-invoice):", err)
 		return
 	}
 
@@ -318,7 +326,7 @@ func main() {
 	var claimInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &claimInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(claim-external-pubkey-tweaked):", err)
+		fmt.Println("Error unmarshalling JSON(claim-external-pubkey-tweaked):", err)
 		return
 	}
 
@@ -344,7 +352,7 @@ func main() {
 	var mintResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &mintResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(spend):", err)
+		fmt.Println("Error unmarshalling JSON(spend):", err)
 		return
 	}
 
@@ -352,6 +360,10 @@ func main() {
 
 	// `/v2/mint/decode-notes`
 	logMethod("/v2/mint/decode-notes")
+	if mintData == nil {
+		fmt.Println("mintData is nil.")
+		return
+	}
 	decodedData, err := fc.Mint.DecodeNotes(mintData.Notes)
 	if err != nil {
 		fmt.Println("Error calling DECODE_NOTES: ", err)
@@ -366,7 +378,7 @@ func main() {
 	var decodedResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &decodedResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(decode-notes):", err)
+		fmt.Println("Error unmarshalling JSON(decode-notes):", err)
 		return
 	}
 
@@ -374,9 +386,13 @@ func main() {
 
 	// `/v2/mint/encode-notes`
 	logMethod("/v2/mint/encode-notes")
+	if decodedData == nil {
+		fmt.Println("decodedData is nil.")
+		return
+	}
 	encodedData, err := fc.Mint.EncodeNotes(decodedData.NotesJson)
 	if err != nil {
-		fmt.Println("Error calling DECODE_NOTES: ", err)
+		fmt.Println("Error calling ENCODE_NOTES: ", err)
 		return
 	}
 
@@ -388,7 +404,7 @@ func main() {
 	var encodedResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &encodedResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(encode-notes):", err)
+		fmt.Println("Error unmarshalling JSON(encode-notes):", err)
 		return
 	}
 
@@ -396,6 +412,10 @@ func main() {
 
 	// `/v2/mint/validate`
 	logMethod("/v2/mint/validate")
+	if mintData == nil {
+		fmt.Println("mintData is nil.")
+		return
+	}
 	validateData, err := fc.Mint.Validate(mintData.Notes, nil)
 	if err != nil {
 		fmt.Println("Error calling VALIDATE: ", err)
@@ -410,7 +430,7 @@ func main() {
 	var validateResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &validateResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(validate):", err)
+		fmt.Println("Error unmarshalling JSON(validate):", err)
 		return
 	}
 
@@ -418,6 +438,10 @@ func main() {
 
 	// `/v2/mint/reissue`
 	logMethod("/v2/mint/reissue")
+	if mintData == nil {
+		fmt.Println("mintData is nil.")
+		return
+	}
 	reissueData, err := fc.Mint.Reissue(mintData.Notes, nil)
 	if err != nil {
 		fmt.Println("Error calling REISSUE: ", err)
@@ -432,7 +456,7 @@ func main() {
 	var reissueResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &reissueResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(reissue):", err)
+		fmt.Println("Error unmarshalling JSON(reissue):", err)
 		return
 	}
 
@@ -440,6 +464,10 @@ func main() {
 
 	// `/v2/mint/split`
 	logMethod("/v2/mint/split")
+	if mintData == nil {
+		fmt.Println("mintData is nil.")
+		return
+	}
 	splitData, err := fc.Mint.Split(mintData.Notes)
 	if err != nil {
 		fmt.Println("Error calling SPLIT: ", err)
@@ -454,7 +482,7 @@ func main() {
 	var splitResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &splitResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(split):", err)
+		fmt.Println("Error unmarshalling JSON(split):", err)
 		return
 	}
 
@@ -463,6 +491,10 @@ func main() {
 	// `/v2/mint/combine`
 	logMethod("/v2/mint/combine")
 	notesVec := func() []string {
+		if splitData == nil || splitData.Notes == nil {
+			fmt.Println("splitData or splitData.Notes is nil")
+			return nil
+		}
 		result := make([]string, 0, len(splitData.Notes))
 		for _, value := range splitData.Notes {
 			result = append(result, value)
@@ -477,13 +509,13 @@ func main() {
 
 	jsonBytes, err = json.Marshal(combineData)
 	if err != nil {
-		fmt.Println("Error marshaling JSON(split):", err)
+		fmt.Println("Error marshaling JSON(combine-data):", err)
 		return
 	}
 	var combineResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &combineResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(split):", err)
+		fmt.Println("Error unmarshalling JSON(combine-data):", err)
 		return
 	}
 
@@ -494,7 +526,7 @@ func main() {
 	/////////////////////
 
 	// `/v2/onchain/deposit-address`
-	logMethod("/v2/onchain/deposit-address")
+	logMethod("/v2/wallet/deposit-address")
 	addr, err := fc.Onchain.CreateDepositAddress(1000, nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_DEPOSIT_ADDRESS: ", err)
@@ -509,14 +541,14 @@ func main() {
 	var addrResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &addrResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(deposit-address):", err)
+		fmt.Println("Error unmarshalling JSON(deposit-address):", err)
 		return
 	}
 
 	logInputAndOutput(1000, addrResponseData)
 
 	// `/v2/onchain/withdraw`
-	logMethod("/v2/onchain/withdraw")
+	logMethod("/v2/wallet/withdraw")
 	withdrawData, err := fc.Onchain.Withdraw(addr.Address, 1000, nil)
 	if err != nil {
 		fmt.Println("Error calling WITHDRAW: ", err)
@@ -531,7 +563,7 @@ func main() {
 	var withdrawResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &withdrawResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON(withdraw):", err)
+		fmt.Println("Error unmarshalling JSON(withdraw):", err)
 		return
 	}
 
