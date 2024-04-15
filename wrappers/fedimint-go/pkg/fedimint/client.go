@@ -119,7 +119,6 @@ func (fc *FedimintClient) post(endpoint string, body interface{}) ([]byte, error
 	return fc.fetchWithAuth(endpoint, "POST", jsonBody)
 }
 
-
 // postWithFederationId takes any request object, marshals it to JSON, optionally adds a federationId, and makes a POST request.
 func (fc *FedimintClient) postWithFederationId(endpoint string, requestBody interface{}, federationId *string) ([]byte, error) {
 	// Initialize an empty map for the request body.
@@ -161,7 +160,6 @@ func (fc *FedimintClient) postWithFederationId(endpoint string, requestBody inte
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal modified request map: %w", err)
 	}
-
 
 	fmt.Printf("modifiedRequestJSON: %s\n", modifiedRequestJSON)
 
@@ -319,7 +317,7 @@ func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, us
 
 func (onchain *OnchainModule) CreateDepositAddress(timeout int, federationId *string) (*modules.OnchainDepositAddressResponse, error) {
 	request := modules.OnchainDepositAddressRequest{Timeout: timeout}
-	resp, err := onchain.Client.postWithFederationId("/wallet/deposit-address", request, federationId)
+	resp, err := onchain.Client.postWithFederationId("/onchain/deposit-address", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +331,7 @@ func (onchain *OnchainModule) CreateDepositAddress(timeout int, federationId *st
 
 func (onchain *OnchainModule) AwaitDeposit(operationId string, federationId *string) (*modules.OnchainAwaitDepositResponse, error) {
 	request := modules.OnchainAwaitDepositRequest{OperationId: operationId}
-	resp, err := onchain.Client.postWithFederationId("/wallet/await-deposit", request, federationId)
+	resp, err := onchain.Client.postWithFederationId("/onchain/await-deposit", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +345,7 @@ func (onchain *OnchainModule) AwaitDeposit(operationId string, federationId *str
 
 func (onchain *OnchainModule) Withdraw(address string, amountSat int, federationId *string) (*modules.OnchainWithdrawResponse, error) {
 	request := modules.OnchainWithdrawRequest{Address: address, AmountSat: amountSat}
-	resp, err := onchain.Client.postWithFederationId("/wallet/withdraw", request, federationId)
+	resp, err := onchain.Client.postWithFederationId("/onchain/withdraw", request, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +544,6 @@ func (ln *LnModule) ClaimPubkeyReceive(privateKey string, gatewayId string, fede
 	}
 	return &infoResp, nil
 }
-
 
 func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, gatewayId string, federationId string) (*types.InfoResponse, error) {
 	request := modules.LnClaimPubkeyTweakedRequest{PrivateKey: privateKey, Tweaks: tweaks}
