@@ -31,6 +31,17 @@ check *ARGS="--workspace --all-targets":
   cargo check {{ARGS}}
 
 
+# run all checks recommended before opening a PR
+final-check: lint clippy
+  #!/usr/bin/env bash
+  set -euo pipefail
+  if [ ! -f Cargo.toml ]; then
+    cd {{invocation_directory()}}
+  fi
+  cargo test --doc
+  just test
+
+
 # run code formatters
 format:
   #!/usr/bin/env bash

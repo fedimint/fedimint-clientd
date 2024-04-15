@@ -5,15 +5,21 @@
   inputs = {
     nixpkgs = { url = "github:nixos/nixpkgs/nixos-23.11"; };
 
-    flakebox = {
-      url = "github:rustshop/flakebox";
+    fenix = {
+      url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    flakebox = {
+      url = "github:dpc/flakebox?rev=226d584e9a288b9a0471af08c5712e7fac6f87dc";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.fenix.follows = "fenix";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flakebox, flake-utils }:
+  outputs = { self, nixpkgs, flakebox, fenix, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -27,12 +33,24 @@
           paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
         };
 
-        toolchainArgs = {
+        toolchainArgs = let llvmPackages = pkgs.llvmPackages_11;
+        in {
           extraRustFlags = "--cfg tokio_unstable";
+
+          components = [ "rustc" "cargo" "clippy" "rust-analyzer" "rust-src" ];
+
+          args = {
+            nativeBuildInputs =
+              [ pkgs.wasm-bindgen-cli pkgs.geckodriver pkgs.wasm-pack ]
+              ++ lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.firefox ];
+          };
         } // lib.optionalAttrs pkgs.stdenv.isDarwin {
           # on Darwin newest stdenv doesn't seem to work
           # linking rocksdb
           stdenv = pkgs.clang11Stdenv;
+          clang = llvmPackages.clang;
+          libclang = llvmPackages.libclang.lib;
+          clang-unwrapped = llvmPackages.clang-unwrapped;
         };
 
         # all standard toolchains provided by flakebox
@@ -44,7 +62,7 @@
           flakeboxLib.mkFenixMultiToolchain { toolchains = toolchainsNative; };
 
         commonArgs = {
-          buildInputs = [ pkgs.openssl ] ++ lib.optionals pkgs.stdenv.isDarwin
+          buildInputs = [ ] ++ lib.optionals pkgs.stdenv.isDarwin
             [ pkgs.darwin.apple_sdk.frameworks.SystemConfiguration ];
           nativeBuildInputs = [ pkgs.pkg-config ];
         };
@@ -70,7 +88,15 @@
         packages = { default = outputs.fedimint-clientd; };
         devShells = flakeboxLib.mkShells {
           packages = [ ];
-          nativeBuildInputs = [ pkgs.mprocs pkgs.go pkgs.bun ];
+          buildInputs = commonArgs.buildInputs;
+          nativeBuildInputs =
+            [ pkgs.mprocs pkgs.go pkgs.bun commonArgs.nativeBuildInputs ];
+          shellHook = ''
+            export RUSTFLAGS="--cfg tokio_unstable"
+            export RUSTDOCFLAGS="--cfg tokio_unstable"
+            export RUST_LOG="info"
+          '';
+
         };
       });
 }

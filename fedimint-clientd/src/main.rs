@@ -9,7 +9,6 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
-mod config;
 mod error;
 mod router;
 mod state;
@@ -159,11 +158,11 @@ async fn main() -> Result<()> {
 
     let listener = tokio::net::TcpListener::bind(format!("{}", &cli.addr))
         .await
-        .expect(
-            "Failed to bind to address, should be a valid address and port like 127.0.0.1:3333",
-        );
+        .map_err(|e| anyhow::anyhow!("Failed to bind to address, should be a valid address and port like 127.0.0.1:3333: {e}"))?;
     info!("fedimint-clientd Listening on {}", &cli.addr);
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to start server: {e}"))?;
 
     Ok(())
 }

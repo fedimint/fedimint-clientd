@@ -213,6 +213,7 @@ func main() {
 
 	// `/v2/ln/invoice`
 	logMethod("/v2/ln/invoice")
+
 	gatewayId := "035f2f7912e0f570841d5c0d8976a40af0dcca5609198436f596e78d2c851ee58a"
 	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, &gatewayId, nil)
 	if err != nil {

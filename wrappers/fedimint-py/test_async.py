@@ -22,7 +22,7 @@ def new_key_pair():
 
 
 async def build_test_client():
-    base_url = os.getenv("FEDIMINT_CLIENTD_BASE_URL", "127.0.0.1:3333")
+    base_url = os.getenv("FEDIMINT_CLIENTD_BASE_URL", "http://127.0.0.1:3333")
     password = os.getenv("FEDIMINT_CLIENTD_PASSWORD", "password")
     active_federation_id = os.getenv(
         "FEDIMINT_CLIENTD_ACTIVE_FEDERATION_ID",

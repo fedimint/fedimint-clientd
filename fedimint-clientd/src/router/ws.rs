@@ -17,7 +17,12 @@ pub async fn websocket_handler(
     ws: WebSocketUpgrade,
     State(state): State<AppState>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(|socket| handle_socket(socket, state))
+    ws.on_upgrade(move |socket| async move {
+        if let Err(e) = handle_socket(socket, state).await {
+            // Log the error or handle it as needed
+            eprintln!("Error handling socket: {}", e);
+        }
+    })
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -74,27 +79,32 @@ pub enum JsonRpcMethod {
     WalletWithdraw,
 }
 
-async fn handle_socket(mut socket: WebSocket, state: AppState) {
+async fn handle_socket(mut socket: WebSocket, state: AppState) -> Result<(), anyhow::Error> {
     while let Some(Ok(msg)) = socket.next().await {
         if let Message::Text(text) = msg {
             info!("Received: {}", text);
             let req = match serde_json::from_str::<JsonRpcRequest>(&text) {
                 Ok(request) => request,
                 Err(err) => {
-                    send_err_invalid_req(&mut socket, err, &text).await;
+                    send_err_invalid_req(&mut socket, err, &text).await?;
                     continue;
                 }
             };
 
             let res = match_method(req.clone(), state.clone()).await;
 
-            let res_msg = create_json_rpc_response(res, req.id);
-            socket.send(res_msg).await.unwrap();
+            let res_msg = create_json_rpc_response(res, req.id)?;
+            socket.send(res_msg).await?;
         }
     }
+
+    Ok(())
 }
 
-fn create_json_rpc_response(res: Result<Value, AppError>, req_id: u64) -> Message {
+fn create_json_rpc_response(
+    res: Result<Value, AppError>,
+    req_id: u64,
+) -> Result<Message, anyhow::Error> {
     let json_rpc_msg = match res {
         Ok(res) => JsonRpcResponse {
             jsonrpc: JSONRPC_VERSION.to_string(),
@@ -115,13 +125,20 @@ fn create_json_rpc_response(res: Result<Value, AppError>, req_id: u64) -> Messag
 
     // TODO: Proper error handling for serialization, but this should never fail
     let msg_text = serde_json::to_string(&json_rpc_msg).map_err(|err| {
-        "Internal Error - Failed to serialize JSON-RPC response: ".to_string() + &err.to_string()
-    });
+        anyhow::anyhow!(
+            "Internal Error - Failed to serialize JSON-RPC response: {}",
+            err
+        )
+    })?;
 
-    Message::Text(msg_text.unwrap())
+    Ok(Message::Text(msg_text))
 }
 
-async fn send_err_invalid_req(socket: &mut WebSocket, err: serde_json::Error, text: &str) {
+async fn send_err_invalid_req(
+    socket: &mut WebSocket,
+    err: serde_json::Error,
+    text: &str,
+) -> Result<(), anyhow::Error> {
     // Try to extract the id from the request
     let id = serde_json::from_str::<Value>(text)
         .ok()
@@ -138,9 +155,11 @@ async fn send_err_invalid_req(socket: &mut WebSocket, err: serde_json::Error, te
         id: id.unwrap_or(0),
     };
     socket
-        .send(Message::Text(serde_json::to_string(&err_msg).unwrap()))
+        .send(Message::Text(serde_json::to_string(&err_msg)?))
         .await
-        .unwrap();
+        .map_err(|e| anyhow::anyhow!("Failed to send error response: {}", e))?;
+
+    Ok(())
 }
 
 async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, AppError> {

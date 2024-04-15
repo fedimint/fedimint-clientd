@@ -83,7 +83,11 @@ pub async fn handle_info(
     }
 
     let response = CashuNUT06InfoResponse {
-        name: config.global.federation_name().unwrap().to_string(),
+        name: config
+            .global
+            .federation_name()
+            .unwrap_or_default()
+            .to_string(),
         pubkey: config.global.calculate_federation_id().to_string(),
         version: format!("{:?}", config.global.consensus_version),
         description: "Cashu <-> Fedimint Soon (tm)".to_string(),

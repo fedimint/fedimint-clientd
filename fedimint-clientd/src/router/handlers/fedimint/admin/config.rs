@@ -13,7 +13,8 @@ async fn _config(multimint: MultiMint) -> Result<Value, AppError> {
     for (id, client) in multimint.clients.lock().await.iter() {
         config.insert(*id, client.get_config_json());
     }
-    Ok(serde_json::to_value(config).expect("Client config is serializable"))
+    Ok(serde_json::to_value(config)
+        .map_err(|e| anyhow::anyhow!("Client config is serializable: {e}"))?)
 }
 
 pub async fn handle_ws(state: AppState) -> Result<Value, AppError> {
