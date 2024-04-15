@@ -114,8 +114,6 @@ func (fc *FedimintClient) post(endpoint string, body interface{}) ([]byte, error
 		return nil, fmt.Errorf("error marshaling request body: %w", err)
 	}
 
-	fmt.Printf("jsonBody: %s\n", jsonBody)
-	// Assuming fetchWithAuth is correctly implemented.
 	return fc.fetchWithAuth(endpoint, "POST", jsonBody)
 }
 
@@ -141,17 +139,12 @@ func (fc *FedimintClient) postWithFederationId(endpoint string, requestBody inte
 	}
 
 	// Determine the effective federationId to use
-	effectiveFederationId := fc.ActiveFederationId
-	fmt.Printf("effectiveFederationId: %s\n", effectiveFederationId)
-
+	var effectiveFederationId string
 	if federationId != nil {
-		bodyMap["federationId"] = *federationId
+		effectiveFederationId = *federationId
 	} else {
-		bodyMap["federationId"] = fc.ActiveFederationId
+		effectiveFederationId = fc.ActiveFederationId
 	}
-
-	fmt.Printf("effectiveFederationId: %s\n", effectiveFederationId)
-
 	// Add federationId to the map, which is now guaranteed to be initialized.
 	requestMap["federationId"] = effectiveFederationId
 
@@ -160,8 +153,6 @@ func (fc *FedimintClient) postWithFederationId(endpoint string, requestBody inte
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal modified request map: %w", err)
 	}
-
-	fmt.Printf("modifiedRequestJSON: %s\n", modifiedRequestJSON)
 
 	// Proceed to make the POST request with the modified JSON body.
 	return fc.fetchWithAuth(endpoint, "POST", modifiedRequestJSON)
@@ -545,9 +536,9 @@ func (ln *LnModule) ClaimPubkeyReceive(privateKey string, gatewayId string, fede
 	return &infoResp, nil
 }
 
-func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, gatewayId string, federationId string) (*types.InfoResponse, error) {
+func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, gatewayId *string, federationId *string) (*types.InfoResponse, error) {
 	request := modules.LnClaimPubkeyTweakedRequest{PrivateKey: privateKey, Tweaks: tweaks}
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/claim-external-receive-tweaked", request, &gatewayId, &federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/claim-external-receive-tweaked", request, gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -573,14 +564,14 @@ func (ln *LnModule) AwaitInvoice(operationId string, gatewayId string, federatio
 	return &infoResp, nil
 }
 
-func (ln *LnModule) Pay(paymentInfo string, gatewayId string, amountMsat *uint64, lnurlComment *string, federationId *string) (*modules.LnPayResponse, error) {
+func (ln *LnModule) Pay(paymentInfo string, gatewayId *string, amountMsat *uint64, lnurlComment *string, federationId *string) (*modules.LnPayResponse, error) {
 	request := modules.LnPayRequest{
 		PaymentInfo:  paymentInfo,
 		AmountMsat:   amountMsat,
 		LnurlComment: lnurlComment,
 	}
 	fmt.Println("request: ", request)
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/pay", request, &gatewayId, federationId)
+	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/pay", request, gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}

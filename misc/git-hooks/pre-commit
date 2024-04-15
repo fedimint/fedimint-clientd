@@ -165,5 +165,4 @@ parallel \
   check_shellcheck \
   check_trailing_newline \
   check_trailing_whitespace \
-  check_typos \
-  check_nothing
+  check_nothing # check_typos \

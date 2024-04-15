@@ -214,7 +214,7 @@ func main() {
 
 	// `/v2/ln/invoice`
 	logMethod("/v2/ln/invoice")
-	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, fc.GetActiveGatewayId(), nil)
+	invoiceData, err := fc.Ln.CreateInvoice(10000, "test_INVOICE", nil, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling INVOICE: ", err)
 		return
@@ -236,10 +236,10 @@ func main() {
 
 	// `/v2/ln/pay`
 	logMethod("/v2/ln/pay")
-  if invoiceData == nil {
+	if invoiceData == nil {
 		fmt.Println("invoice data is empty")
 	}
-	payData, err := fc.Ln.Pay(invoiceData.Invoice, fc.GetActiveGatewayId(), nil, nil, nil)
+	payData, err := fc.Ln.Pay(invoiceData.Invoice, nil, nil, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling PAY: ", err)
 		return
@@ -261,7 +261,7 @@ func main() {
 
 	// /v2/ln/await-invoice
 	logMethod("/v2/ln/await-invoice")
-  if invoiceData == nil {
+	if invoiceData == nil {
 		fmt.Println("invoice data is empty")
 	}
 	awaitInvoiceData, err := fc.Ln.AwaitInvoice(invoiceData.OperationId, fc.GetActiveGatewayId(), nil)
@@ -306,12 +306,12 @@ func main() {
 
 	logInputAndOutput([]interface{}{keyPair.PublicKey, 1, 10000, "test"}, tweakInvoiceResponseData)
 	// pay the invoice
-	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, fc.GetActiveGatewayId(), nil, nil, nil)
+	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, nil, nil, nil, nil)
 	fmt.Println("Paid locked invoice!")
 
 	// `/v1/ln/claim-external-pubkey-tweaked`
 	logMethod("/v1/ln/claim-external-pubkey-tweaked")
-	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, fc.GetActiveGatewayId(), fc.GetActiveFederationId())
+	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
 		return
@@ -359,7 +359,7 @@ func main() {
 
 	// `/v2/mint/decode-notes`
 	logMethod("/v2/mint/decode-notes")
-  if mintData == nil {
+	if mintData == nil {
 		fmt.Println("mintData is nil.")
 		return
 	}
@@ -385,7 +385,7 @@ func main() {
 
 	// `/v2/mint/encode-notes`
 	logMethod("/v2/mint/encode-notes")
-  if decodedData == nil {
+	if decodedData == nil {
 		fmt.Println("decodedData is nil.")
 		return
 	}
