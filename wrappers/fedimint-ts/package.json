@@ -2,7 +2,7 @@
   "name": "fedimint-ts",
   "author": "The Fedimint Developers",
   "description": "A TypeScript Wrapper for the Fedimint HTTP Client",
-  "version": "0.2.23",
+  "version": "0.2.24",
   "license": "MIT",
   "files": [
     "dist"
