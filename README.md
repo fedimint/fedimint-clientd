@@ -13,16 +13,18 @@ You can install the cli app with `cargo install fedimint-clientd` or by cloning 
 ```
 CLI USAGE:
 fedimint-clientd \
-  --fm_db_path=/absolute/path/to/dir/to/store/database \
+  --db-path=/absolute/path/to/dir/to/store/database \
   --password="some-secure-password-that-becomes-the-bearer-token" \
   --addr="127.0.0.1:8080"
-  --mode="default"
+  --mode="rest"
+  --invite-code="fed1-fedimint-invite-code"
 
 ENV USAGE:
 FEDIMINT_CLIENTD_DB_PATH=/absolute/path/to/dir/to/store/database
 FEDIMINT_CLIENTD_PASSWORD="some-secure-password-that-becomes-the-bearer-token"
 FEDIMINT_CLIENTD_ADDR="127.0.0.1:8080"
-FEDIMINT_CLIENTD_MODE="default"
+FEDIMINT_CLIENTD_MODE="rest"
+FEDIMINT_CLIENTD_INVITE_CODE="fed1-fedimint-invite-code"
 ```
 
 ## Fedimint Clientd Endpoints
