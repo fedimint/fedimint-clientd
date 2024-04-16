@@ -1,4 +1,4 @@
-import type {
+import {
   // BackupRequest,
   InfoResponse,
   ListOperationsRequest,
@@ -41,19 +41,12 @@ import type {
 } from "./types";
 
 /**
- * All the methods calling to fedimint clientd are asynchronous and return a Promise that resolves to the data returned by the API.
- * @param T - The type of data that the API returns
- * @returns - The data returned by the API
- */
-type FedimintResponse<T> = Promise<T>;
-
-/**
  * Builder pattern for creating a FedimintClient.
  * @param baseUrl - The base URL of the Fedimint API
  * @param password - The password of the Fedimint client
  * @param activeFederationId - The ID of the active federation
  */
-class FedimintClientBuilder {
+export class FedimintClientBuilder {
   private baseUrl: string;
   private password: string;
   private activeFederationId: string;
@@ -117,7 +110,7 @@ class FedimintClientBuilder {
  * @param activeFederationId - The ID of the active federation to use for module methods
  * @param activeGatewayId - Optional, the ID of the active gateway, if not provided, the first gateway in the active federation will be used
  */
-class FedimintClient {
+export class FedimintClient {
   private baseUrl: string;
   private password: string;
   private activeFederationId: string;
@@ -194,7 +187,7 @@ class FedimintClient {
    * Automatically ensures a default federation ID is set if needed.
    * @param endpoint - The endpoint to make the request to.
    */
-  private async get<T>(endpoint: string): FedimintResponse<T> {
+  private async get<T>(endpoint: string): Promise<T> {
     const res = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${this.password}` },
@@ -216,7 +209,7 @@ class FedimintClient {
    * @param endpoint - The endpoint to make the request to.
    * @param body - The body of the request.
    */
-  private async post<T>(endpoint: string, body: any): FedimintResponse<T> {
+  private async post<T>(endpoint: string, body: any): Promise<T> {
     const res = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "POST",
       headers: {
@@ -248,7 +241,7 @@ class FedimintClient {
     endpoint: string,
     body: any,
     federationId?: string
-  ): FedimintResponse<T> {
+  ): Promise<T> {
     const effectiveFederationId = federationId || this.activeFederationId;
 
     return this.post<T>(endpoint, {
@@ -272,7 +265,7 @@ class FedimintClient {
     body: any,
     gatewayId?: string,
     federationId?: string
-  ): FedimintResponse<T> {
+  ): Promise<T> {
     try {
       const effectiveGatewayId = gatewayId || this.activeGatewayId;
       const effectiveFederationId = federationId || this.activeFederationId;
@@ -296,14 +289,14 @@ class FedimintClient {
   /**
    * Fetches wallet information including holdings, tiers, and federation metadata.
    */
-  public async info(): FedimintResponse<InfoResponse> {
+  public async info(): Promise<InfoResponse> {
     return await this.get<InfoResponse>("/admin/info");
   }
 
   /**
    * Returns the client configurations by federationId
    */
-  public async config(): FedimintResponse<any> {
+  public async config(): Promise<any> {
     return await this.get<any>("/admin/config");
   }
 
@@ -317,7 +310,7 @@ class FedimintClient {
   // public async backup(
   //   metadata: BackupRequest,
   //   federationId?: string
-  // ): FedimintResponse<void> {
+  // ): Promise<void> {
   //   await this.postWithFederationId<void>(
   //     "/admin/backup",
   //     metadata,
@@ -330,7 +323,7 @@ class FedimintClient {
    */
   public async discoverVersion(
     threshold?: number
-  ): FedimintResponse<DiscoverVersionResponse> {
+  ): Promise<DiscoverVersionResponse> {
     const request: DiscoverVersionRequest = threshold ? { threshold } : {};
 
     return this.post<DiscoverVersionResponse>(
@@ -347,7 +340,7 @@ class FedimintClient {
   public async listOperations(
     limit: number,
     federationId?: string
-  ): FedimintResponse<OperationOutput[]> {
+  ): Promise<OperationOutput[]> {
     const request: ListOperationsRequest = { limit };
 
     return await this.postWithFederationId<OperationOutput[]>(
@@ -360,7 +353,7 @@ class FedimintClient {
   /**
    * Returns the current set of connected federation IDs
    */
-  public async federationIds(): FedimintResponse<FederationIdsResponse> {
+  public async federationIds(): Promise<FederationIdsResponse> {
     return await this.get<FederationIdsResponse>("/admin/federation-ids");
   }
 
@@ -379,7 +372,7 @@ class FedimintClient {
     setActiveFederationId: boolean,
     useDefaultGateway: boolean,
     useManualSecret: boolean = false
-  ): FedimintResponse<JoinResponse> {
+  ): Promise<JoinResponse> {
     const request: JoinRequest = { inviteCode, useManualSecret };
 
     const response = await this.post<JoinResponse>("/admin/join", request);
@@ -404,7 +397,7 @@ class FedimintClient {
       expiryTime?: number,
       gatewayId?: string,
       federationId?: string
-    ): FedimintResponse<LightningInvoiceResponse> => {
+    ): Promise<LightningInvoiceResponse> => {
       const request: LightningInvoiceRequest = {
         amountMsat,
         description,
@@ -439,7 +432,7 @@ class FedimintClient {
       expiryTime?: number,
       gatewayId?: string,
       federationId?: string
-    ): FedimintResponse<LightningInvoiceResponse> => {
+    ): Promise<LightningInvoiceResponse> => {
       const request: LightningInvoiceExternalPubkeyTweakedRequest = {
         externalPubkey: pubkey,
         tweak,
@@ -467,7 +460,7 @@ class FedimintClient {
       privateKey: string,
       tweaks: number[],
       federationId: string
-    ): FedimintResponse<InfoResponse> => {
+    ): Promise<InfoResponse> => {
       const request: LightningClaimPubkeyTweakReceivesRequest = {
         privateKey,
         tweaks,
@@ -488,7 +481,7 @@ class FedimintClient {
     awaitInvoice: async (
       operationId: string,
       federationId?: string
-    ): FedimintResponse<InfoResponse> => {
+    ): Promise<InfoResponse> => {
       const request: LightningAwaitInvoiceRequest = { operationId };
 
       return await this.postWithFederationId<InfoResponse>(
@@ -507,7 +500,7 @@ class FedimintClient {
       LightningurlComment?: string,
       gatewayId?: string,
       federationId?: string
-    ): FedimintResponse<LightningPayResponse> => {
+    ): Promise<LightningPayResponse> => {
       const request: LightningPayRequest = {
         paymentInfo,
         amountMsat,
@@ -525,7 +518,7 @@ class FedimintClient {
     /**
      * Outputs a list of registered lighting lightning gateways
      */
-    listGateways: async (): FedimintResponse<Gateway[]> =>
+    listGateways: async (): Promise<Gateway[]> =>
       await this.postWithFederationId<Gateway[]>("/ln/list-gateways", {}),
   };
 
@@ -538,7 +531,7 @@ class FedimintClient {
      */
     decodeNotes: async (
       notes: string
-    ): FedimintResponse<MintDecodeNotesResponse> => {
+    ): Promise<MintDecodeNotesResponse> => {
       const request: MintDecodeNotesRequest = {
         notes,
       };
@@ -554,7 +547,7 @@ class FedimintClient {
      */
     encodeNotes: async (
       notesJson: NotesJson
-    ): FedimintResponse<MintEncodeNotesResponse> => {
+    ): Promise<MintEncodeNotesResponse> => {
       const request: MintEncodeNotesRequest = {
         notesJsonStr: JSON.stringify(notesJson),
       };
@@ -573,7 +566,7 @@ class FedimintClient {
     reissue: async (
       notes: string,
       federationId?: string
-    ): FedimintResponse<MintReissueResponse> => {
+    ): Promise<MintReissueResponse> => {
       const request: MintReissueRequest = { notes };
 
       return await this.postWithFederationId<MintReissueResponse>(
@@ -599,7 +592,7 @@ class FedimintClient {
       timeout: number,
       includeInvite: boolean,
       federationId?: string
-    ): FedimintResponse<MintSpendResponse> => {
+    ): Promise<MintSpendResponse> => {
       const request: MintSpendRequest = {
         amountMsat,
         allowOverpay,
@@ -620,7 +613,7 @@ class FedimintClient {
     validate: async (
       notes: string,
       federationId?: string
-    ): FedimintResponse<MintValidateResponse> => {
+    ): Promise<MintValidateResponse> => {
       const request: MintValidateRequest = { notes };
 
       return await this.postWithFederationId<MintValidateResponse>(
@@ -634,7 +627,7 @@ class FedimintClient {
      * Splits an ecash note string into its individual notes.
      * @param notes - The notes to split
      */
-    split: async (notes: string): FedimintResponse<MintSplitResponse> => {
+    split: async (notes: string): Promise<MintSplitResponse> => {
       const request: MintSplitRequest = { notes };
 
       return await this.post<MintSplitResponse>("/mint/split", request);
@@ -646,7 +639,7 @@ class FedimintClient {
      */
     combine: async (
       notesVec: string[]
-    ): FedimintResponse<MintCombineResponse> => {
+    ): Promise<MintCombineResponse> => {
       const request: MintCombineRequest = { notesVec };
 
       return await this.post<MintCombineResponse>("/mint/combine", request);
@@ -671,7 +664,7 @@ class FedimintClient {
     createDepositAddress: async (
       timeout: number,
       federationId?: string
-    ): FedimintResponse<OnchainDepositAddressResponse> => {
+    ): Promise<OnchainDepositAddressResponse> => {
       const request: OnchainDepositAddressRequest = { timeout };
 
       return await this.postWithFederationId<OnchainDepositAddressResponse>(
@@ -690,7 +683,7 @@ class FedimintClient {
     awaitDeposit: async (
       operationId: string,
       federationId?: string
-    ): FedimintResponse<OnchainAwaitDepositResponse> => {
+    ): Promise<OnchainAwaitDepositResponse> => {
       const request: OnchainAwaitDepositRequest = { operationId };
 
       return await this.postWithFederationId<OnchainAwaitDepositResponse>(
@@ -714,7 +707,7 @@ class FedimintClient {
       address: string,
       amountSat: number | "all",
       federationId?: string
-    ): FedimintResponse<OnchainWithdrawResponse> => {
+    ): Promise<OnchainWithdrawResponse> => {
       const request: OnchainWithdrawRequest = { address, amountSat };
 
       return await this.postWithFederationId<OnchainWithdrawResponse>(
@@ -725,5 +718,3 @@ class FedimintClient {
     },
   };
 }
-
-export { FedimintClientBuilder, FedimintClient };
