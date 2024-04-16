@@ -5,7 +5,7 @@ mprocs:
   ./scripts/mprocs-nix.sh dev-fed mprocs-new.yaml
 
 test-ts:
-  bun run wrappers/fedimint-ts/test.ts
+  bun run wrappers/fedimint-ts/tests/test.ts
 
 test-py:
   python3.11 wrappers/fedimint-py/test.py

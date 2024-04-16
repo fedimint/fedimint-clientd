@@ -1,7 +1,7 @@
-import { randomBytes } from "crypto";
-import { FedimintClientBuilder } from "./FedimintClient";
 import dotenv from "dotenv";
+import { randomBytes } from "crypto";
 import * as secp256k1 from "secp256k1";
+import { FedimintClientBuilder } from "../src";
 
 dotenv.config();
 
