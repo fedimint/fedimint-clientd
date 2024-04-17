@@ -5,6 +5,7 @@ use axum::Json;
 use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_core::core::OperationId;
+use fedimint_core::Amount;
 use fedimint_ln_client::{LightningClientModule, LnReceiveState};
 use futures_util::StreamExt;
 use serde::Deserialize;
@@ -13,7 +14,6 @@ use tracing::info;
 
 use crate::error::AppError;
 use crate::router::handlers::fedimint::admin::get_note_summary;
-use crate::router::handlers::fedimint::admin::info::InfoResponse;
 use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
@@ -26,7 +26,7 @@ pub struct AwaitInvoiceRequest {
 async fn _await_invoice(
     client: ClientHandleArc,
     req: AwaitInvoiceRequest,
-) -> Result<InfoResponse, AppError> {
+) -> Result<Amount, AppError> {
     let lightning_module = &client.get_first_module::<LightningClientModule>();
     let mut updates = lightning_module
         .subscribe_ln_receive(req.operation_id)
@@ -36,7 +36,9 @@ async fn _await_invoice(
         info!("Update: {update:?}");
         match update {
             LnReceiveState::Claimed => {
-                return Ok(get_note_summary(&client).await?);
+                return Ok(get_note_summary(&client)
+                    .await
+                    .map(|info_response| info_response.total_amount_msat)?);
             }
             LnReceiveState::Canceled { reason } => {
                 return Err(AppError::new(
@@ -69,7 +71,7 @@ pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
 pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<AwaitInvoiceRequest>,
-) -> Result<Json<InfoResponse>, AppError> {
+) -> Result<Json<Amount>, AppError> {
     let client = state.get_client(req.federation_id).await?;
     let invoice = _await_invoice(client, req).await?;
     Ok(Json(invoice))
