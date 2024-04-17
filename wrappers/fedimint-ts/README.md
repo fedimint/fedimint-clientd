@@ -3,9 +3,10 @@
 This is a TypeScript client that consumes the [Fedimint Http Client](https://github.com/kodylow/fedimint-http), communicating with it via HTTP and a password. It's a hacky prototype, but it works until we can get a proper TS client for Fedimint. All of the federation handling code happens in the fedimint-http-client, this just exposes a simple API for interacting with the client from TypeScript (will be mirrored in Python and Go).
 
 ## Usage
+
 ```typescript
-import {FedimintClientBuilder} from "./FedimintClient";
 import dotenv from "dotenv";
+import { FedimintClientBuilder } from "fedimint-ts";
 
 dotenv.config();
 
@@ -51,41 +52,20 @@ fedimintClient.ln.awaitInvoice({ operation_id }).then((response) => {
 });
 ```
 
-# Setup
+## Development
 
-Set the following in the fedimint-http  .env environment variables:
+Install dependencies with `bun install` or `npm install`.
 
-```bash
-FEDERATION_INVITE_CODE = 'fed1-some-invite-code'
-SECRET_KEY = 'some-secret-key' # generate this with `openssl rand -base64 32`
-FM_DB_PATH = '/absolute/path/to/fm.db' # just make this a new dir called `fm_db` in the root of the fedimint-http-client and use the absolute path to thatm it'll create the db file for you on startup
-PASSWORD = 'password'
-DOMAIN = 'localhost'
-PORT = 5000
-BASE_URL = 'http://localhost:5000'
-```
-
-Then start the fedimint-http-client server:
-
-```bash
-cargo run
-```
-
-Then you're ready to run the typescript client, which will use the same base url and password as the fedimint-http-client:
+Follow these [steps to setup a `fedimint-clientd` server](https://github.com/fedimint/fedimint-clientd?tab=readme-ov-file#getting-started) and then you're ready to run the typescript client.
+ `fedimint-ts` will use the same base url and password as the `fedimint-clientd`:
 
 ```bash
 BASE_URL = 'http://localhost:5000'
 PASSWORD = 'password'
 ```
 
-To install dependencies:
+Then run your code that follows the pattern of `tests/info-example.ts`.
 
 ```bash
-bun install
-```
-
-To run (this just runs an example that creates FedimintClient in typescript and creates an invoice):
-
-```bash
-bun run example.ts
+bun run tests/info-example.ts
 ```

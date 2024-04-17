@@ -1,10 +1,15 @@
-import { FedimintClientBuilder } from "./FedimintClient";
+/**
+ * Example that builds a `FedimintClient` connected to a `fedimint-clientd`
+ * and then uses it to get information about the active Fedimint.
+ */
+
 import dotenv from "dotenv";
+import { FedimintClientBuilder } from "../src";
 
 dotenv.config();
 
 async function main() {
-  const baseUrl = process.env.BASE_URL || "http://localhost:3333";
+  const baseUrl = process.env.BASE_URL || "http://127.0.0.1:3333";
   const password = process.env.PASSWORD || "password";
   const builder = new FedimintClientBuilder();
   builder

@@ -1,26 +1,28 @@
 {
   "name": "fedimint-ts",
-  "module": "index.ts",
-  "type": "module",
   "author": "The Fedimint Developers",
-  "license": "MIT",
-  "version": "0.2.23",
   "description": "A TypeScript Wrapper for the Fedimint HTTP Client",
+  "version": "0.2.24",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc"
   },
-  "devDependencies": {
-    "@types/secp256k1": "^4.0.6",
-    "@typescript-eslint/eslint-plugin": "^6.13.1",
-    "@typescript-eslint/parser": "^6.13.1",
-    "bun-types": "latest",
-    "eslint": "^8",
-    "typescript": "^5.0.0"
-  },
+  "type": "module",
+  "module": "index.ts",
   "dependencies": {
     "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "fedimint-ts": "^0.2.7",
     "secp256k1": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/secp256k1": "^4.0.6",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "eslint": "^8",
+    "typescript": "^5.0.0"
   }
 }
