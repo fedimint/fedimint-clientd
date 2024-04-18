@@ -1,6 +1,8 @@
 {
   "include": ["src/**/*"],
   "compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2020", "dom"],
     "allowJs": true,
     "declaration": true,
     "outDir": "dist",
