@@ -392,18 +392,10 @@ export class FedimintClient {
      * Creates a lightning invoice to receive payment via gateway
      */
     createInvoice: async (
-      amountMsat: number,
-      description: string,
-      expiryTime?: number,
+      request: LightningInvoiceRequest,
       gatewayId?: string,
       federationId?: string
     ): Promise<LightningInvoiceResponse> => {
-      const request: LightningInvoiceRequest = {
-        amountMsat,
-        description,
-        expiryTime,
-      };
-
       return await this.postWithGatewayIdAndFederationId<LightningInvoiceResponse>(
         "/ln/invoice",
         request,
@@ -425,22 +417,10 @@ export class FedimintClient {
      * @param federationId - The ID of the federation to use for the invoice, if not provided will use the active federation ID
      */
     createInvoiceForPubkeyTweak: async (
-      pubkey: string,
-      tweak: number,
-      amountMsat: number,
-      description: string,
-      expiryTime?: number,
+      request: LightningInvoiceExternalPubkeyTweakedRequest,
       gatewayId?: string,
       federationId?: string
     ): Promise<LightningInvoiceResponse> => {
-      const request: LightningInvoiceExternalPubkeyTweakedRequest = {
-        externalPubkey: pubkey,
-        tweak,
-        amountMsat,
-        description,
-        expiryTime,
-      };
-
       return await this.postWithGatewayIdAndFederationId<LightningInvoiceExternalPubkeyTweakedResponse>(
         "/ln/invoice-external-pubkey-tweaked",
         request,
@@ -457,15 +437,9 @@ export class FedimintClient {
      * @param federationId - The ID of the federation to claim the contracts in. Contracts are on specific federations so this is required.
      */
     claimPubkeyTweakReceives: async (
-      privateKey: string,
-      tweaks: number[],
+      request: LightningClaimPubkeyTweakReceivesRequest,
       federationId: string
     ): Promise<InfoResponse> => {
-      const request: LightningClaimPubkeyTweakReceivesRequest = {
-        privateKey,
-        tweaks,
-      };
-
       return await this.postWithFederationId<InfoResponse>(
         "/ln/claim-external-receive-tweaked",
         request,
@@ -495,18 +469,10 @@ export class FedimintClient {
      * Pays a lightning invoice or Lightningurl via a gateway
      */
     pay: async (
-      paymentInfo: string,
-      amountMsat?: number,
-      LightningurlComment?: string,
+      request: LightningPayRequest,
       gatewayId?: string,
       federationId?: string
     ): Promise<LightningPayResponse> => {
-      const request: LightningPayRequest = {
-        paymentInfo,
-        amountMsat,
-        LightningurlComment,
-      };
-
       return await this.postWithGatewayIdAndFederationId<LightningPayResponse>(
         "/ln/pay",
         request,
@@ -529,9 +495,7 @@ export class FedimintClient {
     /**
      * Decodes hex encoded binary ecash notes to json
      */
-    decodeNotes: async (
-      notes: string
-    ): Promise<MintDecodeNotesResponse> => {
+    decodeNotes: async (notes: string): Promise<MintDecodeNotesResponse> => {
       const request: MintDecodeNotesRequest = {
         notes,
       };
@@ -587,19 +551,9 @@ export class FedimintClient {
      * @param federationId - The ID of the federation to spend the note in, if not provided will use the active federation ID
      */
     spend: async (
-      amountMsat: number,
-      allowOverpay: boolean,
-      timeout: number,
-      includeInvite: boolean,
+      request: MintSpendRequest,
       federationId?: string
     ): Promise<MintSpendResponse> => {
-      const request: MintSpendRequest = {
-        amountMsat,
-        allowOverpay,
-        timeout,
-        includeInvite,
-      };
-
       return await this.postWithFederationId<MintSpendResponse>(
         "/mint/spend",
         request,
@@ -637,9 +591,7 @@ export class FedimintClient {
      * Combines ecash notes into a single note string.
      * @param notesVec - The notes to combine
      */
-    combine: async (
-      notesVec: string[]
-    ): Promise<MintCombineResponse> => {
+    combine: async (notesVec: string[]): Promise<MintCombineResponse> => {
       const request: MintCombineRequest = { notesVec };
 
       return await this.post<MintCombineResponse>("/mint/combine", request);
