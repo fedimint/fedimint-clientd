@@ -1,6 +1,6 @@
 [package]
 name = "fedimint-clientd"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin"
 repository = "https://github.com/fedimint/fedimint-clientd"
@@ -31,13 +31,16 @@ tower-http = { version = "0.5.2", features = ["cors", "auth", "trace"] }
 bitcoin = "0.29.2"
 itertools = "0.12.0"
 lnurl-rs = { version = "0.5.0", features = ["async"], default-features = false }
-reqwest = { version = "0.12.3", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.12.3", features = [
+  "json",
+  "rustls-tls",
+], default-features = false }
 lightning-invoice = { version = "0.26.0", features = ["serde"] }
 bitcoin_hashes = "0.13.0"
 time = { version = "0.3.25", features = ["formatting"] }
 chrono = "0.4.31"
 futures-util = "0.3.30"
 clap = { version = "3", features = ["derive", "env"] }
-multimint = { version = "0.3.0" }
+multimint = { version = "0.3.2" }
 # multimint = { path = "../multimint" }
 axum-otel-metrics = "0.8.0"

@@ -1,7 +1,14 @@
 import dotenv from "dotenv";
 import { randomBytes } from "crypto";
 import * as secp256k1 from "secp256k1";
-import { FedimintClientBuilder } from "../src";
+import {
+  FedimintClientBuilder,
+  LightningClaimPubkeyReceiveTweakedRequest,
+  LightningInvoiceExternalPubkeyTweakedRequest,
+  LightningInvoiceRequest,
+  LightningPayRequest,
+  MintSpendRequest,
+} from "../src";
 
 dotenv.config();
 
@@ -98,9 +105,13 @@ async function main() {
   logInputAndOutput({}, data);
   // `/v2/ln/invoice`
   logMethod("/v2/ln/invoice");
+  let lightningInvoiceRequest: LightningInvoiceRequest = {
+    amountMsat: 10000,
+    description: "test",
+    expiryTime: 3600,
+  };
   let { operationId, invoice } = await fedimintClient.lightning.createInvoice(
-    10000,
-    "test"
+    lightningInvoiceRequest
   );
   logInputAndOutput(
     { amountMsat: 10000, description: "test" },
@@ -108,7 +119,10 @@ async function main() {
   );
   // `/v2/ln/pay`
   logMethod("/v2/ln/pay");
-  let payResponse = await fedimintClient.lightning.pay(invoice);
+  let lightningPayRequest: LightningPayRequest = {
+    paymentInfo: invoice,
+  };
+  let payResponse = await fedimintClient.lightning.pay(lightningPayRequest);
   logInputAndOutput({ paymentInfo: invoice }, payResponse);
   // `/v2/ln/await-invoice`
   logMethod("/v2/ln/await-invoice");
@@ -116,11 +130,16 @@ async function main() {
   logInputAndOutput({ operationId }, data);
   // `/v1/ln/invoice-external-pubkey-tweaked`
   logMethod("/v1/ln/invoice-external-pubkey-tweaked");
+  let lightningInvoiceExternalPubkeyTweakedRequest: LightningInvoiceExternalPubkeyTweakedRequest =
+    {
+      externalPubkey: keyPair.publicKey,
+      tweak: 1,
+      amountMsat: 1000,
+      description: "test",
+      expiryTime: 3600,
+    };
   data = await fedimintClient.lightning.createInvoiceForPubkeyTweak(
-    keyPair.publicKey,
-    1,
-    1000,
-    "test"
+    lightningInvoiceExternalPubkeyTweakedRequest
   );
   logInputAndOutput(
     {
@@ -132,12 +151,19 @@ async function main() {
     data
   );
   // pay the invoice
-  payResponse = await fedimintClient.lightning.pay(data.invoice);
+  let payRequest: LightningPayRequest = {
+    paymentInfo: data.invoice,
+  };
+  payResponse = await fedimintClient.lightning.pay(payRequest);
   // `/v1/ln/claim-external-pubkey-tweaked`
   logMethod("/v1/ln/claim-external-pubkey-tweaked");
+  let lightningClaimPubkeyTweakedRequest: LightningClaimPubkeyReceiveTweakedRequest =
+    {
+      privateKey: keyPair.privateKey,
+      tweaks: [1],
+    };
   data = await fedimintClient.lightning.claimPubkeyTweakReceives(
-    keyPair.privateKey,
-    [1],
+    lightningClaimPubkeyTweakedRequest,
     fedimintClient.getActiveFederationId()
   );
   logInputAndOutput({ privateKey: keyPair.privateKey, tweaks: [1] }, data);
@@ -145,7 +171,13 @@ async function main() {
   // MINT METHODS
   // `/v2/mint/spend`
   logMethod("/v2/mint/spend");
-  let mintData = await fedimintClient.mint.spend(3000, true, 1000, false);
+  let spendRequest: MintSpendRequest = {
+    amountMsat: 3000,
+    allowOverpay: true,
+    timeout: 1000,
+    includeInvite: true,
+  };
+  let mintData = await fedimintClient.mint.spend(spendRequest);
   logInputAndOutput(
     { amountMsat: 3000, allowOverpay: true, timeout: 1000 },
     data

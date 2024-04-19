@@ -72,6 +72,7 @@ use fedimint_core::api::InviteCode;
 use fedimint_core::config::{FederationId, FederationIdPrefix, JsonClientConfig};
 use fedimint_core::db::Database;
 use fedimint_core::Amount;
+use fedimint_ln_client::LightningClientModule;
 use fedimint_mint_client::MintClientModule;
 use fedimint_wallet_client::WalletClientModule;
 use tokio::sync::Mutex;
@@ -361,5 +362,18 @@ impl MultiMint {
         }
 
         Ok(info_map)
+    }
+
+    /// Update the gateway caches for all the lightning modules in the
+    /// multimint.
+    pub async fn update_gateway_caches(&self, apply_meta: bool) -> Result<()> {
+        let clients = self.clients.lock().await;
+
+        for (_, client) in clients.iter() {
+            let lightning_client = client.get_first_module::<LightningClientModule>();
+            lightning_client.update_gateway_cache(apply_meta).await?;
+        }
+
+        Ok(())
     }
 }

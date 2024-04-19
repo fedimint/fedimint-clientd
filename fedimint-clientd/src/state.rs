@@ -16,6 +16,7 @@ pub struct AppState {
 impl AppState {
     pub async fn new(fm_db_path: PathBuf) -> Result<Self> {
         let clients = MultiMint::new(fm_db_path).await?;
+        clients.update_gateway_caches(true).await?;
         Ok(Self {
             multimint: clients,
             cashu_mint: None,
