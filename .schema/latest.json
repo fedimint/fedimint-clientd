@@ -73,54 +73,36 @@
       "properties": {
         "body": {
           "description": "Template that represents a single release in the changelog. It contains the commit messages. This is a [tera](https://keats.github.io/tera/) template.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "commit_parsers": {
           "description": "Commits that don't match any of the commit parsers are skipped.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
             "$ref": "#/definitions/CommitParser"
           }
         },
         "commit_preprocessors": {
           "description": "An array of commit preprocessors for manipulating the commit messages before parsing/grouping them.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
             "$ref": "#/definitions/TextProcessor"
           }
         },
         "header": {
           "description": "Text at the beginning of the changelog.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "link_parsers": {
           "description": "An array of link parsers for extracting external references, and turning them into URLs, using regex.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
             "$ref": "#/definitions/LinkParser"
           }
         },
         "protect_breaking_commits": {
           "description": "Whether to protect all breaking changes from being skipped by a commit parser.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "sort_commits": {
           "description": "How to sort the commits inside the various sections.",
@@ -135,17 +117,11 @@
         },
         "tag_pattern": {
           "description": "A regular expression for matching the git tags to add to the changelog.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "trim": {
           "description": "If set to `true`, leading and trailing whitespace are removed from [`Self::body`].",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         }
       },
       "additionalProperties": false
@@ -156,75 +132,45 @@
       "properties": {
         "body": {
           "description": "Regex for matching the commit body.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "default_scope": {
           "description": "Default scope of the commit.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "field": {
           "description": "Field name of the commit to match the regex against.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "group": {
           "description": "Group of the commit.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "message": {
           "description": "Regex for matching the commit message.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "pattern": {
           "description": "Regex for matching the field value.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "scope": {
           "description": "Commit scope for overriding the default scope.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "sha": {
           "description": "SHA1 of the commit.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "skip": {
           "description": "Whether to skip this commit group.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         }
       }
     },
     "LinkParser": {
       "type": "object",
-      "required": [
-        "href",
-        "pattern"
-      ],
+      "required": ["href", "pattern"],
       "properties": {
         "href": {
           "description": "The string used to generate the link URL.",
@@ -236,27 +182,19 @@
         },
         "text": {
           "description": "The string used to generate the link text.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         }
       }
     },
     "PackageSpecificConfigWithName": {
       "description": "Config at the `[[package]]` level.",
       "type": "object",
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "properties": {
         "changelog_include": {
           "title": "Changelog Include",
           "description": "List of package names. Include the changelogs of these packages in the changelog of the current package.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
             "type": "string"
           }
@@ -264,50 +202,32 @@
         "changelog_path": {
           "title": "Changelog Path",
           "description": "Normally the changelog is placed in the same directory of the Cargo.toml file. The user can provide a custom path here. This changelog_path needs to be propagated to all the commands: `update`, `release-pr` and `release`.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "changelog_update": {
           "title": "Changelog Update",
           "description": "Whether to create/update changelog or not. If unspecified, the changelog is updated.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "git_release_body": {
           "title": "Git Release Body",
           "description": "Tera template of the git release body created by release-plz.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "git_release_draft": {
           "title": "Git Release Draft",
           "description": "If true, will not auto-publish the release.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "git_release_enable": {
           "title": "Git Release Enable",
           "description": "Publish the GitHub/Gitea release for the created git tag. Enabled by default.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "git_release_name": {
           "title": "Git Release Name",
           "description": "Tera template of the git release name created by release-plz.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "git_release_type": {
           "title": "Git Release Type",
@@ -324,18 +244,12 @@
         "git_tag_enable": {
           "title": "Git Tag Enable",
           "description": "Publish the git tag for the new package version. Enabled by default.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "git_tag_name": {
           "title": "Git Tag Name",
           "description": "Tera template of the git tag name created by release-plz.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "name": {
           "type": "string"
@@ -343,26 +257,17 @@
         "publish": {
           "title": "Publish",
           "description": "If `false`, don't run `cargo publish`.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "publish_allow_dirty": {
           "title": "Publish Allow Dirty",
           "description": "If `true`, add the `--allow-dirty` flag to the `cargo publish` command.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "publish_features": {
           "title": "Publish Features",
           "description": "If `[\"a\", \"b\", \"c\"]`, add the `--features=a,b,c` flag to the `cargo publish` command.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
             "type": "string"
           }
@@ -370,26 +275,17 @@
         "publish_no_verify": {
           "title": "Publish No Verify",
           "description": "If `true`, add the `--no-verify` flag to the `cargo publish` command.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "release": {
           "title": "Release",
           "description": "Used to toggle off the update/release process for a workspace or package.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "semver_check": {
           "title": "Semver Check",
           "description": "Controls when to run cargo-semver-checks. If unspecified, run cargo-semver-checks if the package is a library.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         }
       }
     },
@@ -399,41 +295,30 @@
           "title": "Prod",
           "description": "Will mark the release as ready for production.",
           "type": "string",
-          "enum": [
-            "prod"
-          ]
+          "enum": ["prod"]
         },
         {
           "title": "Pre",
           "description": "Will mark the release as not ready for production. I.e. as pre-release.",
           "type": "string",
-          "enum": [
-            "pre"
-          ]
+          "enum": ["pre"]
         },
         {
           "title": "Auto",
           "description": "Will mark the release as not ready for production in case there is a semver pre-release in the tag e.g. v1.0.0-rc1. Otherwise, will mark the release as ready for production.",
           "type": "string",
-          "enum": [
-            "auto"
-          ]
+          "enum": ["auto"]
         }
       ]
     },
     "Sorting": {
       "type": "string",
-      "enum": [
-        "oldest",
-        "newest"
-      ]
+      "enum": ["oldest", "newest"]
     },
     "TextProcessor": {
       "description": "Used for modifying commit messages.",
       "type": "object",
-      "required": [
-        "pattern"
-      ],
+      "required": ["pattern"],
       "properties": {
         "pattern": {
           "description": "Regex for matching a text to replace.",
@@ -441,17 +326,11 @@
         },
         "replace": {
           "description": "Replacement text.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "replace_command": {
           "description": "Command that will be run for replacing the commit message.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         }
       }
     },
@@ -462,66 +341,42 @@
         "allow_dirty": {
           "title": "Allow Dirty",
           "description": "- If `true`, allow dirty working directories to be updated. The uncommitted changes will be part of the update. - If `false` or [`Option::None`], the command will fail if the working directory is dirty.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "changelog_config": {
           "title": "Changelog Config",
           "description": "Path to the git cliff configuration file. Defaults to the `keep a changelog` configuration.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "changelog_update": {
           "title": "Changelog Update",
           "description": "Whether to create/update changelog or not. If unspecified, the changelog is updated.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "dependencies_update": {
           "title": "Dependencies Update",
           "description": "- If `true`, update all the dependencies in the Cargo.lock file by running `cargo update`. - If `false` or [`Option::None`], only update the workspace packages by running `cargo update --workspace`.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "git_release_body": {
           "title": "Git Release Body",
           "description": "Tera template of the git release body created by release-plz.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "git_release_draft": {
           "title": "Git Release Draft",
           "description": "If true, will not auto-publish the release.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "git_release_enable": {
           "title": "Git Release Enable",
           "description": "Publish the GitHub/Gitea release for the created git tag. Enabled by default.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "git_release_name": {
           "title": "Git Release Name",
           "description": "Tera template of the git release name created by release-plz.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "git_release_type": {
           "title": "Git Release Type",
@@ -538,18 +393,12 @@
         "git_tag_enable": {
           "title": "Git Tag Enable",
           "description": "Publish the git tag for the new package version. Enabled by default.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "git_tag_name": {
           "title": "Git Tag Name",
           "description": "Tera template of the git tag name created by release-plz.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "pr_draft": {
           "title": "PR Draft",
@@ -569,26 +418,17 @@
         "publish": {
           "title": "Publish",
           "description": "If `false`, don't run `cargo publish`.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "publish_allow_dirty": {
           "title": "Publish Allow Dirty",
           "description": "If `true`, add the `--allow-dirty` flag to the `cargo publish` command.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "publish_features": {
           "title": "Publish Features",
           "description": "If `[\"a\", \"b\", \"c\"]`, add the `--features=a,b,c` flag to the `cargo publish` command.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": ["array", "null"],
           "items": {
             "type": "string"
           }
@@ -596,51 +436,33 @@
         "publish_no_verify": {
           "title": "Publish No Verify",
           "description": "If `true`, add the `--no-verify` flag to the `cargo publish` command.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "publish_timeout": {
           "title": "Publish Timeout",
           "description": "Timeout for the publishing process",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "release": {
           "title": "Release",
           "description": "Used to toggle off the update/release process for a workspace or package.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         },
         "release_commits": {
           "title": "Release Commits",
           "description": "Prepare release only if at least one commit respects this regex.",
-          "type": [
-            "string",
-            "null"
-          ]
+          "type": ["string", "null"]
         },
         "repo_url": {
           "title": "Repo URL",
           "description": "GitHub/Gitea repository url where your project is hosted. It is used to generate the changelog release link. It defaults to the url of the default remote.",
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "format": "uri"
         },
         "semver_check": {
           "title": "Semver Check",
           "description": "Controls when to run cargo-semver-checks. If unspecified, run cargo-semver-checks if the package is a library.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": ["boolean", "null"]
         }
       }
     }

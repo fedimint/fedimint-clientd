@@ -1,6 +1,6 @@
 {
   description =
-    "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin";
+    "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin and ecash";
 
   inputs = {
     nixpkgs = { url = "github:nixos/nixpkgs/nixos-23.11"; };
@@ -17,12 +17,20 @@
     };
 
     flake-utils.url = "github:numtide/flake-utils";
+
+    fedimint = {
+      url =
+        "github:fedimint/fedimint?rev=a41e3a7e31ce0f26058206a04f1cd49ef2b12fe3";
+    };
   };
 
-  outputs = { self, nixpkgs, flakebox, fenix, flake-utils }:
+  outputs = { self, nixpkgs, flakebox, fenix, flake-utils, fedimint }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = fedimint.overlays.fedimint;
+        };
         lib = pkgs.lib;
         flakeboxLib = flakebox.lib.${system} { };
         rustSrc = flakeboxLib.filterSubPaths {
@@ -85,18 +93,29 @@
             });
       in {
         legacyPackages = outputs;
-        packages = { default = outputs.fedimint-clientd; };
+        packages = { default = outputs.fedimint-roastr; };
         devShells = flakeboxLib.mkShells {
           packages = [ ];
           buildInputs = commonArgs.buildInputs;
-          nativeBuildInputs =
-            [ pkgs.mprocs pkgs.go pkgs.bun commonArgs.nativeBuildInputs ];
+          nativeBuildInputs = [
+            pkgs.mprocs
+            pkgs.go
+            pkgs.bun
+            pkgs.bitcoind
+            pkgs.clightning
+            pkgs.lnd
+            pkgs.esplora-electrs
+            pkgs.electrs
+            commonArgs.nativeBuildInputs
+            fedimint.packages.${system}.devimint
+            fedimint.packages.${system}.gateway-pkgs
+            fedimint.packages.${system}.fedimint-pkgs
+          ];
           shellHook = ''
             export RUSTFLAGS="--cfg tokio_unstable"
             export RUSTDOCFLAGS="--cfg tokio_unstable"
             export RUST_LOG="info"
           '';
-
         };
       });
 }
