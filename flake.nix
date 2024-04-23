@@ -93,7 +93,7 @@
             });
       in {
         legacyPackages = outputs;
-        packages = { default = outputs.fedimint-roastr; };
+        packages = { default = outputs.fedimint-clientd; };
         devShells = flakeboxLib.mkShells {
           packages = [ ];
           buildInputs = commonArgs.buildInputs;
