@@ -6,6 +6,7 @@ use bitcoin::secp256k1::{Secp256k1, SecretKey};
 use bitcoin::util::key::KeyPair;
 use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
+use fedimint_core::Amount;
 use fedimint_ln_client::{LightningClientModule, LnReceiveState};
 use futures_util::StreamExt;
 use serde::Deserialize;
@@ -14,7 +15,6 @@ use tracing::info;
 
 use crate::error::AppError;
 use crate::router::handlers::fedimint::admin::get_note_summary;
-use crate::router::handlers::fedimint::admin::info::InfoResponse;
 use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
@@ -27,7 +27,7 @@ pub struct ClaimExternalReceiveRequest {
 async fn _await_claim_external_receive(
     client: ClientHandleArc,
     req: ClaimExternalReceiveRequest,
-) -> Result<InfoResponse, AppError> {
+) -> Result<Amount, AppError> {
     let secp = Secp256k1::new();
     let key_pair = KeyPair::from_secret_key(&secp, &req.private_key);
     let lightning_module = &client.get_first_module::<LightningClientModule>();
@@ -41,7 +41,9 @@ async fn _await_claim_external_receive(
         info!("Update: {update:?}");
         match update {
             LnReceiveState::Claimed => {
-                return Ok(get_note_summary(&client).await?);
+                return Ok(get_note_summary(&client)
+                    .await
+                    .map(|info_response| info_response.total_amount_msat)?);
             }
             LnReceiveState::Canceled { reason } => {
                 return Err(AppError::new(
@@ -74,7 +76,7 @@ pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
 pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<ClaimExternalReceiveRequest>,
-) -> Result<Json<InfoResponse>, AppError> {
+) -> Result<Json<Amount>, AppError> {
     let client = state.get_client(req.federation_id).await?;
     let invoice = _await_claim_external_receive(client, req).await?;
     Ok(Json(invoice))
