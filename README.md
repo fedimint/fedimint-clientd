@@ -1,6 +1,6 @@
 # fedimint-clientd: A Fedimint Client for Server Side Applications
 
-fedimint-clientd runs a fedimint client with Ecash, Lightning, and Onchain modules to let a server side application hold and use Bitcoin with Fedimint. It exposes a REST API & provides wrappers in typescript, python, goland, and elixir. It uses the `multimint` crate to manage clients connected to multiple Federations from a single `fedimint-clientd` instance.
+fedimint-clientd runs a fedimint client with Ecash, Lightning, and Onchain modules to let a server side application hold and use Bitcoin with Fedimint. It exposes a REST API & provides wrappers in typescript, python, golang, and elixir. It uses the `multimint` crate to manage clients connected to multiple Federations from a single `fedimint-clientd` instance.
 
 This project is intended to be an easy-to-use starting point for those interested in adding Fedimint client support to their applications. Fedimint-clientd only exposes Fedimint's default modules, and any more complex Fedimint integration will require custom implementation using [Fedimint's rust crates](https://github.com/fedimint/fedimint).
 
