@@ -1,6 +1,6 @@
- # fedimint-clientd: A Fedimint Client for Server Side Applications
+# fedimint-clientd: A Fedimint Client for Server Side Applications
 
-fedimint-clientd runs a fedimint client with Ecash, Lightning, and Onchain modules to let a server side application hold and use Bitcoin with Fedimint. It exposes a REST API & provides wrappers in typescript, python, and golang. It uses the `multimint` crate to manages clients connected to multiple Federations from a single `fedimint-clientd` instance.
+fedimint-clientd runs a fedimint client with Ecash, Lightning, and Onchain modules to let a server side application hold and use Bitcoin with Fedimint. It exposes a REST API & provides wrappers in typescript, python, goland, and elixir. It uses the `multimint` crate to manage clients connected to multiple Federations from a single `fedimint-clientd` instance.
 
 This project is intended to be an easy-to-use starting point for those interested in adding Fedimint client support to their applications. Fedimint-clientd only exposes Fedimint's default modules, and any more complex Fedimint integration will require custom implementation using [Fedimint's rust crates](https://github.com/fedimint/fedimint).
 
@@ -49,7 +49,7 @@ curl http://localhost:3333/fedimint/v2/admin/info -H 'Authorization: Bearer some
 
 - `/fedimint/v2/mint/reissue`: Reissue notes received from a third party to avoid double spends.
 - `/fedimint/v2/mint/spend`: Prepare notes to send to a third party as a payment.
-- `/fedimint/v2/mint/validate`: Verifies the signatures of e-cash notes, but *not* if they have been spent already.
+- `/fedimint/v2/mint/validate`: Verifies the signatures of e-cash notes, but _not_ if they have been spent already.
 - `/fedimint/v2/mint/split`: Splits a string containing multiple e-cash notes (e.g. from the `spend` command) into ones that contain exactly one.
 - `/fedimint/v2/mint/combine`: Combines two or more serialized e-cash notes strings.
 

@@ -9,12 +9,12 @@ defmodule Fedimintex.Client do
           admin: atom(),
           mint: atom(),
           ln: atom(),
-          wallet: atom()
+          onchain: atom()
         }
 
   @type http_response :: {:ok, map()} | {:error, String.t()}
 
-  defstruct base_url: nil, password: nil, admin: nil, mint: nil, ln: nil, wallet: nil
+  defstruct base_url: nil, password: nil, admin: nil, mint: nil, ln: nil, onchain: nil
 
   @doc """
   Creates a new `Fedimintex.Client` struct.
@@ -32,12 +32,12 @@ defmodule Fedimintex.Client do
   @spec new(String.t(), String.t()) :: t()
   def new(base_url, password) do
     %__MODULE__{
-      base_url: base_url <> "/fedimint/v2",
+      base_url: base_url <> "/v2",
       password: password,
       admin: Fedimintex.Admin,
       mint: Fedimintex.Mint,
       ln: Fedimintex.Ln,
-      wallet: Fedimintex.Wallet
+      onchain: Fedimintex.Wallet
     }
   end
 
