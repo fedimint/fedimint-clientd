@@ -38,6 +38,7 @@ import {
   LightningInvoiceResponse,
   LightningInvoiceExternalPubkeyTweakedResponse,
   LightningPayResponse,
+  LightningPaymentResponse,
 } from "./types";
 
 /**
@@ -439,8 +440,8 @@ export class FedimintClient {
     claimPubkeyTweakReceives: async (
       request: LightningClaimPubkeyTweakReceivesRequest,
       federationId: string
-    ): Promise<InfoResponse> => {
-      return await this.postWithFederationId<InfoResponse>(
+    ): Promise<LightningPaymentResponse> => {
+      return await this.postWithFederationId<LightningPaymentResponse>(
         "/ln/claim-external-receive-tweaked",
         request,
         federationId
@@ -455,10 +456,10 @@ export class FedimintClient {
     awaitInvoice: async (
       operationId: string,
       federationId?: string
-    ): Promise<InfoResponse> => {
+    ): Promise<LightningPaymentResponse> => {
       const request: LightningAwaitInvoiceRequest = { operationId };
 
-      return await this.postWithFederationId<InfoResponse>(
+      return await this.postWithFederationId<LightningPaymentResponse>(
         "/ln/await-invoice",
         request,
         federationId

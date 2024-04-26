@@ -13,7 +13,7 @@ use fedimint_mint_client::MintClientModule;
 use fedimint_wallet_client::WalletClientModule;
 use info::InfoResponse;
 
-pub async fn get_note_summary(client: &ClientHandleArc) -> anyhow::Result<InfoResponse> {
+pub async fn _get_note_summary(client: &ClientHandleArc) -> anyhow::Result<InfoResponse> {
     let mint_client = client.get_first_module::<MintClientModule>();
     let wallet_client = client.get_first_module::<WalletClientModule>();
     let summary = mint_client

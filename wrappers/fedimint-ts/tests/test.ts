@@ -43,7 +43,8 @@ const newKeyPair = (): KeyPair => {
 };
 
 async function buildTestClient() {
-  const baseUrl = process.env.FEDIMINT_CLIENTD_BASE_URL || "127.0.0.1:3333";
+  const baseUrl =
+    process.env.FEDIMINT_CLIENTD_BASE_URL || "http://127.0.0.1:3333";
   const password = process.env.FEDIMINT_CLIENTD_PASSWORD || "password";
   const activeFederationId =
     process.env.FEDIMINT_CLIENTD_ACTIVE_FEDERATION_ID ||
@@ -55,7 +56,14 @@ async function buildTestClient() {
     .setActiveFederationId(activeFederationId);
 
   const client = await builder.build();
-
+  console.log(
+    "Created client. Base url: ",
+    baseUrl,
+    ", password: ",
+    password,
+    "Active federation id: ",
+    client.getActiveFederationId()
+  );
   await client.useDefaultGateway();
 
   console.log("Default gateway id: ", client.getActiveGatewayId());

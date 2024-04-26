@@ -1,5 +1,10 @@
 package modules
 
+import (
+	"encoding/json"
+	"errors"
+)
+
 type LnInvoiceRequest struct {
 	AmountMsat  uint64 `json:"amountMsat"`
 	Description string `json:"description"`
@@ -91,3 +96,42 @@ type Gateway struct {
 }
 
 type ListGatewaysResponse map[string][]Gateway
+
+type LnReceiveState interface {
+	isLnReceiveState()
+}
+
+type Claimed struct{}
+
+func (Claimed) isLnReceiveState() {}
+
+type Canceled struct {
+	Reason string `json:"reason"`
+}
+
+func (Canceled) isLnReceiveState() {}
+
+type LnPaymentResponse struct {
+	Status LnReceiveState `json:"status"`
+}
+
+func (r *LnPaymentResponse) UnmarshalJSON(data []byte) error {
+	aux := struct {
+		Status string `json:"status"`
+		Reason string `json:"reason,omitempty"`
+	}{}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	switch aux.Status {
+	case "claimed":
+		r.Status = Claimed{}
+	case "canceled":
+		r.Status = Canceled{Reason: aux.Reason}
+	default:
+		return errors.New("unknown status")
+	}
+
+	return nil
+}

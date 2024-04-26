@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
+from enum import Enum
 
 
 class LightningCreateInvoiceRequest(BaseModel):
@@ -50,6 +51,29 @@ class LightningPayResponse(BaseModel):
 
 class LightningAwaitPayRequest(BaseModel):
     operationId: str
+
+
+class LnReceiveState(Enum):
+    Created = "Created"
+    WaitingForPayment = "WaitingForPayment"
+    Canceled = "Canceled"
+    Funded = "Funded"
+    AwaitingFunds = "AwaitingFunds"
+    Claimed = "Claimed"
+
+
+class WaitingForPayment(BaseModel):
+    invoice: str
+    timeout: int
+
+
+class Canceled(BaseModel):
+    reason: str
+
+
+class LightningPaymentResponse(BaseModel):
+    state: LnReceiveState
+    details: Optional[Union[WaitingForPayment, Canceled]] = None
 
 
 class GatewayFees(BaseModel):
