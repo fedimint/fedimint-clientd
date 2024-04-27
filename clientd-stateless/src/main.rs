@@ -4,7 +4,7 @@ use std::str::FromStr;
 use anyhow::Result;
 use axum::http::Method;
 use fedimint_core::api::InviteCode;
-use router::handlers;
+use router::{check, info, keys, keysets, melt, mint, swap};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
@@ -156,31 +156,22 @@ async fn main() -> Result<()> {
 /// - DLEQ in BlindedSignature for Mint to User
 fn cashu_v1_rest() -> Router<AppState> {
     Router::new()
-        .route("/keys", get(handlers::keys::handle_keys))
-        .route(
-            "/keys/:keyset_id",
-            get(handlers::keys::handle_keys_keyset_id),
-        )
-        .route("/keysets", get(handlers::keysets::handle_keysets))
-        .route("/swap", post(handlers::swap::handle_swap))
-        .route(
-            "/mint/quote/:method",
-            get(handlers::mint::quote::handle_method),
-        )
+        .route("/keys", get(keys::handle_keys))
+        .route("/keys/:keyset_id", get(keys::handle_keys_keyset_id))
+        .route("/keysets", get(keysets::handle_keysets))
+        .route("/swap", post(swap::handle_swap))
+        .route("/mint/quote/:method", get(mint::quote::handle_method))
         .route(
             "/mint/quote/:method/:quote_id",
-            get(handlers::mint::quote::handle_method_quote_id),
+            get(mint::quote::handle_method_quote_id),
         )
-        .route("/mint/:method", post(handlers::mint::method::handle_method))
-        .route(
-            "/melt/quote/:method",
-            get(handlers::melt::quote::handle_method),
-        )
+        .route("/mint/:method", post(mint::method::handle_method))
+        .route("/melt/quote/:method", get(melt::quote::handle_method))
         .route(
             "/melt/quote/:method/:quote_id",
-            get(handlers::melt::quote::handle_method_quote_id),
+            get(melt::quote::handle_method_quote_id),
         )
-        .route("/melt/:method", post(handlers::melt::method::handle_method))
-        .route("/info", get(handlers::info::handle_info))
-        .route("/check", post(handlers::check::handle_check))
+        .route("/melt/:method", post(melt::method::handle_method))
+        .route("/info", get(info::handle_info))
+        .route("/check", post(check::handle_check))
 }

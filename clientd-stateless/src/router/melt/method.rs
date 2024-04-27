@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 
 use crate::error::AppError;
-use crate::router::handlers::{Method, Unit};
+use crate::router::{Method, Unit};
 use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
