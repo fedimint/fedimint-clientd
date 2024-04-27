@@ -107,7 +107,7 @@ async def main():
     )
 
     # Pay the invoice
-    fedimint_client.lightning.pay(data["invoice"], None, None)
+    await fedimint_client.lightning.pay(data["invoice"], None, None)
     print("Paid locked invoice!")
 
     # `/v2/ln/claim-external-pubkey-tweaked`

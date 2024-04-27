@@ -13,7 +13,7 @@ use serde_json::{json, Value};
 use tracing::{error, info};
 
 use crate::error::AppError;
-use crate::router::handlers::fedimint::ln::{get_invoice, wait_for_ln_payment};
+use crate::router::handlers::ln::{get_invoice, wait_for_ln_payment};
 use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]

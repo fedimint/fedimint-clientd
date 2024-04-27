@@ -163,85 +163,68 @@ async fn send_err_invalid_req(
 async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, AppError> {
     match req.method {
         JsonRpcMethod::AdminBackup => {
-            handlers::fedimint::admin::backup::handle_ws(state.clone(), req.params).await
+            handlers::admin::backup::handle_ws(state.clone(), req.params).await
         }
-        JsonRpcMethod::AdminConfig => {
-            handlers::fedimint::admin::config::handle_ws(state.clone()).await
-        }
+        JsonRpcMethod::AdminConfig => handlers::admin::config::handle_ws(state.clone()).await,
         JsonRpcMethod::AdminDiscoverVersion => {
-            handlers::fedimint::admin::discover_version::handle_ws(state.clone(), req.params).await
+            handlers::admin::discover_version::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminFederationIds => {
-            handlers::fedimint::admin::federation_ids::handle_ws(state.clone(), req.params).await
+            handlers::admin::federation_ids::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminInfo => {
-            handlers::fedimint::admin::info::handle_ws(state.clone(), req.params).await
+            handlers::admin::info::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminJoin => {
-            handlers::fedimint::admin::join::handle_ws(state.clone(), req.params).await
+            handlers::admin::join::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminModule => {
-            handlers::fedimint::admin::module::handle_ws(state.clone(), req.params).await
+            handlers::admin::module::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminRestore => {
-            handlers::fedimint::admin::restore::handle_ws(state.clone(), req.params).await
+            handlers::admin::restore::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::AdminListOperations => {
-            handlers::fedimint::admin::list_operations::handle_ws(state.clone(), req.params).await
+            handlers::admin::list_operations::handle_ws(state.clone(), req.params).await
         }
-        JsonRpcMethod::MintDecodeNotes => {
-            handlers::fedimint::mint::decode_notes::handle_ws(req.params).await
-        }
-        JsonRpcMethod::MintEncodeNotes => {
-            handlers::fedimint::mint::encode_notes::handle_ws(req.params).await
-        }
+        JsonRpcMethod::MintDecodeNotes => handlers::mint::decode_notes::handle_ws(req.params).await,
+        JsonRpcMethod::MintEncodeNotes => handlers::mint::encode_notes::handle_ws(req.params).await,
         JsonRpcMethod::MintReissue => {
-            handlers::fedimint::mint::reissue::handle_ws(state.clone(), req.params).await
+            handlers::mint::reissue::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::MintSpend => {
-            handlers::fedimint::mint::spend::handle_ws(state.clone(), req.params).await
+            handlers::mint::spend::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::MintValidate => {
-            handlers::fedimint::mint::validate::handle_ws(state.clone(), req.params).await
+            handlers::mint::validate::handle_ws(state.clone(), req.params).await
         }
-        JsonRpcMethod::MintSplit => handlers::fedimint::mint::split::handle_ws(req.params).await,
-        JsonRpcMethod::MintCombine => {
-            handlers::fedimint::mint::combine::handle_ws(req.params).await
-        }
+        JsonRpcMethod::MintSplit => handlers::mint::split::handle_ws(req.params).await,
+        JsonRpcMethod::MintCombine => handlers::mint::combine::handle_ws(req.params).await,
         JsonRpcMethod::LnInvoice => {
-            handlers::fedimint::ln::invoice::handle_ws(state.clone(), req.params).await
+            handlers::ln::invoice::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::LnInvoiceExternalPubkeyTweaked => {
-            handlers::fedimint::ln::invoice_external_pubkey_tweaked::handle_ws(
-                state.clone(),
-                req.params,
-            )
-            .await
+            handlers::ln::invoice_external_pubkey_tweaked::handle_ws(state.clone(), req.params)
+                .await
         }
         JsonRpcMethod::LnAwaitInvoice => {
-            handlers::fedimint::ln::await_invoice::handle_ws(state.clone(), req.params).await
+            handlers::ln::await_invoice::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::LnClaimExternalReceiveTweaked => {
-            handlers::fedimint::ln::claim_external_receive_tweaked::handle_ws(
-                state.clone(),
-                req.params,
-            )
-            .await
+            handlers::ln::claim_external_receive_tweaked::handle_ws(state.clone(), req.params).await
         }
-        JsonRpcMethod::LnPay => {
-            handlers::fedimint::ln::pay::handle_ws(state.clone(), req.params).await
-        }
+        JsonRpcMethod::LnPay => handlers::ln::pay::handle_ws(state.clone(), req.params).await,
         JsonRpcMethod::LnListGateways => {
-            handlers::fedimint::ln::list_gateways::handle_ws(state.clone(), req.params).await
+            handlers::ln::list_gateways::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::WalletDepositAddress => {
-            handlers::fedimint::onchain::deposit_address::handle_ws(state.clone(), req.params).await
+            handlers::onchain::deposit_address::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::WalletAwaitDeposit => {
-            handlers::fedimint::onchain::await_deposit::handle_ws(state.clone(), req.params).await
+            handlers::onchain::await_deposit::handle_ws(state.clone(), req.params).await
         }
         JsonRpcMethod::WalletWithdraw => {
-            handlers::fedimint::onchain::withdraw::handle_ws(state.clone(), req.params).await
+            handlers::onchain::withdraw::handle_ws(state.clone(), req.params).await
         }
     }
 }

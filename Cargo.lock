@@ -698,6 +698,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "clientd-statless"
+version = "0.3.3"
+dependencies = [
+ "anyhow",
+ "async-utility",
+ "axum",
+ "axum-macros",
+ "axum-otel-metrics",
+ "base64 0.22.0",
+ "bitcoin 0.29.2",
+ "bitcoin_hashes 0.13.0",
+ "chrono",
+ "clap",
+ "dotenv",
+ "fedimint",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-ln-client",
+ "fedimint-mint-client",
+ "fedimint-rocksdb",
+ "fedimint-tbs",
+ "fedimint-wallet-client",
+ "futures-util",
+ "hex",
+ "itertools 0.12.1",
+ "lazy_static",
+ "lightning-invoice",
+ "lnurl-rs",
+ "multimint 0.3.2",
+ "reqwest 0.12.4",
+ "serde",
+ "serde_json",
+ "time",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

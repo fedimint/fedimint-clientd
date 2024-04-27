@@ -1,7 +1,10 @@
 use std::collections::BTreeMap;
+use std::env;
+use std::str::FromStr;
 
 use axum::extract::State;
 use axum::Json;
+use fedimint_core::config::FederationId;
 use serde::Serialize;
 
 use crate::error::AppError;
@@ -42,7 +45,11 @@ pub struct CashuNUT06InfoResponse {
 pub async fn handle_info(
     State(state): State<AppState>,
 ) -> Result<Json<CashuNUT06InfoResponse>, AppError> {
-    let client = state.get_cashu_client().await?;
+    let federation_id = env::var("FEDIMINT_CLIENTD_ACTIVE_FEDERATION_ID")
+        .map_err(|e| anyhow::anyhow!("Failed to get active federation id: {}", e))?;
+    let client = state
+        .get_client(FederationId::from_str(&federation_id)?)
+        .await?;
 
     let config = client.get_config();
     let mut nuts = BTreeMap::new();

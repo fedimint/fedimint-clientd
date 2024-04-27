@@ -4,6 +4,7 @@ use std::str::FromStr;
 use anyhow::Result;
 use axum::http::Method;
 use fedimint_core::api::InviteCode;
+use router::handlers::{admin, ln, mint, onchain};
 use router::ws::websocket_handler;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
@@ -18,7 +19,6 @@ use axum::routing::{get, post};
 use axum::Router;
 use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::{Parser, Subcommand, ValueEnum};
-use router::handlers::*;
 use state::AppState;
 // use tower_http::cors::{Any, CorsLayer};
 use tower_http::validate_request::ValidateRequestHeaderLayer;
@@ -27,7 +27,6 @@ use tower_http::validate_request::ValidateRequestHeaderLayer;
 enum Mode {
     Rest,
     Ws,
-    Cashu,
 }
 
 impl FromStr for Mode {
@@ -37,7 +36,6 @@ impl FromStr for Mode {
         match s {
             "rest" => Ok(Mode::Rest),
             "ws" => Ok(Mode::Ws),
-            "cashu" => Ok(Mode::Cashu),
             _ => Err(anyhow::anyhow!("Invalid mode")),
         }
     }
@@ -103,9 +101,6 @@ async fn main() -> Result<()> {
                 .register_new(invite_code, manual_secret)
                 .await?;
             info!("Created client for federation id: {:?}", federation_id);
-            if cli.mode == Mode::Cashu {
-                state.cashu_mint = Some(federation_id);
-            }
         }
         Err(e) => {
             info!(
@@ -126,10 +121,6 @@ async fn main() -> Result<()> {
             .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
         Mode::Ws => Router::new()
             .route("/ws", get(websocket_handler))
-            .with_state(state)
-            .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
-        Mode::Cashu => Router::new()
-            .nest("/v1", cashu_v1_rest())
             .with_state(state)
             .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
     };
@@ -213,134 +204,58 @@ async fn main() -> Result<()> {
 /// - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
 fn fedimint_v2_rest() -> Router<AppState> {
     let mint_router = Router::new()
-        .route(
-            "/decode-notes",
-            post(fedimint::mint::decode_notes::handle_rest),
-        )
-        .route(
-            "/encode-notes",
-            post(fedimint::mint::encode_notes::handle_rest),
-        )
-        .route("/reissue", post(fedimint::mint::reissue::handle_rest))
-        .route("/spend", post(fedimint::mint::spend::handle_rest))
-        .route("/validate", post(fedimint::mint::validate::handle_rest))
-        .route("/split", post(fedimint::mint::split::handle_rest))
-        .route("/combine", post(fedimint::mint::combine::handle_rest));
+        .route("/decode-notes", post(mint::decode_notes::handle_rest))
+        .route("/encode-notes", post(mint::encode_notes::handle_rest))
+        .route("/reissue", post(mint::reissue::handle_rest))
+        .route("/spend", post(mint::spend::handle_rest))
+        .route("/validate", post(mint::validate::handle_rest))
+        .route("/split", post(mint::split::handle_rest))
+        .route("/combine", post(mint::combine::handle_rest));
 
     let ln_router = Router::new()
-        .route("/invoice", post(fedimint::ln::invoice::handle_rest))
+        .route("/invoice", post(ln::invoice::handle_rest))
         .route(
             "/invoice-external-pubkey-tweaked",
-            post(fedimint::ln::invoice_external_pubkey_tweaked::handle_rest),
+            post(ln::invoice_external_pubkey_tweaked::handle_rest),
         )
-        .route(
-            "/await-invoice",
-            post(fedimint::ln::await_invoice::handle_rest),
-        )
+        .route("/await-invoice", post(ln::await_invoice::handle_rest))
         .route(
             "/claim-external-receive-tweaked",
-            post(fedimint::ln::claim_external_receive_tweaked::handle_rest),
+            post(ln::claim_external_receive_tweaked::handle_rest),
         )
-        .route("/pay", post(fedimint::ln::pay::handle_rest))
-        .route(
-            "/list-gateways",
-            post(fedimint::ln::list_gateways::handle_rest),
-        );
+        .route("/pay", post(ln::pay::handle_rest))
+        .route("/list-gateways", post(ln::list_gateways::handle_rest));
 
     let onchain_router = Router::new()
         .route(
             "/deposit-address",
-            post(fedimint::onchain::deposit_address::handle_rest),
+            post(onchain::deposit_address::handle_rest),
         )
-        .route(
-            "/await-deposit",
-            post(fedimint::onchain::await_deposit::handle_rest),
-        )
-        .route("/withdraw", post(fedimint::onchain::withdraw::handle_rest));
+        .route("/await-deposit", post(onchain::await_deposit::handle_rest))
+        .route("/withdraw", post(onchain::withdraw::handle_rest));
 
     let admin_router = Router::new()
-        .route("/backup", post(fedimint::admin::backup::handle_rest))
+        .route("/backup", post(admin::backup::handle_rest))
         .route(
             "/discover-version",
-            post(fedimint::admin::discover_version::handle_rest),
+            post(admin::discover_version::handle_rest),
         )
-        .route(
-            "/federation-ids",
-            get(fedimint::admin::federation_ids::handle_rest),
-        )
-        .route("/info", get(fedimint::admin::info::handle_rest))
-        .route("/join", post(fedimint::admin::join::handle_rest))
-        .route("/restore", post(fedimint::admin::restore::handle_rest))
-        // .route("/printsecret", get(fedimint::handle_printsecret)) TODO: should I expose this
+        .route("/federation-ids", get(admin::federation_ids::handle_rest))
+        .route("/info", get(admin::info::handle_rest))
+        .route("/join", post(admin::join::handle_rest))
+        .route("/restore", post(admin::restore::handle_rest))
+        // .route("/printsecret", get(handle_printsecret)) TODO: should I expose this
         // under admin?
         .route(
             "/list-operations",
-            post(fedimint::admin::list_operations::handle_rest),
+            post(admin::list_operations::handle_rest),
         )
-        .route("/module", post(fedimint::admin::module::handle_rest))
-        .route("/config", get(fedimint::admin::config::handle_rest));
+        .route("/module", post(admin::module::handle_rest))
+        .route("/config", get(admin::config::handle_rest));
 
     Router::new()
         .nest("/admin", admin_router)
         .nest("/mint", mint_router)
         .nest("/ln", ln_router)
         .nest("/onchain", onchain_router)
-}
-
-/// Implements Cashu V1 API Routes:
-///
-/// REQUIRED
-/// NUT-01 Mint Public Key Exchange && NUT-02 Keysets and Keyset IDs
-/// - `/cashu/v1/keys`
-/// - `/cashu/v1/keys/{keyset_id}`
-/// - `/cashu/v1/keysets`
-/// NUT-03 Swap Tokens (Equivalent to `reissue` command)
-/// - `/cashu/v1/swap`
-/// NUT-04 Mint Tokens: supports `bolt11` and `onchain` methods
-/// - `/cashu/v1/mint/quote/{method}`
-/// - `/cashu/v1/mint/quote/{method}/{quote_id}`
-/// - `/cashu/v1/mint/{method}`
-/// NUT-05 Melting Tokens: supports `bolt11` and `onchain` methods
-/// - `/cashu/v1/melt/quote/{method}`
-/// - `/cashu/v1/melt/quote/{method}/{quote_id}`
-/// - `/cashu/v1/melt/{method}`
-/// NUT-06 Mint Information
-/// - `/cashu/v1/info`
-///
-/// OPTIONAL
-/// NUT-07 Token State Check
-/// - `/cashu/v1/check`
-/// NUT-08 Lightning Fee Return
-/// - Modification of NUT-05 Melt
-/// NUT-10 Spending Conditions
-/// NUT-11 Pay to Public Key (P2PK)
-/// - Fedimint already does this
-/// NUT-12 Offline Ecash Signature Validation
-/// - DLEQ in BlindedSignature for Mint to User
-fn cashu_v1_rest() -> Router<AppState> {
-    Router::new()
-        .route("/keys", get(cashu::keys::handle_keys))
-        .route("/keys/:keyset_id", get(cashu::keys::handle_keys_keyset_id))
-        .route("/keysets", get(cashu::keysets::handle_keysets))
-        .route("/swap", post(cashu::swap::handle_swap))
-        .route(
-            "/mint/quote/:method",
-            get(cashu::mint::quote::handle_method),
-        )
-        .route(
-            "/mint/quote/:method/:quote_id",
-            get(cashu::mint::quote::handle_method_quote_id),
-        )
-        .route("/mint/:method", post(cashu::mint::method::handle_method))
-        .route(
-            "/melt/quote/:method",
-            get(cashu::melt::quote::handle_method),
-        )
-        .route(
-            "/melt/quote/:method/:quote_id",
-            get(cashu::melt::quote::handle_method_quote_id),
-        )
-        .route("/melt/:method", post(cashu::melt::method::handle_method))
-        .route("/info", get(cashu::info::handle_info))
-        .route("/check", post(cashu::check::handle_check))
 }
