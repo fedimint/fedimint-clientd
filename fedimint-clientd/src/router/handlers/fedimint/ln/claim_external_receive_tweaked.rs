@@ -8,13 +8,11 @@ use fedimint_client::ClientHandleArc;
 use fedimint_core::config::FederationId;
 use fedimint_ln_client::{LightningClientModule, LnReceiveState};
 use futures_util::StreamExt;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tracing::info;
+use tracing::{debug, error, info};
 
 use crate::error::AppError;
-use crate::router::handlers::fedimint::admin::get_note_summary;
-use crate::router::handlers::fedimint::admin::info::InfoResponse;
 use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]
@@ -25,10 +23,16 @@ pub struct ClaimExternalReceiveTweakedRequest {
     pub federation_id: FederationId,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClaimExternalReceiveTweakedResponse {
+    pub status: LnReceiveState,
+}
+
 async fn _await_claim_external_receive_tweaked(
     client: ClientHandleArc,
     req: ClaimExternalReceiveTweakedRequest,
-) -> Result<InfoResponse, AppError> {
+) -> Result<ClaimExternalReceiveTweakedResponse, AppError> {
     let secp = Secp256k1::new();
     let key_pair = KeyPair::from_secret_key(&secp, &req.private_key);
     let lightning_module = &client.get_first_module::<LightningClientModule>();
@@ -36,33 +40,34 @@ async fn _await_claim_external_receive_tweaked(
         .scan_receive_for_user_tweaked(key_pair, req.tweaks, ())
         .await;
 
-    let mut final_response = get_note_summary(&client).await?;
     for operation_id in operation_id {
         let mut updates = lightning_module
             .subscribe_ln_claim(operation_id)
             .await?
             .into_stream();
-
+        info!(
+            "Created claim external receive tweaked stream for operation id: {}",
+            operation_id
+        );
         while let Some(update) = updates.next().await {
-            info!("Update: {update:?}");
-            match update {
+            debug!("Update: {update:?}");
+            match &update {
                 LnReceiveState::Claimed => {
-                    final_response = get_note_summary(&client).await?;
+                    return Ok(ClaimExternalReceiveTweakedResponse { status: update });
                 }
                 LnReceiveState::Canceled { reason } => {
-                    return Err(AppError::new(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        anyhow!(reason),
-                    ))
+                    error!("Claim canceled: {}", reason);
+                    return Ok(ClaimExternalReceiveTweakedResponse { status: update });
                 }
                 _ => {}
             }
-
-            info!("Update: {update:?}");
         }
     }
 
-    Ok(final_response)
+    Err(AppError::new(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        anyhow!("Unexpected end of stream"),
+    ))
 }
 
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
@@ -78,8 +83,8 @@ pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
 pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<ClaimExternalReceiveTweakedRequest>,
-) -> Result<Json<InfoResponse>, AppError> {
+) -> Result<Json<ClaimExternalReceiveTweakedResponse>, AppError> {
     let client = state.get_client(req.federation_id).await?;
-    let invoice = _await_claim_external_receive_tweaked(client, req).await?;
-    Ok(Json(invoice))
+    let invoice_response = _await_claim_external_receive_tweaked(client, req).await?;
+    Ok(Json(invoice_response))
 }

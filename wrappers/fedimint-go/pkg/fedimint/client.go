@@ -522,46 +522,32 @@ func (ln *LnModule) CreateInvoiceForPubkeyTweak(pubkey string, tweak uint64, amo
 	return &invoiceResp, nil
 }
 
-func (ln *LnModule) ClaimPubkeyReceive(privateKey string, gatewayId string, federationId *string) (*types.InfoResponse, error) {
-	request := modules.LnClaimPubkeyReceiveRequest{PrivateKey: privateKey}
-	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/claim-external-receive", request, &gatewayId, federationId)
-	if err != nil {
-		return nil, err
-	}
-	var infoResp types.InfoResponse
-	err = json.Unmarshal(resp, &infoResp)
-	if err != nil {
-		return nil, err
-	}
-	return &infoResp, nil
-}
-
-func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, gatewayId *string, federationId *string) (*types.InfoResponse, error) {
+func (ln *LnModule) ClaimPubkeyTweakReceive(privateKey string, tweaks []uint64, gatewayId *string, federationId *string) (*modules.LnPaymentResponse, error) {
 	request := modules.LnClaimPubkeyTweakedRequest{PrivateKey: privateKey, Tweaks: tweaks}
 	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/claim-external-receive-tweaked", request, gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
-	var infoResp types.InfoResponse
-	err = json.Unmarshal(resp, &infoResp)
+	var paymentResp modules.LnPaymentResponse
+	err = json.Unmarshal(resp, &paymentResp)
 	if err != nil {
 		return nil, err
 	}
-	return &infoResp, nil
+	return &paymentResp, nil
 }
 
-func (ln *LnModule) AwaitInvoice(operationId string, gatewayId string, federationId *string) (*types.InfoResponse, error) {
+func (ln *LnModule) AwaitInvoice(operationId string, gatewayId string, federationId *string) (*modules.LnPaymentResponse, error) {
 	request := modules.LnAwaitInvoiceRequest{OperationId: operationId}
 	resp, err := ln.Client.postWithGatewayIdAndFederationId("/ln/await-invoice", request, &gatewayId, federationId)
 	if err != nil {
 		return nil, err
 	}
-	var infoResp types.InfoResponse
-	err = json.Unmarshal(resp, &infoResp)
+	var paymentResp modules.LnPaymentResponse
+	err = json.Unmarshal(resp, &paymentResp)
 	if err != nil {
 		return nil, err
 	}
-	return &infoResp, nil
+	return &paymentResp, nil
 }
 
 func (ln *LnModule) Pay(paymentInfo string, gatewayId *string, amountMsat *uint64, lnurlComment *string, federationId *string) (*modules.LnPayResponse, error) {

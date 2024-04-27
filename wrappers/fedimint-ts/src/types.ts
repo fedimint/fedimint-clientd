@@ -154,6 +154,32 @@ export interface LightningAwaitInvoiceRequest {
   operationId: string;
 }
 
+export enum LnReceiveState {
+  Created,
+  WaitingForPayment,
+  Canceled,
+  Funded,
+  AwaitingFunds,
+  Claimed,
+}
+
+export interface WaitingForPayment {
+  invoice: string;
+  timeout: number;
+}
+
+export interface Canceled {
+  reason: string;
+}
+
+export type LightningPaymentResponse =
+  | { state: LnReceiveState.Created }
+  | { state: LnReceiveState.WaitingForPayment; details: WaitingForPayment }
+  | { state: LnReceiveState.Canceled; details: Canceled }
+  | { state: LnReceiveState.Funded }
+  | { state: LnReceiveState.AwaitingFunds }
+  | { state: LnReceiveState.Claimed };
+
 export interface LightningPayRequest {
   paymentInfo: string;
   amountMsat?: number;

@@ -20,6 +20,7 @@ from models.lightning import (
     LightningInvoiceForPubkeyTweakResponse,
     LightningPayRequest,
     LightningPayResponse,
+    LightningPaymentResponse,
 )
 
 from models.onchain import (
@@ -201,7 +202,7 @@ class FedimintClient:
 
         def await_invoice(
             self, operation_id: str, federation_id: str = None
-        ) -> InfoResponse:
+        ) -> LightningPaymentResponse:
             request: LightningAwaitInvoiceRequest = {"operationId": operation_id}
             return self.client._post_with_federation_id(
                 "/ln/await-invoice", request, federation_id
@@ -237,7 +238,7 @@ class FedimintClient:
             private_key: str,
             tweaks: List[int],
             federation_id: str = None,
-        ) -> InfoResponse:
+        ) -> LightningPaymentResponse:
             request: LightningClaimPubkeReceivesRequest = {
                 "privateKey": private_key,
                 "tweaks": tweaks,

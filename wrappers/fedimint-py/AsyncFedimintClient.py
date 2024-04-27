@@ -23,6 +23,7 @@ from models.lightning import (
     LightningPayRequest,
     LightningPayResponse,
     LightningAwaitPayRequest,
+    LightningPaymentResponse,
 )
 
 from models.onchain import (
@@ -255,7 +256,7 @@ class AsyncFedimintClient:
             private_key: str,
             tweaks: List[int],
             federation_id: str = None,
-        ) -> InfoResponse:
+        ) -> LightningPaymentResponse:
             request: LightningClaimPubkeReceivesRequest = {
                 "privateKey": private_key,
                 "tweaks": tweaks,
@@ -269,7 +270,7 @@ class AsyncFedimintClient:
 
         async def await_invoice(
             self, operation_id: str, federation_id: str = None
-        ) -> InfoResponse:
+        ) -> LightningPaymentResponse:
             request: LightningAwaitInvoiceRequest = {"operationId": operation_id}
             return await self.client._post_with_gateway_id_and_federation_id(
                 "/ln/await-invoice", request, federation_id=federation_id
