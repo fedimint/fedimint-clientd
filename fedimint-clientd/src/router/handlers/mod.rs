@@ -1,2 +1,4 @@
-pub mod cashu;
-pub mod fedimint;
+pub mod admin;
+pub mod ln;
+pub mod mint;
+pub mod onchain;
