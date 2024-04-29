@@ -64,17 +64,7 @@ func buildTestClient() *fedimint.FedimintClient {
 	return fedimint.NewFedimintClient(baseUrl, password, federationId)
 }
 
-func main() {
-	fc := buildTestClient()
-	fc.UseDefaultGateway()
-	keyPair := newKeyPair()
-	fmt.Printf("Generated Key Pair: ")
-	fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
-	fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
-
-	///////////////////
-	// ADMIN METHODS //
-	///////////////////
+func adminMethods(fc *fedimint.FedimintClient) {
 
 	// `/v2/admin/config`
 	logMethod("/v2/admin/config")
@@ -186,9 +176,9 @@ func main() {
 
 	logInputAndOutput([]interface{}{10}, listOperationsResponseData)
 
-	///////////////////////
-	// LIGHTNING METHODS //
-	///////////////////////
+}
+
+func lnMethods(fc *fedimint.FedimintClient, kp KeyPair) {
 
 	// `/v2/ln/list-gateways`
 	logMethod("/v2/ln/list-gateways")
@@ -198,7 +188,7 @@ func main() {
 		return
 	}
 
-	jsonBytes, err = json.Marshal(gatewayList)
+	jsonBytes, err := json.Marshal(gatewayList)
 	if err != nil {
 		fmt.Println("Error marshaling JSON(list-gateways):", err)
 		return
@@ -286,7 +276,7 @@ func main() {
 
 	// `/v1/ln/invoice-external-pubkey-tweaked`
 	logMethod("/v1/ln/invoice-external-pubkey-tweaked")
-	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", fc.GetActiveGatewayId(), nil, nil)
+	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(kp.PublicKey, 1, 10000, "test", fc.GetActiveGatewayId(), nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY_TWEAK: ", err)
 		return
@@ -304,14 +294,14 @@ func main() {
 		return
 	}
 
-	logInputAndOutput([]interface{}{keyPair.PublicKey, 1, 10000, "test"}, tweakInvoiceResponseData)
+	logInputAndOutput([]interface{}{kp.PublicKey, 1, 10000, "test"}, tweakInvoiceResponseData)
 	// pay the invoice
 	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, nil, nil, nil, nil)
 	fmt.Println("Paid locked invoice!")
 
 	// `/v1/ln/claim-external-pubkey-tweaked`
 	logMethod("/v1/ln/claim-external-pubkey-tweaked")
-	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, nil, nil)
+	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(kp.PrivateKey, []uint64{1}, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
 		return
@@ -329,11 +319,11 @@ func main() {
 		return
 	}
 
-	logInputAndOutput([]interface{}{keyPair.PrivateKey, []uint64{1}}, claimInvoiceResponseData)
+	logInputAndOutput([]interface{}{kp.PrivateKey, []uint64{1}}, claimInvoiceResponseData)
 
-	//////////////////
-	// MINT METHODS //
-	//////////////////
+}
+
+func mintMethods(fc *fedimint.FedimintClient) {
 
 	// `/v2/mint/spend`
 	logMethod("/v2/mint/spend")
@@ -343,7 +333,7 @@ func main() {
 		return
 	}
 
-	jsonBytes, err = json.Marshal(mintData)
+	jsonBytes, err := json.Marshal(mintData)
 	if err != nil {
 		fmt.Println("Error marshaling JSON(spend):", err)
 		return
@@ -522,10 +512,9 @@ func main() {
 	}
 
 	logInputAndOutput(splitData.Notes, combineResponseData)
+}
 
-	/////////////////////
-	// ONCHAIN METHODS //
-	/////////////////////
+func onchainMethods(fc *fedimint.FedimintClient) {
 
 	// `/v2/onchain/deposit-address`
 	logMethod("/v2/onchain/deposit-address")
@@ -535,7 +524,7 @@ func main() {
 		return
 	}
 
-	jsonBytes, err = json.Marshal(addr)
+	jsonBytes, err := json.Marshal(addr)
 	if err != nil {
 		fmt.Println("Error marshaling JSON(deposit-address):", err)
 		return
@@ -574,4 +563,24 @@ func main() {
 	fmt.Println("============================================")
 	fmt.Println("|| Done: All methods tested successfully! ||")
 	fmt.Println("============================================")
+
+}
+
+func main() {
+	fc := buildTestClient()
+	fc.UseDefaultGateway()
+	keyPair := newKeyPair()
+	fmt.Printf("Generated Key Pair: ")
+	fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
+	fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
+
+	// admin methods
+	adminMethods(fc)
+	//lightening methods
+	lnMethods(fc, keyPair)
+	// mint methods
+	mintMethods(fc)
+	//onchain methods
+	onchainMethods(fc)
+
 }
