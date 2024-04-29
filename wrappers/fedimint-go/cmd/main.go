@@ -4,8 +4,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fedimint-go-client/pkg/fedimint"
+	"fedimint-go-client/pkg/handlers"
 	"fmt"
+	"log"
 	"os"
+
+	"html/template"
+	"net/http"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/joho/godotenv"
@@ -582,5 +587,14 @@ func main() {
 	mintMethods(fc)
 	//onchain methods
 	onchainMethods(fc)
+
+	handlers := &handlers.Handler{
+		Tmpl: template.Must(template.ParseGlob("templates/*.gohtml")),
+	}
+
+	r := http.NewServeMux()
+	r.HandleFunc("/", handlers.Index)
+
+	log.Fatal(http.ListenAndServe(":8080", r))
 
 }
