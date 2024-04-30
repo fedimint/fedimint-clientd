@@ -1,11 +1,15 @@
 [package]
-name = "clientd-statless"
+name = "clientd-stateless"
 version = "0.3.3"
 edition = "2021"
 description = "A stateless fedimint client daemon"
 repository = "https://github.com/fedimint/fedimint-clientd"
 keywords = ["fedimint", "bitcoin", "lightning", "ecash"]
 license = "MIT"
+
+[[example]]
+name = "cashu_encoding"
+path = "examples/cashu_encoding.rs"
 
 [dependencies]
 anyhow = "1.0.75"

@@ -14,8 +14,8 @@ use lightning_invoice::{Bolt11InvoiceDescription, Description};
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
+use crate::cashu::{Method, Unit};
 use crate::error::AppError;
-use crate::router::{Method, Unit};
 use crate::state::AppState;
 
 #[derive(Debug, Deserialize)]

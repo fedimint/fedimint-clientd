@@ -9,8 +9,9 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
+mod cashu;
 mod error;
-mod router;
+pub mod router;
 mod state;
 mod utils;
 
