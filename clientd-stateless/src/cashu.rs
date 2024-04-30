@@ -7,7 +7,7 @@ use base64::Engine;
 use bitcoin::secp256k1::{Secp256k1, SecretKey};
 use bitcoin::KeyPair;
 use fedimint_core::api::InviteCode;
-use fedimint_core::config::FederationIdPrefix;
+use fedimint_core::config::{FederationId, FederationIdPrefix};
 use fedimint_core::db::DatabaseValue;
 use fedimint_core::module::registry::ModuleDecoderRegistry;
 use fedimint_core::{Amount, TieredMulti};
@@ -148,7 +148,7 @@ impl fmt::Display for TokenV3 {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Unit {
     Msat,
@@ -160,4 +160,23 @@ pub enum Unit {
 pub enum Method {
     Bolt11,
     Onchain,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub struct Keyset {
+    id: String,
+    unit: Unit,
+    active: bool,
+}
+
+impl From<FederationId> for Keyset {
+    fn from(federation_id: FederationId) -> Self {
+        let as_str = format!("00{}", federation_id.to_string());
+        Keyset {
+            id: as_str,
+            unit: Unit::Msat,
+            active: true,
+        }
+    }
 }
