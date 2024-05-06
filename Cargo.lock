@@ -698,7 +698,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "clientd-statless"
+name = "clientd-stateless"
 version = "0.3.3"
 dependencies = [
  "anyhow",
