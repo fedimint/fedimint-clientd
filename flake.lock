@@ -421,13 +421,13 @@
       "locked": {
         "lastModified": 1712778429,
         "narHash": "sha256-oile9hEqPZdlLLGAy359Lpek36lPoKPbWtda63I3/5o=",
-        "owner": "dpc",
+        "owner": "flakebox",
         "repo": "flakebox",
         "rev": "226d584e9a288b9a0471af08c5712e7fac6f87dc",
         "type": "github"
       },
       "original": {
-        "owner": "dpc",
+        "owner": "flakebox",
         "repo": "flakebox",
         "rev": "226d584e9a288b9a0471af08c5712e7fac6f87dc",
         "type": "github"
