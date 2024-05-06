@@ -699,7 +699,7 @@ dependencies = [
 
 [[package]]
 name = "clientd-stateless"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "anyhow",
  "async-utility",
@@ -1044,7 +1044,7 @@ dependencies = [
 
 [[package]]
 name = "fedimint-clientd"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "anyhow",
  "async-utility",
@@ -1068,7 +1068,7 @@ dependencies = [
  "lazy_static",
  "lightning-invoice",
  "lnurl-rs",
- "multimint 0.3.2",
+ "multimint 0.3.4",
  "reqwest 0.12.4",
  "serde",
  "serde_json",
@@ -2453,7 +2453,7 @@ dependencies = [
 
 [[package]]
 name = "multimint"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "anyhow",
  "fedimint-client",

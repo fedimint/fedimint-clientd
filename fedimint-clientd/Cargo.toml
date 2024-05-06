@@ -1,11 +1,13 @@
 [package]
 name = "fedimint-clientd"
-version = "0.3.3"
-edition = "2021"
 description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin"
-repository = "https://github.com/fedimint/fedimint-clientd"
-keywords = ["fedimint", "bitcoin", "lightning", "ecash"]
-license = "MIT"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+authors.workspace = true
 
 [dependencies]
 anyhow = "1.0.75"
@@ -41,6 +43,5 @@ time = { version = "0.3.25", features = ["formatting"] }
 chrono = "0.4.31"
 futures-util = "0.3.30"
 clap = { version = "3", features = ["derive", "env"] }
-multimint = { version = "0.3.2" }
-# multimint = { path = "../multimint" }
+multimint = { path = "../multimint" }
 axum-otel-metrics = "0.8.0"
