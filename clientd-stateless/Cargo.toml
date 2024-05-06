@@ -1,11 +1,13 @@
 [package]
 name = "clientd-stateless"
-version = "0.3.3"
-edition = "2021"
 description = "A stateless fedimint client daemon"
-repository = "https://github.com/fedimint/fedimint-clientd"
-keywords = ["fedimint", "bitcoin", "lightning", "ecash"]
-license = "MIT"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+authors.workspace = true
 
 [dependencies]
 anyhow = "1.0.75"

@@ -1068,7 +1068,7 @@ dependencies = [
  "lazy_static",
  "lightning-invoice",
  "lnurl-rs",
- "multimint 0.3.2",
+ "multimint 0.3.3",
  "reqwest 0.12.4",
  "serde",
  "serde_json",
