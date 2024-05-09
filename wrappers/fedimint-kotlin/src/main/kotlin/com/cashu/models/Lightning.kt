@@ -18,9 +18,14 @@ data class LightningInvoiceForPubkeyTweakResponse(
 @Serializable
 data class LightningPayResponse(
     val operationId: String,
-    val paymentType: String,
+    val paymentType: PaymentType,
     val contractId: String,
     val fee: Int
+)
+
+@Serializable
+data class PaymentType(
+    val internal: String,
 )
 
 @Serializable

@@ -13,6 +13,7 @@ data class NotesJson(
 @Serializable
 data class Note(
     val signature: String,
+    @SerialName("spend_key")
     val spendKey: String
 )
 

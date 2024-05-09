@@ -136,6 +136,8 @@ class FedimintClient(
     }
 
     inner class MintModule {
+        private val json = Json { ignoreUnknownKeys = true }
+
         suspend fun spend(
             amountMsat: Int,
             allowOverpay: Boolean,
@@ -149,27 +151,37 @@ class FedimintClient(
                 "timeout" to timeout,
                 "includeInvite" to includeInvite,
             )
-            return _postWithFederationId(
+            val res= _postWithFederationId(
                 "mint/spend",
                 federationId = federationId,
                 data = mintSpendRequest
-            ) as MintSpendResponse?
+            )
+
+            if (res != null) {
+                return json.decodeFromString<MintSpendResponse>(res)
+            }
+            return null
         }
 
         suspend fun decodeNotes(notes: String, federationId: String? = null): MintDecodeNotesResponse? {
-            return _postWithFederationId(
+            val res= _postWithFederationId(
                 "mint/decode-notes",
                 federationId = federationId,
                 data = mapOf("notes" to notes)
-            ) as MintDecodeNotesResponse?
+            )
+
+            if (res != null) {
+                return json.decodeFromString<MintDecodeNotesResponse>(res)
+            }
+            return null
         }
 
         suspend fun encodeNotes(notes: NotesJson, federationId: String? = null): String? {
             return _postWithFederationId(
                 "mint/encode-notes",
                 federationId = federationId,
-                data = mapOf("notesJsonStr" to notes)
-            ) as String?
+                data = mapOf("notesJsonStr" to json.encodeToString(notes))
+            )
         }
 
         suspend fun validate(notes: String, federationId: String? = null): String? {
@@ -177,7 +189,7 @@ class FedimintClient(
                 "mint/validate",
                 federationId = federationId,
                 data = mapOf("notes" to notes)
-            ) as String?
+            )
         }
 
         suspend fun combine(notesVec: List<String>, federationId: String? = null): String? {
@@ -185,7 +197,7 @@ class FedimintClient(
                 "mint/combine",
                 federationId = federationId,
                 data = mapOf("notesVec" to notesVec)
-            ) as String?
+            )
         }
 
         suspend fun reissue(notes: String, federationId: String? = null): String? {
@@ -193,7 +205,7 @@ class FedimintClient(
                 "mint/reissue",
                 federationId = federationId,
                 data = mapOf("notes" to notes)
-            ) as String?
+            )
         }
 
         suspend fun split(notes: String, federationId: String? = null): String? {
@@ -201,7 +213,7 @@ class FedimintClient(
                 "mint/split",
                 federationId = federationId,
                 data = mapOf("notes" to notes)
-            ) as String?
+            )
         }
     }
 
