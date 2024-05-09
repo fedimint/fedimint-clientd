@@ -43,7 +43,7 @@
 
         toolchainArgs = let llvmPackages = pkgs.llvmPackages_11;
         in {
-          # extraRustFlags = "--cfg tokio_unstable";
+          extraRustFlags = "--cfg tokio_unstable";
 
           components = [ "rustc" "cargo" "clippy" "rust-analyzer" "rust-src" ];
 
