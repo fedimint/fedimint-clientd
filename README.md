@@ -31,6 +31,7 @@ This project is intended to be an easy-to-use starting point for those intereste
   FEDIMINT_CLIENTD_DB_PATH=/absolute/path/to/dir/to/store/database
   FEDIMINT_CLIENTD_PASSWORD="some-secure-password-that-becomes-the-bearer-token"
   FEDIMINT_CLIENTD_ADDR="127.0.0.1:3333"
+  FEDIMINT_CLIENTD_BASE_URL="127.0.0.1:3333"
   FEDIMINT_CLIENTD_MODE="rest"
   # this is the invite code to the Fedi Alpha federation mutinynet,
   # you can replace it with another but its the most useful one for testing so good to at least have it
