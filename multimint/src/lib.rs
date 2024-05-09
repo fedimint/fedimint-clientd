@@ -367,12 +367,12 @@ impl MultiMint {
 
     /// Update the gateway caches for all the lightning modules in the
     /// multimint.
-    pub async fn update_gateway_caches(&self, apply_meta: bool) -> Result<()> {
+    pub async fn update_gateway_caches(&self) -> Result<()> {
         let clients = self.clients.lock().await;
 
         for (_, client) in clients.iter() {
             let lightning_client = client.get_first_module::<LightningClientModule>();
-            lightning_client.update_gateway_cache(apply_meta).await?;
+            lightning_client.update_gateway_cache().await?;
         }
 
         Ok(())

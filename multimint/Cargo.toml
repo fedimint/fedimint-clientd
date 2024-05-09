@@ -13,16 +13,16 @@ authors.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+fedimint-client = { workspace = true }
 anyhow = "1.0.75"
 serde = "1.0.193"
 serde_json = "1.0.108"
 tokio = { version = "1.34.0", features = ["full"] }
-fedimint-client = "0.3.0"
-fedimint-core = "0.3.0"
-fedimint-wallet-client = "0.3.0"
-fedimint-mint-client = "0.3.0"
-fedimint-ln-client = "0.3.0"
-fedimint-rocksdb = "0.3.0"
+fedimint-core = { workspace = true }
+fedimint-wallet-client = { workspace = true }
+fedimint-mint-client = { workspace = true }
+fedimint-ln-client = { workspace = true }
+fedimint-rocksdb = { workspace = true }
 futures-util = "0.3.30"
 rand = "0.8.5"
 tracing = "0.1.40"

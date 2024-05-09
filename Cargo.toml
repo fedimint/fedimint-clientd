@@ -11,6 +11,14 @@ license = "MIT"
 readme = "README.md"
 authors = ["The Fedimint Developers"]
 
+[workspace.dependencies]
+fedimint-client = "0.3.1"
+fedimint-core = "0.3.1"
+fedimint-wallet-client = "0.3.1"
+fedimint-mint-client = "0.3.1"
+fedimint-ln-client = "0.3.1"
+fedimint-rocksdb = "0.3.1"
+
 # Config for 'cargo dist'
 [workspace.metadata.dist]
 # The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)

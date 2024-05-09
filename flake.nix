@@ -19,8 +19,9 @@
     flake-utils.url = "github:numtide/flake-utils";
 
     fedimint = {
-      url =
-        "github:fedimint/fedimint?rev=a41e3a7e31ce0f26058206a04f1cd49ef2b12fe3";
+      url = ''
+        github:fedimint/fedimint?rev=dbabb5f44de5401d24ca9414534a36a22e89c6df
+      '';
     };
   };
 
@@ -43,7 +44,7 @@
 
         toolchainArgs = let llvmPackages = pkgs.llvmPackages_11;
         in {
-          extraRustFlags = "--cfg tokio_unstable";
+          # extraRustFlags = "--cfg tokio_unstable";
 
           components = [ "rustc" "cargo" "clippy" "rust-analyzer" "rust-src" ];
 
