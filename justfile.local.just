@@ -1,7 +1,7 @@
 dev:
   mprocs -c mprocs.yaml
 
-mprocs:
+dev-regtest:
   ./scripts/mprocs-nix.sh dev-fed mprocs-new.yaml
 
 test-ts:
