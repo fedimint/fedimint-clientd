@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
 use axum::http::StatusCode;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::config::{FederationId, FederationIdPrefix};
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::config::{FederationId, FederationIdPrefix};
 use multimint::MultiMint;
 
 use crate::error::AppError;

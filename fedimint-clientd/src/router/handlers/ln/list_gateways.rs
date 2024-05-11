@@ -2,9 +2,9 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::config::FederationId;
-use fedimint_ln_client::LightningClientModule;
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::config::FederationId;
+use multimint::fedimint_ln_client::LightningClientModule;
 use serde::Deserialize;
 use serde_json::{json, Value};
 

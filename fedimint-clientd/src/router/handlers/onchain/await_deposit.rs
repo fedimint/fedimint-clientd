@@ -2,11 +2,11 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::config::FederationId;
-use fedimint_core::core::OperationId;
-use fedimint_wallet_client::{DepositState, WalletClientModule};
 use futures_util::StreamExt;
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::config::FederationId;
+use multimint::fedimint_core::core::OperationId;
+use multimint::fedimint_wallet_client::{DepositState, WalletClientModule};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 

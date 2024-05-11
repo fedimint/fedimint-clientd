@@ -5,11 +5,11 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use bitcoin::Address;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::config::FederationId;
-use fedimint_core::core::OperationId;
-use fedimint_core::time::now;
-use fedimint_wallet_client::WalletClientModule;
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::config::FederationId;
+use multimint::fedimint_core::core::OperationId;
+use multimint::fedimint_core::time::now;
+use multimint::fedimint_wallet_client::WalletClientModule;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 

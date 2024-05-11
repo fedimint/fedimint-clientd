@@ -2,8 +2,8 @@ use std::collections::BTreeMap;
 
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_core::{Amount, TieredMulti};
-use fedimint_mint_client::OOBNotes;
+use multimint::fedimint_core::{Amount, TieredMulti};
+use multimint::fedimint_mint_client::OOBNotes;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 

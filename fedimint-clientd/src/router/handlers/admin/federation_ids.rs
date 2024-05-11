@@ -1,7 +1,7 @@
 use anyhow::Error;
 use axum::extract::State;
 use axum::Json;
-use fedimint_core::config::FederationId;
+use multimint::fedimint_core::config::FederationId;
 use multimint::MultiMint;
 use serde::Serialize;
 use serde_json::{json, Value};

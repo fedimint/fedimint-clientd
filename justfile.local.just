@@ -26,3 +26,6 @@ test-all:
 
 wscat:
   mprocs -c mprocs-wscat.yaml
+
+publish:
+  cargo publish -p multimint && cargo publish -p fedimint-clientd && cargo publish -p clientd-stateless

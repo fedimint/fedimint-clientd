@@ -1,7 +1,7 @@
 use axum::extract::State;
 use axum::Json;
-use fedimint_core::Amount;
-use fedimint_mint_client::{MintClientModule, OOBNotes};
+use multimint::fedimint_core::Amount;
+use multimint::fedimint_mint_client::{MintClientModule, OOBNotes};
 use serde::{Deserialize, Serialize};
 
 use crate::error::AppError;

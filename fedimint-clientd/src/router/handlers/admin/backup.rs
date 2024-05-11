@@ -4,9 +4,9 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::backup::Metadata;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::config::FederationId;
+use multimint::fedimint_client::backup::Metadata;
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::config::FederationId;
 use serde::Deserialize;
 use serde_json::{json, Value};
 

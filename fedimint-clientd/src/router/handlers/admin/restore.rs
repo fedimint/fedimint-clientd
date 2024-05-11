@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientHandleArc;
+use multimint::fedimint_client::ClientHandleArc;
 use serde_json::{json, Value};
 
 use crate::error::AppError;

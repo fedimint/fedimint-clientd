@@ -1,5 +1,5 @@
-use fedimint_core::TieredMulti;
-use fedimint_mint_client::SpendableNote;
+use multimint::fedimint_core::TieredMulti;
+use multimint::fedimint_mint_client::SpendableNote;
 use serde::{Deserialize, Serialize};
 
 pub mod combine;

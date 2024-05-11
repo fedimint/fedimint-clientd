@@ -2,10 +2,10 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::Amount;
-use fedimint_mint_client::{MintClientModule, OOBNotes};
 use futures_util::StreamExt;
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::Amount;
+use multimint::fedimint_mint_client::{MintClientModule, OOBNotes, ReissueExternalNotesState};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use tracing::info;
@@ -42,7 +42,7 @@ async fn _reissue(
 
     while let Some(update) = updates.next().await {
         let update_clone = update.clone();
-        if let fedimint_mint_client::ReissueExternalNotesState::Failed(e) = update {
+        if let ReissueExternalNotesState::Failed(e) = update {
             Err(AppError::new(StatusCode::INTERNAL_SERVER_ERROR, anyhow!(e)))?;
         }
 

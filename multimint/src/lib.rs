@@ -78,7 +78,11 @@ use fedimint_wallet_client::WalletClientModule;
 use tokio::sync::Mutex;
 use tracing::warn;
 use types::InfoResponse;
-pub use {fedimint_core, fedimint_ln_client, fedimint_mint_client, fedimint_wallet_client};
+// Reexport all the fedimint crates for ease of use
+pub use {
+    fedimint_client, fedimint_core, fedimint_ln_client, fedimint_mint_client,
+    fedimint_wallet_client,
+};
 
 pub mod client;
 pub mod db;
