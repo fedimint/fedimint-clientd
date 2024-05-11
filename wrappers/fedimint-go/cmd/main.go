@@ -572,28 +572,32 @@ func onchainMethods(fc *fedimint.FedimintClient) {
 }
 
 func main() {
-	fc := buildTestClient()
-	fc.UseDefaultGateway()
-	keyPair := newKeyPair()
-	fmt.Printf("Generated Key Pair: ")
-	fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
-	fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
+	// fc := buildTestClient()
+	// fc.UseDefaultGateway()
+	// keyPair := newKeyPair()
+	// fmt.Printf("Generated Key Pair: ")
+	// fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
+	// fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
 
-	// admin methods
-	adminMethods(fc)
-	//lightening methods
-	lnMethods(fc, keyPair)
-	// mint methods
-	mintMethods(fc)
-	//onchain methods
-	onchainMethods(fc)
+	// // admin methods
+	// adminMethods(fc)
+	// //lightening methods
+	// lnMethods(fc, keyPair)
+	// // mint methods
+	// mintMethods(fc)
+	// //onchain methods
+	// onchainMethods(fc)
 
 	handlers := &handlers.Handler{
 		Tmpl: template.Must(template.ParseGlob("templates/*.gohtml")),
+		Fc:   buildTestClient(),
 	}
 
 	r := http.NewServeMux()
 	r.HandleFunc("/", handlers.Index)
+	r.HandleFunc("/admin/config", handlers.AdminConfigHandler)
+	r.HandleFunc("/ln/invoice", handlers.InvoiceHandler)
+	r.HandleFunc("/create-invoice", handlers.CreateInvoiceHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 
