@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ln Pay</title>
+</head>
+<body>
+    <h1>Ln Pay</h1>
+
+    <form id="lnPayForm" action="/ln-pay" method="post">
+        <label for="FederationId">Federation ID</label><br>
+        <input type="text" id="federationId" name="federationId"><br><br>
+        <label for="gatewayId">Gateway ID</label><br>
+        <input type="text" id="gatewayId" name="gatewayId"><br><br>
+        <label for="amountMsat">Amount (msat)</label><br>
+        <input type="number" id="amountMsat" name="amountMsat"><br><br>
+        <label for="lnurlComment">Lnurl Comment</label><br>
+        <input type="text" id="lnurlComment" name="lnurlComment"><br><br>
+        <label for="paymentInfo">Payment Info</label><br>
+        <input type="text" id="paymentInfo" name="paymentInfo"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+
+</body>
+</html>
