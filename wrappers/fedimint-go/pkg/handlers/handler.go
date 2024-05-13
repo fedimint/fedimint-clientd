@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fedimint-go-client/pkg/fedimint"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -101,6 +100,46 @@ func (h *Handler) CreateInvoiceHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		err := h.Tmpl.ExecuteTemplate(w, "create-invoice.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) LnPayHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		gwIDStr := r.FormValue("gatewayId")
+		fedIDStr := r.FormValue("federationId")
+		lnurlComment := r.FormValue("lnurlComment")
+		paymentInfo := r.FormValue("paymentInfo")
+		amountMsatStr := r.FormValue("amountMsat")
+		amountMsat, err := strconv.ParseUint(amountMsatStr, 10, 64)
+		if err != nil {
+			http.Error(w, "Invalid amountMsat: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		lnPayResponse, err := h.Fc.Ln.Pay(paymentInfo, &gwIDStr, &amountMsat, &lnurlComment, &fedIDStr)
+		if err != nil {
+			// Check if the error message contains "malformed public key" indicating a problem with gatewayId
+			if strings.Contains(err.Error(), "malformed public key") {
+				http.Error(w, "Invalid gatewayId provided", http.StatusBadRequest)
+				return
+			}
+			http.Error(w, "Error paying: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "ln_pay.gohtml", lnPayResponse)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "ln_pay.gohtml", nil)
 		if err != nil {
 			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
 			return
