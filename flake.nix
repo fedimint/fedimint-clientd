@@ -38,7 +38,15 @@
             name = "fedimint-clientd";
             path = ./.;
           };
-          paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
+          paths = [
+            "Cargo.toml"
+            "Cargo.lock"
+            ".cargo"
+            "src"
+            "multimint"
+            "fedimint-clientd"
+            "clientd-stateless"
+          ];
         };
 
         toolchainArgs = let llvmPackages = pkgs.llvmPackages_11;
