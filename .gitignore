@@ -8,3 +8,4 @@ fm_client_db
 .DS_Store
 fm_db
 result
+/vendor
