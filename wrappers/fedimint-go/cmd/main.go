@@ -598,6 +598,7 @@ func main() {
 	r.HandleFunc("/admin/config", handlers.AdminConfigHandler)
 	r.HandleFunc("/ln/invoice", handlers.InvoiceHandler)
 	r.HandleFunc("/create-invoice", handlers.CreateInvoiceHandler)
+	r.HandleFunc("/ln-pay", handlers.LnPayHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 
