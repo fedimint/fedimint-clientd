@@ -10,7 +10,7 @@ fun main() {
     try {
         val dotenv = dotenv {
             // Provide an absolute path to the .env file
-            directory = "/Volumes/DEV/School/fedimint-clientd/.env"
+            directory = "/Absolute/path/to/file/.env"
             // ignoreIfMalformed = true
              ignoreIfMissing = true
         }
