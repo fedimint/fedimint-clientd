@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use axum::extract::State;
 use axum::Json;
-use fedimint_core::config::FederationId;
+use multimint::fedimint_core::config::FederationId;
 use serde::Serialize;
 
 use crate::error::AppError;

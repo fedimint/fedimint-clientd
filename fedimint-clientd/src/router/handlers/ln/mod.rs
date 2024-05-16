@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
 use anyhow::{bail, Context};
-use fedimint_client::ClientHandleArc;
-use fedimint_core::Amount;
-use fedimint_ln_client::{InternalPayState, LightningClientModule, LnPayState, PayType};
 use futures_util::StreamExt;
 use lightning_invoice::Bolt11Invoice;
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::Amount;
+use multimint::fedimint_ln_client::{InternalPayState, LightningClientModule, LnPayState, PayType};
 use tracing::{debug, info};
 
 use self::pay::{LnPayRequest, LnPayResponse};

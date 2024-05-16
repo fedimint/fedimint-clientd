@@ -6,17 +6,18 @@ use anyhow::anyhow;
 use base64::Engine;
 use bitcoin::secp256k1::{Secp256k1, SecretKey};
 use bitcoin::KeyPair;
-use fedimint_core::api::InviteCode;
-use fedimint_core::config::{FederationId, FederationIdPrefix};
-use fedimint_core::db::DatabaseValue;
-use fedimint_core::module::registry::ModuleDecoderRegistry;
-use fedimint_core::{Amount, TieredMulti};
-use fedimint_mint_client::{OOBNotes, SpendableNote};
+use multimint::fedimint_core::api::InviteCode;
+use multimint::fedimint_core::config::{FederationId, FederationIdPrefix};
+use multimint::fedimint_core::db::DatabaseValue;
+use multimint::fedimint_core::module::registry::ModuleDecoderRegistry;
+use multimint::fedimint_core::{Amount, TieredMulti};
+use multimint::fedimint_mint_client::{OOBNotes, SpendableNote};
 use serde::de::Error;
 use serde::{Deserialize, Serialize};
 use tbs::Signature;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[allow(non_snake_case)]
 pub struct Proof {
     // Amount unassociated with the unit
     amount: u64,
@@ -25,7 +26,6 @@ pub struct Proof {
     // secret -> hex encoded spend key's secret key
     secret: String,
     // signature -> hex encoded BLS signature
-    #[allow(non_snake_case)]
     C: String,
 }
 
@@ -70,7 +70,7 @@ impl TokenV3 {
         serde_json::from_str(&json)
     }
 
-    pub fn from_oobnotes(notes: OOBNotes, invite_code: InviteCode) -> Result<Self, anyhow::Error> {
+    pub fn _from_oobnotes(notes: OOBNotes, invite_code: InviteCode) -> Result<Self, anyhow::Error> {
         let mut token = TokenV3 {
             token: vec![],
             // Always msats
@@ -98,7 +98,7 @@ impl TokenV3 {
         Ok(token)
     }
 
-    fn to_oobnotes(&self, modules: &ModuleDecoderRegistry) -> Result<OOBNotes, anyhow::Error> {
+    fn _to_oobnotes(&self, modules: &ModuleDecoderRegistry) -> Result<OOBNotes, anyhow::Error> {
         let federation_id_prefix = match self.token.first().map(|t| &t.proofs[0].id) {
             Some(id) => FederationIdPrefix::from_str(id)?,
             None => return Err(anyhow!("No token found")),

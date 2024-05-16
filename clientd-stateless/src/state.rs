@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
 use axum::http::StatusCode;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::config::{FederationId, FederationIdPrefix};
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::config::{FederationId, FederationIdPrefix};
 use multimint::MultiMint;
 
 use crate::error::AppError;
@@ -15,7 +15,7 @@ pub struct AppState {
 impl AppState {
     pub async fn new(fm_db_path: PathBuf) -> Result<Self> {
         let clients = MultiMint::new(fm_db_path).await?;
-        clients.update_gateway_caches(true).await?;
+        clients.update_gateway_caches().await?;
         Ok(Self { multimint: clients })
     }
 

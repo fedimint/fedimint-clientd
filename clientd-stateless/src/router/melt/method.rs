@@ -4,13 +4,13 @@ use anyhow::anyhow;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::config::FederationId;
-use fedimint_core::Amount;
-use fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment};
-use fedimint_wallet_client::{WalletClientModule, WithdrawState};
 use futures_util::StreamExt;
 use lightning_invoice::Bolt11Invoice;
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::config::FederationId;
+use multimint::fedimint_core::Amount;
+use multimint::fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment};
+use multimint::fedimint_wallet_client::{WalletClientModule, WithdrawState};
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 

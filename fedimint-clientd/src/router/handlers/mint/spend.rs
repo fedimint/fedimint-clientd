@@ -4,11 +4,11 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_client::ClientHandleArc;
-use fedimint_core::config::FederationId;
-use fedimint_core::core::OperationId;
-use fedimint_core::Amount;
-use fedimint_mint_client::{
+use multimint::fedimint_client::ClientHandleArc;
+use multimint::fedimint_core::config::FederationId;
+use multimint::fedimint_core::core::OperationId;
+use multimint::fedimint_core::Amount;
+use multimint::fedimint_mint_client::{
     MintClientModule, OOBNotes, SelectNotesWithAtleastAmount, SelectNotesWithExactAmount,
 };
 use serde::{Deserialize, Serialize};

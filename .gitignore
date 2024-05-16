@@ -7,4 +7,5 @@ fm_client_db
 .vscode
 .DS_Store
 fm_db
-
+result
+/vendor

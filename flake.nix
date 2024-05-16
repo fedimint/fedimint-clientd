@@ -20,7 +20,7 @@
 
     fedimint = {
       url =
-        "github:fedimint/fedimint?rev=a41e3a7e31ce0f26058206a04f1cd49ef2b12fe3";
+        "github:fedimint/fedimint?rev=dbabb5f44de5401d24ca9414534a36a22e89c6df";
     };
   };
 
@@ -38,7 +38,15 @@
             name = "fedimint-clientd";
             path = ./.;
           };
-          paths = [ "Cargo.toml" "Cargo.lock" ".cargo" "src" ];
+          paths = [
+            "Cargo.toml"
+            "Cargo.lock"
+            ".cargo"
+            "src"
+            "multimint"
+            "fedimint-clientd"
+            "clientd-stateless"
+          ];
         };
 
         toolchainArgs = let llvmPackages = pkgs.llvmPackages_11;

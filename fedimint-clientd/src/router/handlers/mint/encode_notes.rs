@@ -3,8 +3,8 @@ use std::str::FromStr;
 use anyhow::anyhow;
 use axum::http::StatusCode;
 use axum::Json;
-use fedimint_core::config::FederationIdPrefix;
-use fedimint_mint_client::OOBNotes;
+use multimint::fedimint_core::config::FederationIdPrefix;
+use multimint::fedimint_mint_client::OOBNotes;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 

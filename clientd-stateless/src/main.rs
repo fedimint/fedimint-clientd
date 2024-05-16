@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use axum::http::Method;
-use fedimint_core::api::InviteCode;
+use multimint::fedimint_core::api::InviteCode;
 use router::{check, info, keys, keysets, melt, mint, swap};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;

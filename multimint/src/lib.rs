@@ -78,7 +78,11 @@ use fedimint_wallet_client::WalletClientModule;
 use tokio::sync::Mutex;
 use tracing::warn;
 use types::InfoResponse;
-pub use {fedimint_core, fedimint_ln_client, fedimint_mint_client, fedimint_wallet_client};
+// Reexport all the fedimint crates for ease of use
+pub use {
+    fedimint_client, fedimint_core, fedimint_ln_client, fedimint_mint_client,
+    fedimint_wallet_client,
+};
 
 pub mod client;
 pub mod db;
@@ -367,12 +371,12 @@ impl MultiMint {
 
     /// Update the gateway caches for all the lightning modules in the
     /// multimint.
-    pub async fn update_gateway_caches(&self, apply_meta: bool) -> Result<()> {
+    pub async fn update_gateway_caches(&self) -> Result<()> {
         let clients = self.clients.lock().await;
 
         for (_, client) in clients.iter() {
             let lightning_client = client.get_first_module::<LightningClientModule>();
-            lightning_client.update_gateway_cache(apply_meta).await?;
+            lightning_client.update_gateway_cache().await?;
         }
 
         Ok(())
