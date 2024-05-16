@@ -41,10 +41,7 @@ class FedimintClient(
 
     suspend fun _get(endpoint: String): String? {
         try {
-            println("🐛🐛🐛$endpoint🐛🐛🐛")
             val response = client.get("${baseUrl}${endpoint}")
-            println("🐛🐛🐛$endpoint: ${response.status}🐛🐛🐛")
-            println("🐛🐛🐛${response.bodyAsText()}🐛🐛🐛")
             return response.body()
         } catch (e: Exception) {
             println("🐛🐛🐛$endpoint: ${e.localizedMessage}🐛🐛🐛")
@@ -54,13 +51,10 @@ class FedimintClient(
 
     suspend fun _post(endpoint: String, data: String? = null): String? {
         try {
-            println("🐛🐛🐛$endpoint🐛🐛🐛")
             val response = client.post("${baseUrl}${endpoint}") {
                 contentType(ContentType.Application.Json)
                 setBody(data)
             }
-            println("🐛🐛🐛$endpoint: ${response.status}🐛🐛🐛")
-            println("🐛🐛🐛${response.bodyAsText()}🐛🐛🐛")
             if (response.status.value == 200) {
                 return response.bodyAsText()
             }
