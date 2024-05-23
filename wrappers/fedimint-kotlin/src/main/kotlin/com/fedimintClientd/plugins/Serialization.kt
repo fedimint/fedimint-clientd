@@ -1,4 +1,4 @@
-package com.cashu.plugins
+package com.fedimintClientd.plugins
 
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*

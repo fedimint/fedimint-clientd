@@ -1,6 +1,6 @@
-package com.cashu
+package com.fedimintClientd
 
-import com.cashu.plugins.*
+import com.fedimintClientd.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*

@@ -1,4 +1,4 @@
-package com.cashu
+package com.fedimintClientd
 
 import io.github.cdimascio.dotenv.Dotenv
 import kotlinx.coroutines.runBlocking

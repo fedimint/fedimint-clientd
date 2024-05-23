@@ -1,6 +1,6 @@
-package com.cashu
+package com.fedimintClientd
 
-import com.cashu.models.*
+import com.fedimintClientd.models.*
 import com.google.gson.Gson
 import io.ktor.client.*
 import io.ktor.client.call.*

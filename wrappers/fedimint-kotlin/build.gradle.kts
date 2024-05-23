@@ -9,11 +9,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.24"
 }
 
-group = "com.cashu"
+group = "com.fedimintClientd"
 version = "0.0.1"
 
 application {
-    mainClass.set("com.cashu.ApplicationKt")
+    mainClass.set("com.fedimintClientd.ApplicationKt")
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")

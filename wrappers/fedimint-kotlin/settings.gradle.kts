@@ -1,1 +1,1 @@
-rootProject.name = "com.cashu.fedimint-kotlin"
+rootProject.name = "com.fedimintClientd.fedimint-kotlin"
