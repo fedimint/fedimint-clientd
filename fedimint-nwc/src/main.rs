@@ -39,6 +39,7 @@ async fn main() -> Result<()> {
     // Shutdown signal handler
     let (tx, rx) = oneshot::channel::<()>();
     let signal_handler = tokio::spawn(handle_signals(tx));
+    info!("Shutdown signal handler started...");
 
     // Broadcast info event
     state.broadcast_info_event().await?;

@@ -105,6 +105,9 @@ impl AppState {
 
         if res.is_ok() {
             self.sent_info = true;
+            info!("Sent info event...");
+        } else {
+            error!("Failed to send info event: {}", res.err().unwrap());
         }
 
         Ok(())
@@ -112,7 +115,7 @@ impl AppState {
 
     pub async fn handle_event(&self, event: Event) {
         if event.kind == Kind::WalletConnectRequest && event.verify().is_ok() {
-            debug!("Received event!");
+            info!("Received event: {}", event.as_json());
             let event_id = event.id;
             self.active_requests.lock().await.insert(event_id);
 
