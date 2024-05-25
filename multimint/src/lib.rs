@@ -152,8 +152,8 @@ impl MultiMint {
         Self::load_clients(&mut clients.clone(), &db, &client_builder).await?;
 
         Ok(Self {
-            db: db,
-            client_builder: client_builder,
+            db,
+            client_builder,
             clients,
         })
     }
@@ -196,7 +196,7 @@ impl MultiMint {
     ) -> Result<FederationId> {
         let manual_secret: Option<[u8; 64]> = match manual_secret {
             Some(manual_secret) => {
-                let bytes = hex::decode(&manual_secret)?;
+                let bytes = hex::decode(manual_secret)?;
                 Some(
                     bytes
                         .try_into()
@@ -274,7 +274,7 @@ impl MultiMint {
             .collect::<Vec<_>>();
         let federation_id = keys
             .into_iter()
-            .find(|id| id.to_prefix() == federation_id_prefix.clone());
+            .find(|id| id.to_prefix() == *federation_id_prefix);
 
         match federation_id {
             Some(federation_id) => self.get(&federation_id).await,
@@ -284,10 +284,7 @@ impl MultiMint {
 
     /// Update a client by its federation id.
     pub async fn update(&self, federation_id: &FederationId, new_client: ClientHandleArc) {
-        self.clients
-            .lock()
-            .await
-            .insert(federation_id.clone(), new_client);
+        self.clients.lock().await.insert(*federation_id, new_client);
     }
 
     /// Remove a client by its federation id.
@@ -317,7 +314,7 @@ impl MultiMint {
 
         for (federation_id, client) in clients.iter() {
             let client_config = client.get_config_json();
-            configs_map.insert(federation_id.clone(), client_config);
+            configs_map.insert(*federation_id, client_config);
         }
 
         Ok(configs_map)
@@ -330,7 +327,7 @@ impl MultiMint {
 
         for (federation_id, client) in clients.iter() {
             let balance = client.get_balance().await;
-            balances.insert(federation_id.clone(), balance);
+            balances.insert(*federation_id, balance);
         }
 
         Ok(balances)
@@ -355,7 +352,7 @@ impl MultiMint {
                 .await;
 
             let info = InfoResponse {
-                federation_id: federation_id.clone(),
+                federation_id: *federation_id,
                 network: wallet_client.get_network().to_string(),
                 meta: client.get_config().global.meta.clone(),
                 total_amount_msat: summary.total_amount(),
@@ -363,7 +360,7 @@ impl MultiMint {
                 denominations_msat: summary,
             };
 
-            info_map.insert(federation_id.clone(), info);
+            info_map.insert(*federation_id, info);
         }
 
         Ok(info_map)

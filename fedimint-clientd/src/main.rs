@@ -147,7 +147,7 @@ async fn main() -> Result<()> {
         .merge(metrics.routes())
         .layer(metrics);
 
-    let listener = tokio::net::TcpListener::bind(format!("{}", &cli.addr))
+    let listener = tokio::net::TcpListener::bind(cli.addr.clone())
         .await
         .map_err(|e| anyhow::anyhow!("Failed to bind to address, should be a valid address and port like 127.0.0.1:3333: {e}"))?;
     info!("fedimint-clientd Listening on {}", &cli.addr);
