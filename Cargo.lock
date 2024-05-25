@@ -1283,6 +1283,15 @@ dependencies = [
 [[package]]
 name = "fedimint-nwc"
 version = "0.3.5"
+dependencies = [
+ "anyhow",
+ "clap",
+ "dotenv",
+ "multimint 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
 
 [[package]]
 name = "fedimint-rocksdb"
