@@ -21,15 +21,15 @@ pub struct Cli {
     #[clap(long, env = "FEDIMINT_CLIENTD_MANUAL_SECRET", required = false)]
     pub manual_secret: Option<String>,
     /// Location of keys file
-    #[clap(default_value_t = String::from("keys.json"), long)]
+    #[clap(long, env = "FEDIMINT_NWC_KEYS_FILE", default_value_t = String::from("keys.json"))]
     pub keys_file: String,
-    #[clap(long)]
     /// Nostr relay to use
+    #[clap(long, env = "FEDIMINT_NWC_RELAY", default_value_t = String::from("wss://relay.damus.io"))]
     pub relay: String,
     /// Max invoice payment amount, in satoshis
-    #[clap(default_value_t = 100_000, long)]
+    #[clap(long, env = "FEDIMINT_NWC_MAX_AMOUNT", default_value_t = 100_000)]
     pub max_amount: u64,
     /// Max payment amount per day, in satoshis
-    #[clap(default_value_t = 100_000, long)]
+    #[clap(long, env = "FEDIMINT_NWC_DAILY_LIMIT", default_value_t = 100_000)]
     pub daily_limit: u64,
 }
