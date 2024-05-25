@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use nostr_sdk::RelayPoolNotification;
+use nostr_sdk::{JsonUtil, Kind, RelayPoolNotification};
 use tokio::pin;
 use tracing::{error, info};
 
@@ -55,7 +55,14 @@ async fn event_loop(state: AppState) -> Result<()> {
                 match notification {
                     Ok(notification) => match notification {
                         RelayPoolNotification::Event { event, .. } => {
-                            state.handle_event(*event).await
+                            if event.kind == Kind::WalletConnectRequest
+                                && event.pubkey == state.key_manager.user_keys().public_key()
+                                && event.verify().is_ok() {
+                                    info!("Received event: {}", event.as_json());
+                                    state.handle_event(*event).await
+                            } else {
+                                error!("Invalid nwc event: {}", event.as_json());
+                            }
                         },
                         RelayPoolNotification::Shutdown => {
                             info!("Relay pool shutdown");

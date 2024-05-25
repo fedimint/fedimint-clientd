@@ -8,7 +8,7 @@ use tracing::{debug, error, info};
 
 use crate::config::Cli;
 use crate::managers::KeyManager;
-use crate::nwc::handle_nwc_request;
+use crate::nwc::{handle_nwc_request, NwcConfig};
 use crate::services::{MultiMintService, NostrService};
 
 #[derive(Debug, Clone)]
@@ -17,6 +17,7 @@ pub struct AppState {
     pub nostr_service: NostrService,
     pub key_manager: KeyManager,
     pub active_requests: Arc<Mutex<BTreeSet<EventId>>>,
+    pub nwc_config: NwcConfig,
 }
 
 impl AppState {
@@ -26,12 +27,17 @@ impl AppState {
         let nostr_service = NostrService::new(&key_manager, &cli.relays).await?;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));
+        let nwc_config = NwcConfig {
+            max_amount: cli.max_amount,
+            daily_limit: cli.daily_limit,
+        };
 
         Ok(Self {
             multimint_service,
             nostr_service,
             key_manager,
             active_requests,
+            nwc_config,
         })
     }
 
@@ -53,6 +59,8 @@ impl AppState {
         }
     }
 
+    /// Adds nwc events to active requests set while waiting for them to
+    /// complete so they can finish processing before a shutdown.
     pub async fn handle_event(&self, event: Event) {
         if event.kind == Kind::WalletConnectRequest && event.verify().is_ok() {
             info!("Received event: {}", event.as_json());

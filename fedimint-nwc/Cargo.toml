@@ -12,6 +12,7 @@ authors.workspace = true
 anyhow = "1.0.75"
 clap = { version = "4.5.4", features = ["derive", "env"] }
 dotenv = "0.15.0"
+lightning-invoice = { version = "0.31.0", features = ["serde"] }
 multimint = { version = "0.3.6" }
 # multimint = { path = "../multimint" }
 nostr = { version = "0.31.2", features = ["nip47"] }
