@@ -1,6 +1,7 @@
 use anyhow::Result;
-use nostr_sdk::{Client, EventBuilder, EventId, Kind, RelayPoolNotification};
+use nostr_sdk::{Client, EventBuilder, JsonUtil, Kind, RelayPoolNotification};
 use tokio::sync::broadcast::Receiver;
+use tracing::info;
 
 use crate::managers::key::KeyManager;
 use crate::nwc::METHODS;
@@ -31,7 +32,7 @@ impl NostrService {
         Ok(())
     }
 
-    pub async fn broadcast_info_event(&self, keys: &KeyManager) -> Result<EventId> {
+    pub async fn broadcast_info_event(&self, keys: &KeyManager) -> Result<(), anyhow::Error> {
         let content = METHODS
             .iter()
             .map(ToString::to_string)
@@ -39,10 +40,10 @@ impl NostrService {
             .join(" ");
         let info = EventBuilder::new(Kind::WalletConnectInfo, content, [])
             .to_event(&keys.server_keys())?;
-        self.client
-            .send_event(info)
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to send event: {}", e))
+        info!("Broadcasting info event: {}", info.as_json());
+        let event_id = self.client.send_event(info).await?;
+        info!("Broadcasted info event: {}", event_id);
+        Ok(())
     }
 
     pub async fn connect(&self) -> () {

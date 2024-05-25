@@ -49,8 +49,13 @@ async fn handle_signals(tx: oneshot::Sender<()>) -> Result<()> {
 
     match signals {
         Ok(mut stream) => {
-            while stream.recv().await.is_some() {
-                debug!("Received shutdown signal");
+            if let Some(_) = stream.recv().await {
+                debug!("Received shutdown signal, sending oneshot message...");
+                if let Err(e) = tx.send(()) {
+                    debug!("Error sending oneshot message: {:?}", e);
+                    return Err(anyhow::anyhow!("Failed to send oneshot message: {:?}", e));
+                }
+                debug!("Oneshot message sent successfully.");
             }
         }
         Err(e) => {
@@ -58,12 +63,15 @@ async fn handle_signals(tx: oneshot::Sender<()>) -> Result<()> {
         }
     }
 
-    let _ = tx.send(());
     Ok(())
 }
 
 async fn event_loop(state: AppState) -> Result<()> {
     state.nostr_service.connect().await;
+    state
+        .nostr_service
+        .broadcast_info_event(&state.key_manager)
+        .await?;
     loop {
         info!("Listening for events...");
         let (tx, _) = tokio::sync::watch::channel(());

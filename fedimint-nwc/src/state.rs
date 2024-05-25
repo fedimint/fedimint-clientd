@@ -39,9 +39,6 @@ impl AppState {
         self.multimint_service
             .init_multimint(&cli.invite_code, cli.manual_secret.clone())
             .await?;
-        self.nostr_service
-            .broadcast_info_event(&self.key_manager)
-            .await?;
         Ok(())
     }
 
