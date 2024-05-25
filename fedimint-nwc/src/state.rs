@@ -18,6 +18,29 @@ use tracing::{debug, error, info};
 use crate::config::Cli;
 use crate::nwc::{handle_nwc_request, METHODS};
 
+pub async fn init(cli: Cli) -> Result<AppState> {
+    let db_path = cli.db_path.clone();
+    let keys_file = cli.keys_file.clone();
+    let relays = cli.relays.clone();
+
+    let mut state = AppState::new(db_path, &keys_file, &relays).await?;
+
+    let manual_secret = AppState::load_manual_secret(&cli).await;
+    let invite_code = cli.invite_code.clone();
+    state.init_multimint(&invite_code, manual_secret).await?;
+
+    if state.multimint.all().await.is_empty() {
+        return Err(anyhow::anyhow!(
+            "No multimint clients found, must have at least one client to start the server."
+        ));
+    }
+
+    // Broadcast info event on startup
+    state.broadcast_info_event().await?;
+
+    Ok(state)
+}
+
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub multimint: MultiMint,

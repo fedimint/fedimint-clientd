@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use anyhow::Result;
 use clap::Parser;
-use config::Cli;
 use nostr_sdk::RelayPoolNotification;
 use tokio::signal::unix::SignalKind;
 use tokio::sync::oneshot;
@@ -14,35 +13,20 @@ pub mod state;
 
 use state::AppState;
 
+use crate::config::Cli;
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
     dotenv::dotenv().ok();
 
     let cli = Cli::parse();
-    let db_path = cli.db_path.clone();
-    let keys_file = cli.keys_file.clone();
-    let relays = cli.relays.clone();
-
-    let mut state = AppState::new(db_path, &keys_file, &relays).await?;
-
-    let manual_secret = AppState::load_manual_secret(&cli).await;
-    let invite_code = cli.invite_code.clone();
-    state.init_multimint(&invite_code, manual_secret).await?;
-
-    if state.multimint.all().await.is_empty() {
-        return Err(anyhow::anyhow!(
-            "No multimint clients found, must have at least one client to start the server."
-        ));
-    }
+    let state = state::init(cli).await?;
 
     // Shutdown signal handler
     let (tx, rx) = oneshot::channel::<()>();
     let signal_handler = tokio::spawn(handle_signals(tx));
     info!("Shutdown signal handler started...");
-
-    // Broadcast info event
-    state.broadcast_info_event().await?;
 
     // Start the event loop
     event_loop(state.clone()).await?;
