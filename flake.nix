@@ -103,14 +103,13 @@
         legacyPackages = outputs;
         packages = { default = outputs.fedimint-clientd; };
         devShells = flakeboxLib.mkShells {
-          packages = with pkgs ; [
-                jbang                # For running the JBang script version of Schnorr.Java
-                jdk22                # JDK 22 will be in $JAVA_HOME (and in javaToolchains)
-                jextract             # jextract (Nix package) contains a jlinked executable and bundles its own JDK 22
-                (gradle.override {   # Gradle 8.7 (Nix package) depends-on and directly uses JDK 21 to launch Gradle itself
-                    javaToolchains = [ jdk22 ];     # Put JDK 22 in Gradle's javaToolchain configuration
-                })
-            ];
+          packages = with pkgs; [
+            jdk21 # JDK 22 will be in $JAVA_HOME (and in javaToolchains)
+            jextract # jextract (Nix package) contains a jlinked executable and bundles its own JDK 22
+            (gradle.override { # Gradle 8.7 (Nix package) depends-on and directly uses JDK 21 to launch Gradle itself
+              javaToolchains = [ jdk21 ];
+            })
+          ];
           buildInputs = commonArgs.buildInputs;
           nativeBuildInputs = [
             pkgs.mprocs
@@ -127,6 +126,7 @@
             fedimint.packages.${system}.fedimint-pkgs
           ];
           shellHook = ''
+            export JAVA_HOME="${pkgs.jdk21}"
             export RUSTFLAGS="--cfg tokio_unstable"
             export RUSTDOCFLAGS="--cfg tokio_unstable"
             export RUST_LOG="info"
