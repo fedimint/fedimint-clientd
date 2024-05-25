@@ -1,0 +1,11 @@
+[package]
+name = "fedimint-nwc"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+keywords.workspace = true
+license.workspace = true
+readme.workspace = true
+authors.workspace = true
+
+[dependencies]

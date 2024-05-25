@@ -1281,6 +1281,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "fedimint-nwc"
+version = "0.3.5"
+
+[[package]]
 name = "fedimint-rocksdb"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
