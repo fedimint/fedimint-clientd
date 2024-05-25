@@ -8,7 +8,9 @@ use tokio::sync::oneshot;
 use tracing::{debug, info};
 
 pub mod config;
+pub mod managers;
 pub mod nwc;
+pub mod services;
 pub mod state;
 
 use state::AppState;
@@ -21,7 +23,7 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
     let cli = Cli::parse();
-    let state = state::init(cli).await?;
+    let state = AppState::new(cli).await?;
 
     // Shutdown signal handler
     let (tx, rx) = oneshot::channel::<()>();
@@ -61,7 +63,7 @@ async fn handle_signals(tx: oneshot::Sender<()>) -> Result<()> {
 }
 
 async fn event_loop(state: AppState) -> Result<()> {
-    state.nostr_client.connect().await;
+    state.nostr_service.connect().await;
     loop {
         info!("Listening for events...");
         let (tx, _) = tokio::sync::watch::channel(());
@@ -70,7 +72,7 @@ async fn event_loop(state: AppState) -> Result<()> {
             let _ = tx.send(());
         });
 
-        let mut notifications = state.nostr_client.notifications();
+        let mut notifications = state.nostr_service.notifications();
         while let Ok(notification) = notifications.recv().await {
             match notification {
                 RelayPoolNotification::Event { event, .. } => state.handle_event(*event).await,
@@ -82,6 +84,6 @@ async fn event_loop(state: AppState) -> Result<()> {
             }
         }
 
-        state.nostr_client.disconnect().await?;
+        state.nostr_service.disconnect().await?;
     }
 }

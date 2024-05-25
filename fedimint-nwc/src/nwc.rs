@@ -1,4 +1,4 @@
-use nostr_sdk::nips::nip47::Method;
+use nostr::nips::nip47::Method;
 use nostr_sdk::Event;
 
 use crate::state::AppState;
