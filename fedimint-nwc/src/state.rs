@@ -30,26 +30,9 @@ pub struct AppState {
 
 impl AppState {
     pub async fn new(fm_db_path: PathBuf, keys_file: &str, relays: &str) -> Result<Self> {
-        let clients = MultiMint::new(fm_db_path).await?;
-        clients.update_gateway_caches().await?;
-
-        info!("Setting up nostr client...");
+        let clients = Self::init_multimint_clients(fm_db_path).await?;
         let keys = Nip47Keys::load_or_generate(keys_file)?;
-        let lines = relays.split(',').collect::<Vec<_>>();
-        let relays = lines
-            .iter()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .map(|line| line.to_string())
-            .collect::<Vec<_>>();
-        let nostr_client = Client::new(&keys.server_keys());
-        info!("Adding relays...");
-        for relay in relays {
-            nostr_client.add_relay(relay).await?;
-        }
-        info!("Setting NWC subscription...");
-        let subscription = setup_subscription(&keys);
-        nostr_client.subscribe(vec![subscription], None).await;
+        let nostr_client = Self::setup_nostr_client(&keys, relays).await?;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));
 
@@ -61,6 +44,37 @@ impl AppState {
             nostr_client,
             active_requests,
         })
+    }
+
+    async fn init_multimint_clients(fm_db_path: PathBuf) -> Result<MultiMint> {
+        let clients = MultiMint::new(fm_db_path).await?;
+        clients.update_gateway_caches().await?;
+        Ok(clients)
+    }
+
+    async fn setup_nostr_client(keys: &Nip47Keys, relays: &str) -> Result<Client> {
+        info!("Setting up nostr client...");
+        let nostr_client = Client::new(&keys.server_keys());
+        Self::add_relays(&nostr_client, relays).await?;
+        info!("Setting NWC subscription...");
+        let subscription = setup_subscription(keys);
+        nostr_client.subscribe(vec![subscription], None).await;
+        Ok(nostr_client)
+    }
+
+    async fn add_relays(nostr_client: &Client, relays: &str) -> Result<()> {
+        let lines = relays.split(',').collect::<Vec<_>>();
+        let relays = lines
+            .iter()
+            .map(|line| line.trim())
+            .filter(|line| !line.is_empty())
+            .map(|line| line.to_string())
+            .collect::<Vec<_>>();
+        info!("Adding relays...");
+        for relay in relays {
+            nostr_client.add_relay(relay).await?;
+        }
+        Ok(())
     }
 
     pub async fn load_manual_secret(cli: &Cli) -> Option<String> {
