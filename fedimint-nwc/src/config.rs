@@ -24,8 +24,8 @@ pub struct Cli {
     #[clap(long, env = "FEDIMINT_NWC_KEYS_FILE", default_value_t = String::from("keys.json"))]
     pub keys_file: String,
     /// Nostr relay to use
-    #[clap(long, env = "FEDIMINT_NWC_RELAY", default_value_t = String::from("wss://relay.damus.io"))]
-    pub relay: String,
+    #[clap(long, env = "FEDIMINT_NWC_RELAYS", default_value_t = String::from("wss://relay.damus.io"))]
+    pub relays: String,
     /// Max invoice payment amount, in satoshis
     #[clap(long, env = "FEDIMINT_NWC_MAX_AMOUNT", default_value_t = 100_000)]
     pub max_amount: u64,

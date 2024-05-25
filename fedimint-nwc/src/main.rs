@@ -22,9 +22,9 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let db_path = cli.db_path.clone();
     let keys_file = cli.keys_file.clone();
-    let relay = cli.relay.clone();
+    let relays = cli.relays.clone();
 
-    let mut state = AppState::new(db_path, &keys_file, &relay).await?;
+    let mut state = AppState::new(db_path, &keys_file, &relays).await?;
 
     let manual_secret = AppState::load_manual_secret(&cli).await;
     let invite_code = cli.invite_code.clone();

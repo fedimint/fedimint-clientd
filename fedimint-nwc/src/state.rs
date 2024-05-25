@@ -29,13 +29,25 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub async fn new(fm_db_path: PathBuf, keys_file: &str, relay: &str) -> Result<Self> {
+    pub async fn new(fm_db_path: PathBuf, keys_file: &str, relays: &str) -> Result<Self> {
         let clients = MultiMint::new(fm_db_path).await?;
         clients.update_gateway_caches().await?;
 
+        info!("Setting up nostr client...");
         let keys = Nip47Keys::load_or_generate(keys_file)?;
+        let lines = relays.split(',').collect::<Vec<_>>();
+        let relays = lines
+            .iter()
+            .map(|line| line.trim())
+            .filter(|line| !line.is_empty())
+            .map(|line| line.to_string())
+            .collect::<Vec<_>>();
         let nostr_client = Client::new(&keys.server_keys());
-        nostr_client.add_relay(relay).await?;
+        info!("Adding relays...");
+        for relay in relays {
+            nostr_client.add_relay(relay).await?;
+        }
+        info!("Setting NWC subscription...");
         let subscription = setup_subscription(&keys);
         nostr_client.subscribe(vec![subscription], None).await;
 
