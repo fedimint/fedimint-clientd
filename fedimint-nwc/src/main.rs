@@ -1,40 +1,16 @@
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use anyhow::Result;
+use clap::Parser;
+use config::Cli;
 use multimint::fedimint_core::api::InviteCode;
 use tracing::info;
 
+pub mod config;
+pub mod nwc;
 pub mod state;
 
-use clap::{Parser, Subcommand};
 use state::AppState;
-
-#[derive(Subcommand)]
-enum Commands {
-    Start,
-    Stop,
-}
-
-#[derive(Parser)]
-#[clap(version = "1.0", author = "Kody Low")]
-struct Cli {
-    /// Federation invite code
-    #[clap(long, env = "FEDIMINT_CLIENTD_INVITE_CODE", required = false)]
-    invite_code: String,
-
-    /// Path to FM database
-    #[clap(long, env = "FEDIMINT_CLIENTD_DB_PATH", required = true)]
-    db_path: PathBuf,
-
-    /// Addr
-    #[clap(long, env = "FEDIMINT_CLIENTD_ADDR", required = true)]
-    addr: String,
-
-    /// Manual secret
-    #[clap(long, env = "FEDIMINT_CLIENTD_MANUAL_SECRET", required = false)]
-    manual_secret: Option<String>,
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -43,7 +19,7 @@ async fn main() -> Result<()> {
 
     let cli: Cli = Cli::parse();
 
-    let mut state = AppState::new(cli.db_path).await?;
+    let mut state = AppState::new(cli.db_path, &cli.keys_file).await?;
 
     let manual_secret = match cli.manual_secret {
         Some(secret) => Some(secret),
