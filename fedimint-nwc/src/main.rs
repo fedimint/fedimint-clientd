@@ -22,21 +22,22 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let state = AppState::new(cli).await?;
 
-    // Start the event loop
     event_loop(state.clone()).await?;
 
     Ok(())
 }
 
 async fn event_loop(state: AppState) -> Result<()> {
+    // Connect to the relay pool and broadcast the info event
     state.nostr_service.connect().await;
     state
         .nostr_service
         .broadcast_info_event(&state.key_manager)
         .await?;
 
+    // Handle ctrl+c to gracefully shutdown the event loop
     let ctrl_c = tokio::signal::ctrl_c();
-    pin!(ctrl_c); // Pin the ctrl_c future
+    pin!(ctrl_c);
 
     let mut notifications = state.nostr_service.notifications();
 
