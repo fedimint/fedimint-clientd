@@ -7,17 +7,17 @@ use tokio::sync::Mutex;
 use tracing::{debug, error, info};
 
 use crate::config::Cli;
-use crate::managers::KeyManager;
-use crate::nwc::{handle_nwc_request, NwcConfig};
+use crate::managers::{KeyManager, PaymentsManager};
+use crate::nwc::handle_nwc_request;
 use crate::services::{MultiMintService, NostrService};
 
 #[derive(Debug, Clone)]
 pub struct AppState {
+    pub active_requests: Arc<Mutex<BTreeSet<EventId>>>,
     pub multimint_service: MultiMintService,
     pub nostr_service: NostrService,
     pub key_manager: KeyManager,
-    pub active_requests: Arc<Mutex<BTreeSet<EventId>>>,
-    pub nwc_config: NwcConfig,
+    pub payments_manager: PaymentsManager,
 }
 
 impl AppState {
@@ -27,17 +27,14 @@ impl AppState {
         let nostr_service = NostrService::new(&key_manager, &cli.relays).await?;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));
-        let nwc_config = NwcConfig {
-            max_amount: cli.max_amount,
-            daily_limit: cli.daily_limit,
-        };
+        let payments_manager = PaymentsManager::new(cli.max_amount, cli.daily_limit);
 
         Ok(Self {
+            active_requests,
             multimint_service,
             nostr_service,
             key_manager,
-            active_requests,
-            nwc_config,
+            payments_manager,
         })
     }
 

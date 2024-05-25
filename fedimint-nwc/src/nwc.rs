@@ -3,12 +3,13 @@ use std::str::FromStr;
 use anyhow::{anyhow, Result};
 use lightning_invoice::Bolt11Invoice;
 use nostr::nips::nip04;
-use nostr::nips::nip47::{Method, Request, RequestParams};
+use nostr::nips::nip47::{ErrorCode, Method, NIP47Error, Request, RequestParams, Response};
 use nostr::Tag;
 use nostr_sdk::{Event, JsonUtil};
 use tokio::spawn;
-use tracing::info;
+use tracing::{error, info};
 
+use crate::managers::PaymentsManager;
 use crate::services::{MultiMintService, NostrService};
 use crate::state::AppState;
 
@@ -64,7 +65,7 @@ pub async fn handle_nwc_request(state: &AppState, event: Event) -> Result<(), an
                 &event,
                 &state.multimint_service,
                 &state.nostr_service,
-                &state.nwc_config,
+                &state.payments_manager,
             )
             .await
         }
@@ -83,10 +84,10 @@ async fn handle_multiple_payments<T>(
         let event_clone = event.clone();
         let mm = state.multimint_service.clone();
         let nostr = state.nostr_service.clone();
-        let config = state.nwc_config.clone();
-        spawn(async move {
-            handle_nwc_params(params, method, &event_clone, &mm, &nostr, &config).await
-        })
+        let pm = state.payments_manager.clone();
+        spawn(
+            async move { handle_nwc_params(params, method, &event_clone, &mm, &nostr, &pm).await },
+        )
         .await??;
     }
     Ok(())
@@ -98,7 +99,7 @@ async fn handle_nwc_params(
     event: &Event,
     multimint: &MultiMintService,
     nostr: &NostrService,
-    config: &NwcConfig,
+    pm: &PaymentsManager,
 ) -> Result<(), anyhow::Error> {
     let mut d_tag: Option<Tag> = None;
     let content = match params {
@@ -112,11 +113,9 @@ async fn handle_nwc_params(
                 .or(params.amount)
                 .unwrap_or(0);
 
-            let error_msg = if config.max_amount > 0 && msats > config.max_amount * 1_000 {
+            let error_msg = if pm.max_amount > 0 && msats > pm.max_amount * 1_000 {
                 Some("Invoice amount too high.")
-            } else if config.daily_limit > 0
-                && tracker.lock().await.sum_payments() + msats > config.daily_limit * 1_000
-            {
+            } else if pm.daily_limit > 0 && pm.sum_payments() + msats > pm.daily_limit * 1_000 {
                 Some("Daily limit exceeded.")
             } else {
                 None
@@ -125,10 +124,10 @@ async fn handle_nwc_params(
             // verify amount, convert to msats
             match error_msg {
                 None => {
-                    match pay_invoice(invoice, lnd, method).await {
+                    match pay_invoice(invoice, method, mm).await {
                         Ok(content) => {
                             // add payment to tracker
-                            tracker.lock().await.add_payment(msats);
+                            pm.add_payment(msats);
                             content
                         }
                         Err(e) => {
