@@ -35,16 +35,14 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-/// Event loop that listens for nostr events and handles them
+/// Event loop that listens for nostr wallet connect events and handles them
 async fn event_loop(state: AppState) -> Result<()> {
     // Handle ctrl+c to gracefully shutdown the event loop
     let ctrl_c = tokio::signal::ctrl_c();
     pin!(ctrl_c);
 
     let mut notifications = state.nostr_service.notifications();
-
     info!("Listening for events...");
-
     loop {
         tokio::select! {
             _ = &mut ctrl_c => {
