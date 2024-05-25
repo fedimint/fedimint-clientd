@@ -28,7 +28,6 @@ pub async fn init(cli: Cli) -> Result<AppState> {
     let manual_secret = AppState::load_manual_secret(&cli).await;
     let invite_code = cli.invite_code.clone();
     state.init_multimint(&invite_code, manual_secret).await?;
-
     if state.multimint.all().await.is_empty() {
         return Err(anyhow::anyhow!(
             "No multimint clients found, must have at least one client to start the server."
@@ -69,6 +68,27 @@ impl AppState {
         })
     }
 
+    pub async fn init_multimint(
+        &mut self,
+        invite_code: &str,
+        manual_secret: Option<String>,
+    ) -> Result<()> {
+        match InviteCode::from_str(invite_code) {
+            Ok(invite_code) => {
+                let federation_id = self
+                    .multimint
+                    .register_new(invite_code, manual_secret)
+                    .await?;
+                info!("Created client for federation id: {:?}", federation_id);
+                Ok(())
+            }
+            Err(e) => {
+                error!("Invalid federation invite code: {}", e);
+                Err(e.into())
+            }
+        }
+    }
+
     async fn init_multimint_clients(fm_db_path: PathBuf) -> Result<MultiMint> {
         let clients = MultiMint::new(fm_db_path).await?;
         clients.update_gateway_caches().await?;
@@ -104,27 +124,6 @@ impl AppState {
         cli.manual_secret
             .clone()
             .or_else(|| std::env::var("FEDIMINT_CLIENTD_MANUAL_SECRET").ok())
-    }
-
-    pub async fn init_multimint(
-        &mut self,
-        invite_code: &str,
-        manual_secret: Option<String>,
-    ) -> Result<()> {
-        match InviteCode::from_str(invite_code) {
-            Ok(invite_code) => {
-                let federation_id = self
-                    .multimint
-                    .register_new(invite_code, manual_secret)
-                    .await?;
-                info!("Created client for federation id: {:?}", federation_id);
-                Ok(())
-            }
-            Err(e) => {
-                error!("Invalid federation invite code: {}", e);
-                Err(e.into())
-            }
-        }
     }
 
     pub async fn wait_for_active_requests(&self) {
