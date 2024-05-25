@@ -10,27 +10,34 @@ use anyhow::{Context, Result};
 use multimint::fedimint_core::api::InviteCode;
 use multimint::MultiMint;
 use nostr_sdk::secp256k1::SecretKey;
-use nostr_sdk::{EventId, Keys};
+use nostr_sdk::{Client, Event, EventBuilder, EventId, Filter, JsonUtil, Keys, Kind, Timestamp};
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 use tracing::{debug, error, info};
 
 use crate::config::Cli;
+use crate::nwc::{handle_nwc_request, METHODS};
 
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub multimint: MultiMint,
     pub user_keys: Keys,
     pub server_keys: Keys,
+    pub sent_info: bool,
+    pub nostr_client: Client,
     pub active_requests: Arc<Mutex<BTreeSet<EventId>>>,
 }
 
 impl AppState {
-    pub async fn new(fm_db_path: PathBuf, keys_file: &str) -> Result<Self> {
+    pub async fn new(fm_db_path: PathBuf, keys_file: &str, relay: &str) -> Result<Self> {
         let clients = MultiMint::new(fm_db_path).await?;
         clients.update_gateway_caches().await?;
 
         let keys = Nip47Keys::load_or_generate(keys_file)?;
+        let nostr_client = Client::new(&keys.server_keys());
+        nostr_client.add_relay(relay).await?;
+        let subscription = setup_subscription(&keys);
+        nostr_client.subscribe(vec![subscription], None).await;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));
 
@@ -38,6 +45,8 @@ impl AppState {
             multimint: clients,
             user_keys: keys.user_keys(),
             server_keys: keys.server_keys(),
+            sent_info: keys.sent_info,
+            nostr_client,
             active_requests,
         })
     }
@@ -77,6 +86,47 @@ impl AppState {
             }
             debug!("Waiting for {} requests to complete...", requests.len());
             tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+    }
+
+    pub async fn broadcast_info_event(&mut self) -> Result<()> {
+        let content = METHODS
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(" ");
+        let info =
+            EventBuilder::new(Kind::WalletConnectInfo, content, []).to_event(&self.server_keys)?;
+        let res = self
+            .nostr_client
+            .send_event(info)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to send event: {}", e));
+
+        if res.is_ok() {
+            self.sent_info = true;
+        }
+
+        Ok(())
+    }
+
+    pub async fn handle_event(&self, event: Event) {
+        if event.kind == Kind::WalletConnectRequest && event.verify().is_ok() {
+            debug!("Received event!");
+            let event_id = event.id;
+            self.active_requests.lock().await.insert(event_id);
+
+            match tokio::time::timeout(Duration::from_secs(60), handle_nwc_request(&self, event))
+                .await
+            {
+                Ok(Ok(_)) => {}
+                Ok(Err(e)) => error!("Error processing request: {e}"),
+                Err(e) => error!("Timeout error: {e}"),
+            }
+
+            self.active_requests.lock().await.remove(&event_id);
+        } else {
+            error!("Invalid event: {}", event.as_json());
         }
     }
 }
@@ -139,4 +189,12 @@ impl Nip47Keys {
     fn user_keys(&self) -> Keys {
         Keys::new(self.user_key.into())
     }
+}
+
+fn setup_subscription(keys: &Nip47Keys) -> Filter {
+    Filter::new()
+        .kinds(vec![Kind::WalletConnectRequest])
+        .author(keys.user_keys().public_key())
+        .pubkey(keys.server_keys().public_key())
+        .since(Timestamp::now())
 }
