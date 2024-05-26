@@ -117,98 +117,10 @@ async fn handle_nwc_params(
             handle_make_invoice(params, method, multimint, pm).await
         }
         RequestParams::LookupInvoice(params) => {
-            let mut invoice: Option<Bolt11Invoice> = None;
-            let payment_hash: Vec<u8> = match params.payment_hash {
-                None => match params.invoice {
-                    None => return Err(anyhow!("Missing payment_hash or invoice")),
-                    Some(bolt11) => {
-                        let inv = Bolt11Invoice::from_str(&bolt11)
-                            .map_err(|_| anyhow!("Failed to parse invoice"))?;
-                        invoice = Some(inv.clone());
-                        inv.payment_hash().into_32().to_vec()
-                    }
-                },
-                Some(str) => FromHex::from_hex(&str)?,
-            };
-
-            let res = lnd
-                .lookup_invoice(PaymentHash {
-                    r_hash: payment_hash.clone(),
-                    ..Default::default()
-                })
-                .await?
-                .into_inner();
-
-            info!("Looked up invoice: {}", res.payment_request);
-
-            let (description, description_hash) = match invoice {
-                Some(inv) => match inv.description() {
-                    Bolt11InvoiceDescription::Direct(desc) => (Some(desc.to_string()), None),
-                    Bolt11InvoiceDescription::Hash(hash) => (None, Some(hash.0.to_string())),
-                },
-                None => (None, None),
-            };
-
-            let preimage = if res.r_preimage.is_empty() {
-                None
-            } else {
-                Some(hex::encode(res.r_preimage))
-            };
-
-            let settled_at = if res.settle_date == 0 {
-                None
-            } else {
-                Some(res.settle_date as u64)
-            };
-
-            Response {
-                result_type: Method::LookupInvoice,
-                error: None,
-                result: Some(ResponseResult::LookupInvoice(LookupInvoiceResponseResult {
-                    transaction_type: None,
-                    invoice: Some(res.payment_request),
-                    description,
-                    description_hash,
-                    preimage,
-                    payment_hash: hex::encode(payment_hash),
-                    amount: res.value_msat as u64,
-                    fees_paid: 0,
-                    created_at: res.creation_date as u64,
-                    expires_at: (res.creation_date + res.expiry) as u64,
-                    settled_at,
-                    metadata: Default::default(),
-                })),
-            }
+            handle_lookup_invoice(params, method, multimint, pm).await
         }
-        RequestParams::GetBalance => {
-            let tracker = tracker.lock().await.sum_payments();
-            let remaining_msats = config.daily_limit * 1_000 - tracker;
-            info!("Current balance: {remaining_msats}msats");
-            Response {
-                result_type: Method::GetBalance,
-                error: None,
-                result: Some(ResponseResult::GetBalance(GetBalanceResponseResult {
-                    balance: remaining_msats,
-                })),
-            }
-        }
-        RequestParams::GetInfo => {
-            let lnd_info: GetInfoResponse = lnd.get_info(GetInfoRequest {}).await?.into_inner();
-            info!("Getting info");
-            Response {
-                result_type: Method::GetBalance,
-                error: None,
-                result: Some(ResponseResult::GetInfo(GetInfoResponseResult {
-                    alias: lnd_info.alias,
-                    color: lnd_info.color,
-                    pubkey: lnd_info.identity_pubkey,
-                    network: "".to_string(),
-                    block_height: lnd_info.block_height,
-                    block_hash: lnd_info.block_hash,
-                    methods: METHODS.iter().map(|i| i.to_string()).collect(),
-                })),
-            }
-        }
+        RequestParams::GetBalance => handle_get_balance(method, pm).await,
+        RequestParams::GetInfo => handle_get_info(method, nostr).await,
         _ => {
             return Err(anyhow!("Command not supported"));
         }
@@ -347,5 +259,106 @@ async fn handle_make_invoice(
             }),
             result: None,
         },
+    }
+}
+
+async fn handle_lookup_invoice(
+    params: LookupInvoiceRequestParams,
+    method: Method,
+    multimint: &MultiMintService,
+    pm: &mut PaymentsManager,
+) -> Response {
+    let mut invoice: Option<Bolt11Invoice> = None;
+    let payment_hash: Vec<u8> = match params.payment_hash {
+        None => match params.invoice {
+            None => return Err(anyhow!("Missing payment_hash or invoice")),
+            Some(bolt11) => {
+                let inv = Bolt11Invoice::from_str(&bolt11)
+                    .map_err(|_| anyhow!("Failed to parse invoice"))?;
+                invoice = Some(inv.clone());
+                inv.payment_hash().into_32().to_vec()
+            }
+        },
+        Some(str) => FromHex::from_hex(&str)?,
+    };
+
+    let res = lnd
+        .lookup_invoice(PaymentHash {
+            r_hash: payment_hash.clone(),
+            ..Default::default()
+        })
+        .await?
+        .into_inner();
+
+    info!("Looked up invoice: {}", res.payment_request);
+
+    let (description, description_hash) = match invoice {
+        Some(inv) => match inv.description() {
+            Bolt11InvoiceDescription::Direct(desc) => (Some(desc.to_string()), None),
+            Bolt11InvoiceDescription::Hash(hash) => (None, Some(hash.0.to_string())),
+        },
+        None => (None, None),
+    };
+
+    let preimage = if res.r_preimage.is_empty() {
+        None
+    } else {
+        Some(hex::encode(res.r_preimage))
+    };
+
+    let settled_at = if res.settle_date == 0 {
+        None
+    } else {
+        Some(res.settle_date as u64)
+    };
+
+    Response {
+        result_type: Method::LookupInvoice,
+        error: None,
+        result: Some(ResponseResult::LookupInvoice(LookupInvoiceResponseResult {
+            transaction_type: None,
+            invoice: Some(res.payment_request),
+            description,
+            description_hash,
+            preimage,
+            payment_hash: hex::encode(payment_hash),
+            amount: res.value_msat as u64,
+            fees_paid: 0,
+            created_at: res.creation_date as u64,
+            expires_at: (res.creation_date + res.expiry) as u64,
+            settled_at,
+            metadata: Default::default(),
+        })),
+    }
+}
+
+async fn handle_get_balance(method: Method, pm: &mut PaymentsManager) -> Response {
+    let tracker = tracker.lock().await.sum_payments();
+    let remaining_msats = config.daily_limit * 1_000 - tracker;
+    info!("Current balance: {remaining_msats}msats");
+    Response {
+        result_type: Method::GetBalance,
+        error: None,
+        result: Some(ResponseResult::GetBalance(GetBalanceResponseResult {
+            balance: remaining_msats,
+        })),
+    }
+}
+
+async fn handle_get_info(method: Method, nostr: &NostrService) -> Response {
+    let lnd_info: GetInfoResponse = lnd.get_info(GetInfoRequest {}).await?.into_inner();
+    info!("Getting info");
+    Response {
+        result_type: Method::GetInfo,
+        error: None,
+        result: Some(ResponseResult::GetInfo(GetInfoResponseResult {
+            alias: lnd_info.alias,
+            color: lnd_info.color,
+            pubkey: lnd_info.identity_pubkey,
+            network: "".to_string(),
+            block_height: lnd_info.block_height,
+            block_hash: lnd_info.block_hash,
+            methods: METHODS.iter().map(|i| i.to_string()).collect(),
+        })),
     }
 }
