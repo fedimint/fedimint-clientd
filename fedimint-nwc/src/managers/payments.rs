@@ -71,11 +71,13 @@ impl PaymentsManager {
         self.payments.iter().map(|p| p.amount).sum()
     }
 
-    pub fn check_payment_limits(&mut self, msats: u64) -> Option<String> {
+    pub fn check_payment_limits(&mut self, msats: u64, dest: String) -> Option<String> {
         if self.max_amount > 0 && msats > self.max_amount * 1_000 {
             Some("Invoice amount too high.".to_string())
         } else if self.daily_limit > 0 && self.sum_payments() + msats > self.daily_limit * 1_000 {
             Some("Daily limit exceeded.".to_string())
+        } else if self.max_destination_amounts.get(&dest).is_some() {
+            Some("Destination max amount exceeded.".to_string())
         } else {
             None
         }

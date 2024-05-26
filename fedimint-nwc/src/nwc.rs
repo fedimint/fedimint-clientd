@@ -112,8 +112,13 @@ async fn handle_nwc_params(
                 .amount_milli_satoshis()
                 .or(params.amount)
                 .unwrap_or(0);
+            let dest = match invoice.payee_pub_key() {
+                Some(dest) => dest.to_string(),
+                None => "".to_string(), /* FIXME: this is a hack, should handle
+                                         * no pubkey case better */
+            };
 
-            let error_msg = pm.check_payment_limits(msats);
+            let error_msg = pm.check_payment_limits(msats, dest);
 
             // verify amount, convert to msats
             match error_msg {
@@ -121,7 +126,7 @@ async fn handle_nwc_params(
                     match multimint.pay_invoice(invoice, method).await {
                         Ok(content) => {
                             // add payment to tracker
-                            pm.add_payment(msats);
+                            pm.add_payment(msats, dest);
                             content
                         }
                         Err(e) => {
@@ -149,32 +154,27 @@ async fn handle_nwc_params(
             }
         }
         RequestParams::PayKeysend(params) => {
-            d_tag = params.id.map(Tag::Identifier);
+            d_tag = params.id.map(|id| Tag::identifier(id.clone()));
 
             let msats = params.amount;
-            let error_msg = if config.max_amount > 0 && msats > config.max_amount * 1_000 {
-                Some("Invoice amount too high.")
-            } else if config.daily_limit > 0
-                && tracker.lock().await.sum_payments() + msats > config.daily_limit * 1_000
-            {
-                Some("Daily limit exceeded.")
-            } else {
-                None
-            };
+            let dest = params.pubkey.clone();
+
+            let error_msg = pm.check_payment_limits(msats, dest);
 
             // verify amount, convert to msats
             match error_msg {
                 None => {
-                    let pubkey = bitcoin::secp256k1::PublicKey::from_str(&params.pubkey)?;
-                    match pay_keysend(
-                        pubkey,
-                        params.preimage,
-                        params.tlv_records,
-                        msats,
-                        lnd,
-                        method,
-                    )
-                    .await
+                    let pubkey = Pubkey::from_str(&params.pubkey)?;
+                    match multimint
+                        .pay_keysend(
+                            pubkey,
+                            params.preimage,
+                            params.tlv_records,
+                            msats,
+                            lnd,
+                            method,
+                        )
+                        .await
                     {
                         Ok(content) => {
                             // add payment to tracker
