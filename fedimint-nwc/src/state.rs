@@ -9,7 +9,7 @@ use tokio::sync::Mutex;
 use tracing::{debug, error, info};
 
 use crate::config::Cli;
-use crate::managers::PaymentsManager;
+use crate::database::Database;
 use crate::nwc::handle_nwc_request;
 use crate::services::{MultiMintService, NostrService};
 
@@ -18,25 +18,39 @@ pub struct AppState {
     pub active_requests: Arc<Mutex<BTreeSet<EventId>>>,
     pub multimint_service: MultiMintService,
     pub nostr_service: NostrService,
-    pub payments_manager: PaymentsManager,
+    pub db: Database,
 }
 
 impl AppState {
     pub async fn new(cli: Cli) -> Result<Self, anyhow::Error> {
         let invite_code = InviteCode::from_str(&cli.invite_code)?;
+
+        // Define paths for MultiMint and Redb databases within the work_dir
+        let multimint_db_path = cli.work_dir.join("multimint_db");
+        let redb_db_path = cli.work_dir.join("redb_db");
+        let keys_file_path = cli.work_dir.join("keys.json");
+
+        // Ensure directories exist
+        std::fs::create_dir_all(&multimint_db_path)?;
+        std::fs::create_dir_all(&redb_db_path)?;
+
         let multimint_service =
-            MultiMintService::new(cli.db_path, Some(invite_code.federation_id())).await?;
-        let nostr_service = NostrService::new(&cli.keys_file, &cli.relays).await?;
+            MultiMintService::new(multimint_db_path, Some(invite_code.federation_id())).await?;
+        let nostr_service = NostrService::new(&keys_file_path, &cli.relays).await?;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));
-        let payments_manager =
-            PaymentsManager::new(cli.max_amount, cli.daily_limit, cli.rate_limit_secs);
+        let db = Database::new(
+            &redb_db_path,
+            cli.max_amount,
+            cli.daily_limit,
+            cli.rate_limit_secs,
+        )?;
 
         Ok(Self {
             active_requests,
             multimint_service,
             nostr_service,
-            payments_manager,
+            db,
         })
     }
 

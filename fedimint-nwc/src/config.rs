@@ -14,15 +14,12 @@ pub struct Cli {
     /// Federation invite code
     #[clap(long, env = "FEDIMINT_CLIENTD_INVITE_CODE", required = false)]
     pub invite_code: String,
-    /// Path to FM database
-    #[clap(long, env = "FEDIMINT_CLIENTD_DB_PATH", required = true)]
-    pub db_path: PathBuf,
+    /// Working directory for all files
+    #[clap(long, env = "FEDIMINT_CLIENTD_WORK_DIR", required = true)]
+    pub work_dir: PathBuf,
     /// Manual secret
     #[clap(long, env = "FEDIMINT_CLIENTD_MANUAL_SECRET", required = false)]
     pub manual_secret: Option<String>,
-    /// Location of keys file
-    #[clap(long, env = "FEDIMINT_NWC_KEYS_FILE", default_value_t = String::from("keys.json"))]
-    pub keys_file: String,
     /// Nostr relay to use
     #[clap(long, env = "FEDIMINT_NWC_RELAYS", default_value_t = String::from("wss://relay.damus.io"))]
     pub relays: String,

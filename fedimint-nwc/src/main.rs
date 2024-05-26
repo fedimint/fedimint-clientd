@@ -5,7 +5,7 @@ use tokio::pin;
 use tracing::{error, info};
 
 pub mod config;
-pub mod managers;
+pub mod database;
 pub mod nwc;
 pub mod services;
 pub mod state;

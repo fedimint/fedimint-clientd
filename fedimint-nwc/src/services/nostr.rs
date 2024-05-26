@@ -1,6 +1,6 @@
-use std::fs::{create_dir_all, File};
+use std::fs::File;
 use std::io::{BufReader, Write};
-use std::path::Path;
+use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 use nostr::nips::nip04;
@@ -26,9 +26,8 @@ pub struct NostrService {
 }
 
 impl NostrService {
-    pub async fn new(keys_file: &str, relays: &str) -> Result<Self> {
-        let path = Path::new(keys_file);
-        let (server_key, user_key) = match File::open(path) {
+    pub async fn new(keys_file_path: &PathBuf, relays: &str) -> Result<Self> {
+        let (server_key, user_key) = match File::open(keys_file_path) {
             Ok(file) => {
                 let reader = BufReader::new(file);
                 let keys: Self = serde_json::from_reader(reader).context("Failed to parse JSON")?;
@@ -36,7 +35,7 @@ impl NostrService {
             }
             Err(_) => {
                 let (server_key, user_key) = Self::generate_keys()?;
-                Self::write_keys(server_key, user_key, path)?;
+                Self::write_keys(server_key, user_key, keys_file_path)?;
                 (server_key, user_key)
             }
         };
@@ -59,7 +58,11 @@ impl NostrService {
         Ok((**server_key, **user_key))
     }
 
-    fn write_keys(server_key: SecretKey, user_key: SecretKey, path: &Path) -> Result<()> {
+    fn write_keys(
+        server_key: SecretKey,
+        user_key: SecretKey,
+        keys_file_path: &PathBuf,
+    ) -> Result<()> {
         let keys = Self {
             server_key,
             user_key,
@@ -68,10 +71,7 @@ impl NostrService {
                                                                  * initialization */
         };
         let json_str = serde_json::to_string(&keys).context("Failed to serialize data")?;
-        if let Some(parent) = path.parent() {
-            create_dir_all(parent).context("Failed to create directory")?;
-        }
-        let mut file = File::create(path).context("Failed to create file")?;
+        let mut file = File::create(keys_file_path).context("Failed to create file")?;
         file.write_all(json_str.as_bytes())
             .context("Failed to write to file")?;
         Ok(())
