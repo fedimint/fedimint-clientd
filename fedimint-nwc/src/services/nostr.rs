@@ -2,9 +2,13 @@ use std::fs::{create_dir_all, File};
 use std::io::{BufReader, Write};
 use std::path::Path;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
+use nostr::nips::nip04;
+use nostr::nips::nip47::Response;
 use nostr_sdk::secp256k1::SecretKey;
-use nostr_sdk::{Client, Event, EventBuilder, JsonUtil, Keys, Kind, RelayPoolNotification};
+use nostr_sdk::{
+    Client, Event, EventBuilder, EventId, JsonUtil, Keys, Kind, RelayPoolNotification, Tag,
+};
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast::Receiver;
 use tracing::info;
@@ -92,6 +96,37 @@ impl NostrService {
         for relay in relays {
             client.add_relay(relay).await?;
         }
+        Ok(())
+    }
+
+    pub async fn send_event(&self, event: Event) -> Result<EventId, anyhow::Error> {
+        self.client
+            .send_event(event)
+            .await
+            .map_err(|e| anyhow!("Failed to send event: {}", e))
+    }
+
+    pub async fn send_encrypted_response(
+        &self,
+        event: &Event,
+        content: Response,
+        d_tag: Option<Tag>,
+    ) -> Result<(), anyhow::Error> {
+        let encrypted = nip04::encrypt(
+            self.server_keys().secret_key()?,
+            &self.user_keys().public_key(),
+            content.as_json(),
+        )?;
+        let p_tag = Tag::public_key(event.pubkey);
+        let e_tag = Tag::event(event.id);
+        let tags = match d_tag {
+            None => vec![p_tag, e_tag],
+            Some(d_tag) => vec![p_tag, e_tag, d_tag],
+        };
+        let response = EventBuilder::new(Kind::WalletConnectResponse, encrypted, tags)
+            .to_event(&self.server_keys())?;
+
+        self.send_event(response).await?;
         Ok(())
     }
 

@@ -7,7 +7,7 @@ use nostr::nips::nip47::{
     ErrorCode, Method, NIP47Error, Request, RequestParams, Response, ResponseResult,
 };
 use nostr::Tag;
-use nostr_sdk::{Event, JsonUtil};
+use nostr_sdk::{Event, EventBuilder, JsonUtil, Kind};
 use tokio::spawn;
 use tracing::{error, info};
 
@@ -306,21 +306,9 @@ async fn handle_nwc_params(
         }
     };
 
-    let encrypted = nip04::encrypt(
-        &keys.server_key.into(),
-        &keys.user_keys().public_key(),
-        content.as_json(),
-    )?;
-    let p_tag = Tag::public_key(event.pubkey);
-    let e_tag = Tag::event(event.id);
-    let tags = match d_tag {
-        None => vec![p_tag, e_tag],
-        Some(d_tag) => vec![p_tag, e_tag, d_tag],
-    };
-    let response = EventBuilder::new(Kind::WalletConnectResponse, encrypted, tags)
-        .to_event(&keys.server_keys())?;
-
-    client.send_event(response).await?;
+    nostr
+        .send_encrypted_response(&event, content, d_tag)
+        .await?;
 
     Ok(())
 }
