@@ -13,7 +13,7 @@ pub struct Database {
     db: Arc<RedbDatabase>,
     max_amount: u64,
     daily_limit: u64,
-    rate_limit: Duration,
+    _rate_limit: Duration,
 }
 
 impl From<RedbDatabase> for Database {
@@ -22,7 +22,7 @@ impl From<RedbDatabase> for Database {
             db: Arc::new(db),
             max_amount: 0,
             daily_limit: 0,
-            rate_limit: Duration::from_secs(0),
+            _rate_limit: Duration::from_secs(0),
         }
     }
 }
@@ -40,7 +40,7 @@ impl Database {
             db: Arc::new(db),
             max_amount,
             daily_limit,
-            rate_limit: Duration::from_secs(rate_limit_secs),
+            _rate_limit: Duration::from_secs(rate_limit_secs),
         })
     }
 
