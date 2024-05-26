@@ -118,7 +118,7 @@ async fn handle_nwc_params(
             // verify amount, convert to msats
             match error_msg {
                 None => {
-                    match pay_invoice(invoice, method, mm).await {
+                    match multimint.pay_invoice(invoice, method).await {
                         Ok(content) => {
                             // add payment to tracker
                             pm.add_payment(msats);

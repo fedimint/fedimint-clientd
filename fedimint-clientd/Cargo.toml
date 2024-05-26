@@ -40,3 +40,4 @@ clap = { version = "3", features = ["derive", "env"] }
 multimint = { version = "0.3.6" }
 # multimint = { path = "../multimint" }
 axum-otel-metrics = "0.8.0"
+hex = "0.4.3"

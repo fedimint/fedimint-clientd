@@ -1,7 +1,9 @@
 use std::collections::BTreeSet;
+use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
+use multimint::fedimint_core::api::InviteCode;
 use nostr_sdk::{Event, EventId, JsonUtil, Kind};
 use tokio::sync::Mutex;
 use tracing::{debug, error, info};
@@ -21,7 +23,9 @@ pub struct AppState {
 
 impl AppState {
     pub async fn new(cli: Cli) -> Result<Self, anyhow::Error> {
-        let multimint_service = MultiMintService::new(cli.db_path).await?;
+        let invite_code = InviteCode::from_str(&cli.invite_code)?;
+        let multimint_service =
+            MultiMintService::new(cli.db_path, Some(invite_code.federation_id())).await?;
         let nostr_service = NostrService::new(&cli.keys_file, &cli.relays).await?;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));

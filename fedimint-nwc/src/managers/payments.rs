@@ -7,7 +7,7 @@ const CACHE_DURATION: Duration = Duration::from_secs(86_400); // 1 day
 struct Payment {
     time: Instant,
     amount: u64,
-    destination: String, // Assuming destination is a string identifier
+    destination: String,
 }
 
 #[derive(Debug, Clone)]
@@ -15,8 +15,8 @@ pub struct PaymentsManager {
     payments: VecDeque<Payment>,
     max_amount: u64,
     daily_limit: u64,
-    rate_limit: Duration, // New: Limit for frequency of payments
-    max_destination_amounts: HashMap<String, u64>, // New: Max amounts per destination
+    rate_limit: Duration,
+    max_destination_amounts: HashMap<String, u64>,
 }
 
 impl PaymentsManager {

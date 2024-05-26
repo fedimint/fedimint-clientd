@@ -33,6 +33,7 @@ pub struct LnPayResponse {
     pub payment_type: PayType,
     pub contract_id: String,
     pub fee: Amount,
+    pub preimage: String,
 }
 
 async fn _pay(client: ClientHandleArc, req: LnPayRequest) -> Result<LnPayResponse, AppError> {
