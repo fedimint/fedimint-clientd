@@ -32,4 +32,7 @@ pub struct Cli {
     /// Max payment amount per day, in satoshis
     #[clap(long, env = "FEDIMINT_NWC_DAILY_LIMIT", default_value_t = 100_000)]
     pub daily_limit: u64,
+    /// Rate limit for payments, in seconds
+    #[clap(long, env = "FEDIMINT_NWC_RATE_LIMIT_SECS", default_value_t = 86_400)]
+    pub rate_limit_secs: u64,
 }

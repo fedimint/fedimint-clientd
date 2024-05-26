@@ -113,13 +113,7 @@ async fn handle_nwc_params(
                 .or(params.amount)
                 .unwrap_or(0);
 
-            let error_msg = if pm.max_amount > 0 && msats > pm.max_amount * 1_000 {
-                Some("Invoice amount too high.")
-            } else if pm.daily_limit > 0 && pm.sum_payments() + msats > pm.daily_limit * 1_000 {
-                Some("Daily limit exceeded.")
-            } else {
-                None
-            };
+            let error_msg = pm.check_payment_limits(msats);
 
             // verify amount, convert to msats
             match error_msg {

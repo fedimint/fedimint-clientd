@@ -27,7 +27,8 @@ impl AppState {
         let nostr_service = NostrService::new(&key_manager, &cli.relays).await?;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));
-        let payments_manager = PaymentsManager::new(cli.max_amount, cli.daily_limit);
+        let payments_manager =
+            PaymentsManager::new(cli.max_amount, cli.daily_limit, cli.rate_limit_secs);
 
         Ok(Self {
             active_requests,
