@@ -14,7 +14,7 @@ use nostr_sdk::{Event, JsonUtil};
 use tokio::spawn;
 use tracing::{error, info};
 
-use crate::managers::PaymentsManager;
+use crate::database::Database;
 use crate::services::{MultiMintService, NostrService};
 use crate::state::AppState;
 
@@ -58,14 +58,13 @@ pub async fn handle_nwc_request(state: &AppState, event: Event) -> Result<(), an
             .await
         }
         params => {
-            let mut pm = state.payments_manager.clone();
             handle_nwc_params(
                 params,
                 req.method,
                 &event,
                 &state.multimint_service,
                 &state.nostr_service,
-                &mut pm,
+                &state.db,
             )
             .await
         }
@@ -84,9 +83,9 @@ async fn handle_multiple_payments<T>(
         let event_clone = event.clone();
         let mm = state.multimint_service.clone();
         let nostr = state.nostr_service.clone();
-        let mut pm = state.payments_manager.clone();
+        let mut db = state.db.clone();
         spawn(async move {
-            handle_nwc_params(params, method, &event_clone, &mm, &nostr, &mut pm).await
+            handle_nwc_params(params, method, &event_clone, &mm, &nostr, &mut db).await
         })
         .await??;
     }
@@ -99,19 +98,19 @@ async fn handle_nwc_params(
     event: &Event,
     multimint: &MultiMintService,
     nostr: &NostrService,
-    pm: &mut PaymentsManager,
+    db: &Database,
 ) -> Result<(), anyhow::Error> {
-    let mut d_tag: Option<Tag> = None;
+    let d_tag: Option<Tag> = None;
     let content = match params {
         RequestParams::PayInvoice(params) => {
-            handle_pay_invoice(params, method, multimint, pm).await
+            handle_pay_invoice(params, method, multimint, db).await
         }
-        RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, pm).await,
+        RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, db).await,
         RequestParams::MakeInvoice(params) => handle_make_invoice(params, multimint).await,
         RequestParams::LookupInvoice(params) => {
-            handle_lookup_invoice(params, method, multimint, pm).await
+            handle_lookup_invoice(params, method, multimint, db).await
         }
-        RequestParams::GetBalance => handle_get_balance(method, pm).await,
+        RequestParams::GetBalance => handle_get_balance(method, db).await,
         RequestParams::GetInfo => handle_get_info(method, nostr).await,
         _ => {
             return Err(anyhow!("Command not supported"));
@@ -129,7 +128,7 @@ async fn handle_pay_invoice(
     params: PayInvoiceRequestParams,
     method: Method,
     multimint: &MultiMintService,
-    pm: &mut PaymentsManager,
+    db: &Database,
 ) -> Response {
     let invoice = match Bolt11Invoice::from_str(&params.invoice)
         .map_err(|_| anyhow!("Failed to parse invoice"))
@@ -158,7 +157,7 @@ async fn handle_pay_invoice(
                                  * no pubkey case better */
     };
 
-    let error_msg = pm.check_payment_limits(msats, dest.clone());
+    let error_msg = db.check_payment_limits(msats, dest.clone());
 
     // verify amount, convert to msats
     match error_msg {
@@ -166,7 +165,8 @@ async fn handle_pay_invoice(
             match multimint.pay_invoice(invoice, method).await {
                 Ok(content) => {
                     // add payment to tracker
-                    pm.add_payment(msats, dest);
+                    // nosemgrep: use-of-unwrap
+                    db.add_payment(msats, dest).unwrap();
                     content
                 }
                 Err(e) => {
@@ -197,12 +197,12 @@ async fn handle_pay_invoice(
 async fn handle_pay_keysend(
     params: PayKeysendRequestParams,
     method: Method,
-    pm: &mut PaymentsManager,
+    db: &Database,
 ) -> Response {
     let msats = params.amount;
     let dest = params.pubkey.clone();
 
-    let error_msg = pm.check_payment_limits(msats, dest);
+    let error_msg = db.check_payment_limits(msats, dest);
 
     match error_msg {
         None => {
@@ -255,9 +255,9 @@ async fn handle_lookup_invoice(
     params: LookupInvoiceRequestParams,
     method: Method,
     multimint: &MultiMintService,
-    pm: &mut PaymentsManager,
+    db: &Database,
 ) -> Response {
-    let invoice = multimint.lookup_invoice(params).await;
+    let invoice = db.lookup_invoice(params).await;
 
     info!("Looked up invoice: {}", invoice.as_ref().unwrap().invoice);
 
@@ -301,7 +301,7 @@ async fn handle_lookup_invoice(
     }
 }
 
-async fn handle_get_balance(method: Method, pm: &mut PaymentsManager) -> Response {
+async fn handle_get_balance(method: Method, db: &Database) -> Response {
     let tracker = tracker.lock().await.sum_payments();
     let remaining_msats = config.daily_limit * 1_000 - tracker;
     info!("Current balance: {remaining_msats}msats");

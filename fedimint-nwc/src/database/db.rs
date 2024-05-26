@@ -79,14 +79,14 @@ impl Database {
         })
     }
 
-    pub fn check_payment_limits(&self, msats: u64, _dest: String) -> Result<Option<String>> {
-        let total_msats = self.sum_payments()? * 1_000;
+    pub fn check_payment_limits(&self, msats: u64, _dest: String) -> Option<String> {
+        let total_msats = self.sum_payments().unwrap_or(0) * 1_000;
         if self.max_amount > 0 && msats > self.max_amount * 1_000 {
-            Ok(Some("Invoice amount too high.".to_string()))
+            Some("Invoice amount too high.".to_string())
         } else if self.daily_limit > 0 && total_msats + msats > self.daily_limit * 1_000 {
-            Ok(Some("Daily limit exceeded.".to_string()))
+            Some("Daily limit exceeded.".to_string())
         } else {
-            Ok(None)
+            None
         }
     }
 }
