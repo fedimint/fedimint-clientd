@@ -108,10 +108,38 @@ async fn handle_nwc_params(
         RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, db).await,
         RequestParams::MakeInvoice(params) => handle_make_invoice(params, multimint).await,
         RequestParams::LookupInvoice(params) => {
-            handle_lookup_invoice(params, method, multimint, db).await
+            // handle_lookup_invoice(params, method, multimint, db).await
+            Response {
+                result_type: method,
+                error: Some(NIP47Error {
+                    code: ErrorCode::Unauthorized,
+                    message: "LookupInvoice functionality is not implemented yet.".to_string(),
+                }),
+                result: None,
+            }
         }
-        RequestParams::GetBalance => handle_get_balance(method, db).await,
-        RequestParams::GetInfo => handle_get_info(method, nostr).await,
+        RequestParams::GetBalance => {
+            //handle_get_balance(method, db).await,
+            Response {
+                result_type: method,
+                error: Some(NIP47Error {
+                    code: ErrorCode::Unauthorized,
+                    message: "GetBalance functionality is not implemented yet.".to_string(),
+                }),
+                result: None,
+            }
+        }
+        RequestParams::GetInfo => {
+            // handle_get_info(method, nostr).await,
+            Response {
+                result_type: method,
+                error: Some(NIP47Error {
+                    code: ErrorCode::Unauthorized,
+                    message: "GetInfo functionality is not implemented yet.".to_string(),
+                }),
+                result: None,
+            }
+        }
         _ => {
             return Err(anyhow!("Command not supported"));
         }
@@ -251,83 +279,84 @@ async fn handle_make_invoice(
     }
 }
 
-async fn handle_lookup_invoice(
-    params: LookupInvoiceRequestParams,
-    method: Method,
-    multimint: &MultiMintService,
-    db: &Database,
-) -> Response {
-    let invoice = db.lookup_invoice(params).await;
+// async fn handle_lookup_invoice(
+//     params: LookupInvoiceRequestParams,
+//     method: Method,
+//     multimint: &MultiMintService,
+//     db: &Database,
+// ) -> Response {
+//     let invoice = db.lookup_invoice(params).await;
 
-    info!("Looked up invoice: {}", invoice.as_ref().unwrap().invoice);
+//     info!("Looked up invoice: {}", invoice.as_ref().unwrap().invoice);
 
-    let (description, description_hash) = match invoice {
-        Some(inv) => match inv.description() {
-            Bolt11InvoiceDescription::Direct(desc) => (Some(desc.to_string()), None),
-            Bolt11InvoiceDescription::Hash(hash) => (None, Some(hash.0.to_string())),
-        },
-        None => (None, None),
-    };
+//     let (description, description_hash) = match invoice {
+//         Some(inv) => match inv.description() {
+//             Bolt11InvoiceDescription::Direct(desc) =>
+// (Some(desc.to_string()), None),
+// Bolt11InvoiceDescription::Hash(hash) => (None, Some(hash.0.to_string())),
+//         },
+//         None => (None, None),
+//     };
 
-    let preimage = if res.r_preimage.is_empty() {
-        None
-    } else {
-        Some(hex::encode(res.r_preimage))
-    };
+//     let preimage = if res.r_preimage.is_empty() {
+//         None
+//     } else {
+//         Some(hex::encode(res.r_preimage))
+//     };
 
-    let settled_at = if res.settle_date == 0 {
-        None
-    } else {
-        Some(res.settle_date as u64)
-    };
+//     let settled_at = if res.settle_date == 0 {
+//         None
+//     } else {
+//         Some(res.settle_date as u64)
+//     };
 
-    Response {
-        result_type: Method::LookupInvoice,
-        error: None,
-        result: Some(ResponseResult::LookupInvoice(LookupInvoiceResponseResult {
-            transaction_type: None,
-            invoice: Some(res.payment_request),
-            description,
-            description_hash,
-            preimage,
-            payment_hash: hex::encode(payment_hash),
-            amount: res.value_msat as u64,
-            fees_paid: 0,
-            created_at: res.creation_date as u64,
-            expires_at: (res.creation_date + res.expiry) as u64,
-            settled_at,
-            metadata: Default::default(),
-        })),
-    }
-}
+//     Response {
+//         result_type: Method::LookupInvoice,
+//         error: None,
+//         result:
+// Some(ResponseResult::LookupInvoice(LookupInvoiceResponseResult {
+// transaction_type: None,             invoice: Some(res.payment_request),
+//             description,
+//             description_hash,
+//             preimage,
+//             payment_hash: hex::encode(payment_hash),
+//             amount: res.value_msat as u64,
+//             fees_paid: 0,
+//             created_at: res.creation_date as u64,
+//             expires_at: (res.creation_date + res.expiry) as u64,
+//             settled_at,
+//             metadata: Default::default(),
+//         })),
+//     }
+// }
 
-async fn handle_get_balance(method: Method, db: &Database) -> Response {
-    let tracker = tracker.lock().await.sum_payments();
-    let remaining_msats = config.daily_limit * 1_000 - tracker;
-    info!("Current balance: {remaining_msats}msats");
-    Response {
-        result_type: Method::GetBalance,
-        error: None,
-        result: Some(ResponseResult::GetBalance(GetBalanceResponseResult {
-            balance: remaining_msats,
-        })),
-    }
-}
+// async fn handle_get_balance(method: Method, db: &Database) -> Response {
+//     let tracker = tracker.lock().await.sum_payments();
+//     let remaining_msats = config.daily_limit * 1_000 - tracker;
+//     info!("Current balance: {remaining_msats}msats");
+//     Response {
+//         result_type: Method::GetBalance,
+//         error: None,
+//         result: Some(ResponseResult::GetBalance(GetBalanceResponseResult {
+//             balance: remaining_msats,
+//         })),
+//     }
+// }
 
-async fn handle_get_info(method: Method, nostr: &NostrService) -> Response {
-    let lnd_info: GetInfoResponse = lnd.get_info(GetInfoRequest {}).await?.into_inner();
-    info!("Getting info");
-    Response {
-        result_type: Method::GetInfo,
-        error: None,
-        result: Some(ResponseResult::GetInfo(GetInfoResponseResult {
-            alias: lnd_info.alias,
-            color: lnd_info.color,
-            pubkey: lnd_info.identity_pubkey,
-            network: "".to_string(),
-            block_height: lnd_info.block_height,
-            block_hash: lnd_info.block_hash,
-            methods: METHODS.iter().map(|i| i.to_string()).collect(),
-        })),
-    }
-}
+// async fn handle_get_info(method: Method, nostr: &NostrService) -> Response {
+//     let lnd_info: GetInfoResponse = lnd.get_info(GetInfoRequest
+// {}).await?.into_inner();     info!("Getting info");
+//     Response {
+//         result_type: Method::GetInfo,
+//         error: None,
+//         result: Some(ResponseResult::GetInfo(GetInfoResponseResult {
+//             alias: lnd_info.alias,
+//             color: lnd_info.color,
+//             pubkey: lnd_info.identity_pubkey,
+//             network: "".to_string(),
+//             block_height: lnd_info.block_height,
+//             block_hash: lnd_info.block_hash,
+//             methods: METHODS.iter().map(|i| i.to_string()).collect(),
+//         })),
+//     }
+// }

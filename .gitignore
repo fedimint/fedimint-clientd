@@ -11,5 +11,4 @@ result
 /vendor
 
 federations.txt
-keys.json
-fedimint-nwc/keys.json
+work_dir
