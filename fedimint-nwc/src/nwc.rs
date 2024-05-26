@@ -4,8 +4,9 @@ use anyhow::{anyhow, Result};
 use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use nostr::nips::nip04;
 use nostr::nips::nip47::{
-    ErrorCode, LookupInvoiceResponseResult, Method, NIP47Error, PayInvoiceRequestParams,
-    PayKeysendRequestParams, Request, RequestParams, Response, ResponseResult,
+    ErrorCode, LookupInvoiceResponseResult, MakeInvoiceRequestParams, Method, NIP47Error,
+    PayInvoiceRequestParams, PayKeysendRequestParams, Request, RequestParams, Response,
+    ResponseResult,
 };
 use nostr::util::hex;
 use nostr::Tag;
@@ -113,24 +114,7 @@ async fn handle_nwc_params(
         }
         RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, pm).await,
         RequestParams::MakeInvoice(params) => {
-            let description = match params.description {
-                None => "".to_string(),
-                Some(desc) => desc,
-            };
-            let res = multimint
-                .make_invoice(params.amount, description, params.expiry)
-                .await;
-            match res {
-                Ok(res) => res,
-                Err(e) => Response {
-                    result_type: Method::MakeInvoice,
-                    error: Some(NIP47Error {
-                        code: ErrorCode::PaymentFailed,
-                        message: format!("Failed to make invoice: {e}"),
-                    }),
-                    result: None,
-                },
-            }
+            handle_make_invoice(params, method, multimint, pm).await
         }
         RequestParams::LookupInvoice(params) => {
             let mut invoice: Option<Bolt11Invoice> = None;
@@ -334,6 +318,32 @@ async fn handle_pay_keysend(
             error: Some(NIP47Error {
                 code: ErrorCode::QuotaExceeded,
                 message: err_msg,
+            }),
+            result: None,
+        },
+    }
+}
+
+async fn handle_make_invoice(
+    params: MakeInvoiceRequestParams,
+    method: Method,
+    multimint: &MultiMintService,
+    pm: &mut PaymentsManager,
+) -> Response {
+    let description = match params.description {
+        None => "".to_string(),
+        Some(desc) => desc,
+    };
+    let res = multimint
+        .make_invoice(params.amount, description, params.expiry)
+        .await;
+    match res {
+        Ok(res) => res,
+        Err(e) => Response {
+            result_type: Method::MakeInvoice,
+            error: Some(NIP47Error {
+                code: ErrorCode::PaymentFailed,
+                message: format!("Failed to make invoice: {e}"),
             }),
             result: None,
         },
