@@ -29,13 +29,13 @@ impl From<RedbDatabase> for Database {
 
 impl Database {
     pub fn new(
-        db_path: &PathBuf,
+        redb_path: &PathBuf,
         max_amount: u64,
         daily_limit: u64,
         rate_limit_secs: u64,
     ) -> Result<Self> {
-        let db = RedbDatabase::create(db_path)
-            .with_context(|| format!("Failed to create database at {}", db_path.display()))?;
+        let db = RedbDatabase::create(redb_path)
+            .with_context(|| format!("Failed to create database at {}", redb_path.display()))?;
         Ok(Self {
             db: Arc::new(db),
             max_amount,

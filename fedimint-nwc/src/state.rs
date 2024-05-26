@@ -1,4 +1,5 @@
 use std::collections::BTreeSet;
+use std::fs::create_dir_all;
 use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
@@ -27,12 +28,14 @@ impl AppState {
 
         // Define paths for MultiMint and Redb databases within the work_dir
         let multimint_db_path = cli.work_dir.join("multimint_db");
-        let redb_db_path = cli.work_dir.join("redb_db");
+        create_dir_all(&multimint_db_path)?;
+        let db_directory = cli.work_dir.join("redb_db");
+        create_dir_all(&db_directory)?;
+
+        let redb_db_path = db_directory.join("database.db");
         let keys_file_path = cli.work_dir.join("keys.json");
 
         // Ensure directories exist
-        std::fs::create_dir_all(&multimint_db_path)?;
-        std::fs::create_dir_all(&redb_db_path)?;
 
         let multimint_service =
             MultiMintService::new(multimint_db_path, Some(invite_code.federation_id())).await?;
@@ -45,6 +48,7 @@ impl AppState {
             cli.daily_limit,
             cli.rate_limit_secs,
         )?;
+        info!("Initialized database at {}", redb_db_path.display());
 
         Ok(Self {
             active_requests,
