@@ -4,9 +4,9 @@ use anyhow::{anyhow, Result};
 use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use nostr::nips::nip04;
 use nostr::nips::nip47::{
-    ErrorCode, LookupInvoiceResponseResult, MakeInvoiceRequestParams, Method, NIP47Error,
-    PayInvoiceRequestParams, PayKeysendRequestParams, Request, RequestParams, Response,
-    ResponseResult,
+    ErrorCode, LookupInvoiceRequestParams, LookupInvoiceResponseResult, MakeInvoiceRequestParams,
+    Method, NIP47Error, PayInvoiceRequestParams, PayKeysendRequestParams, Request, RequestParams,
+    Response, ResponseResult,
 };
 use nostr::util::hex;
 use nostr::Tag;
@@ -257,29 +257,9 @@ async fn handle_lookup_invoice(
     multimint: &MultiMintService,
     pm: &mut PaymentsManager,
 ) -> Response {
-    let mut invoice: Option<Bolt11Invoice> = None;
-    let payment_hash: Vec<u8> = match params.payment_hash {
-        None => match params.invoice {
-            None => return Err(anyhow!("Missing payment_hash or invoice")),
-            Some(bolt11) => {
-                let inv = Bolt11Invoice::from_str(&bolt11)
-                    .map_err(|_| anyhow!("Failed to parse invoice"))?;
-                invoice = Some(inv.clone());
-                inv.payment_hash().into_32().to_vec()
-            }
-        },
-        Some(str) => FromHex::from_hex(&str)?,
-    };
+    let invoice = multimint.lookup_invoice(params).await;
 
-    let res = lnd
-        .lookup_invoice(PaymentHash {
-            r_hash: payment_hash.clone(),
-            ..Default::default()
-        })
-        .await?
-        .into_inner();
-
-    info!("Looked up invoice: {}", res.payment_request);
+    info!("Looked up invoice: {}", invoice.as_ref().unwrap().invoice);
 
     let (description, description_hash) = match invoice {
         Some(inv) => match inv.description() {
