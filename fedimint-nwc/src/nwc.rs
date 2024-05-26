@@ -9,7 +9,7 @@ use nostr::nips::nip47::{
 };
 use nostr::util::hex;
 use nostr::Tag;
-use nostr_sdk::{Event, EventBuilder, JsonUtil, Kind};
+use nostr_sdk::{Event, JsonUtil};
 use tokio::spawn;
 use tracing::{error, info};
 
