@@ -31,7 +31,7 @@ pub struct NwcConfig {
 }
 
 pub async fn handle_nwc_request(state: &AppState, event: Event) -> Result<(), anyhow::Error> {
-    let user_keys = state.key_manager.user_keys();
+    let user_keys = state.nostr_service.user_keys();
     let decrypted = nip04::decrypt(user_keys.secret_key()?, &event.pubkey, &event.content)?;
     let req: Request = Request::from_json(&decrypted)?;
 

@@ -14,6 +14,8 @@ use state::AppState;
 
 use crate::config::Cli;
 
+/// Fedimint Nostr Wallet Connect
+/// A nostr wallet connect implementation on top of a multimint client
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
@@ -22,12 +24,9 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let state = AppState::new(cli).await?;
 
-    // Connect to the relay pool and broadcast the info event on startup
+    // Connect to the relay pool and broadcast the nwc info event on startup
     state.nostr_service.connect().await;
-    state
-        .nostr_service
-        .broadcast_info_event(&state.key_manager)
-        .await?;
+    state.nostr_service.broadcast_info_event().await?;
 
     // Start the event loop
     event_loop(state.clone()).await?;
@@ -55,8 +54,9 @@ async fn event_loop(state: AppState) -> Result<()> {
                 match notification {
                     Ok(notification) => match notification {
                         RelayPoolNotification::Event { event, .. } => {
+                            // Only handle nwc events
                             if event.kind == Kind::WalletConnectRequest
-                                && event.pubkey == state.key_manager.user_keys().public_key()
+                                && event.pubkey == state.nostr_service.user_keys().public_key()
                                 && event.verify().is_ok() {
                                     info!("Received event: {}", event.as_json());
                                     state.handle_event(*event).await
