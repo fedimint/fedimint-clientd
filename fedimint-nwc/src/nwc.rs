@@ -1,11 +1,13 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
-use lightning_invoice::Bolt11Invoice;
+use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use nostr::nips::nip04;
 use nostr::nips::nip47::{
-    ErrorCode, Method, NIP47Error, Request, RequestParams, Response, ResponseResult,
+    ErrorCode, LookupInvoiceResponseResult, Method, NIP47Error, PayInvoiceRequestParams,
+    PayKeysendRequestParams, Request, RequestParams, Response, ResponseResult,
 };
+use nostr::util::hex;
 use nostr::Tag;
 use nostr_sdk::{Event, EventBuilder, JsonUtil, Kind};
 use tokio::spawn;
@@ -61,13 +63,14 @@ pub async fn handle_nwc_request(state: &AppState, event: Event) -> Result<(), an
             .await
         }
         params => {
+            let mut pm = state.payments_manager.clone();
             handle_nwc_params(
                 params,
                 req.method,
                 &event,
                 &state.multimint_service,
                 &state.nostr_service,
-                &state.payments_manager,
+                &mut pm,
             )
             .await
         }
@@ -86,10 +89,10 @@ async fn handle_multiple_payments<T>(
         let event_clone = event.clone();
         let mm = state.multimint_service.clone();
         let nostr = state.nostr_service.clone();
-        let pm = state.payments_manager.clone();
-        spawn(
-            async move { handle_nwc_params(params, method, &event_clone, &mm, &nostr, &pm).await },
-        )
+        let mut pm = state.payments_manager.clone();
+        spawn(async move {
+            handle_nwc_params(params, method, &event_clone, &mm, &nostr, &mut pm).await
+        })
         .await??;
     }
     Ok(())
@@ -101,93 +104,14 @@ async fn handle_nwc_params(
     event: &Event,
     multimint: &MultiMintService,
     nostr: &NostrService,
-    pm: &PaymentsManager,
+    pm: &mut PaymentsManager,
 ) -> Result<(), anyhow::Error> {
     let mut d_tag: Option<Tag> = None;
     let content = match params {
         RequestParams::PayInvoice(params) => {
-            d_tag = params.id.map(|id| Tag::identifier(id.clone()));
-
-            let invoice = Bolt11Invoice::from_str(&params.invoice)
-                .map_err(|_| anyhow!("Failed to parse invoice"))?;
-            let msats = invoice
-                .amount_milli_satoshis()
-                .or(params.amount)
-                .unwrap_or(0);
-            let dest = match invoice.payee_pub_key() {
-                Some(dest) => dest.to_string(),
-                None => "".to_string(), /* FIXME: this is a hack, should handle
-                                         * no pubkey case better */
-            };
-
-            let error_msg = pm.check_payment_limits(msats, dest);
-
-            // verify amount, convert to msats
-            match error_msg {
-                None => {
-                    match multimint.pay_invoice(invoice, method).await {
-                        Ok(content) => {
-                            // add payment to tracker
-                            pm.add_payment(msats, dest);
-                            content
-                        }
-                        Err(e) => {
-                            error!("Error paying invoice: {e}");
-
-                            Response {
-                                result_type: method,
-                                error: Some(NIP47Error {
-                                    code: ErrorCode::InsufficientBalance,
-                                    message: format!("Failed to pay invoice: {e}"),
-                                }),
-                                result: None,
-                            }
-                        }
-                    }
-                }
-                Some(err_msg) => Response {
-                    result_type: method,
-                    error: Some(NIP47Error {
-                        code: ErrorCode::QuotaExceeded,
-                        message: err_msg.to_string(),
-                    }),
-                    result: None,
-                },
-            }
+            handle_pay_invoice(params, method, multimint, pm).await
         }
-        RequestParams::PayKeysend(params) => {
-            d_tag = params.id.map(|id| Tag::identifier(id.clone()));
-
-            let msats = params.amount;
-            let dest = params.pubkey.clone();
-
-            let error_msg = pm.check_payment_limits(msats, dest);
-
-            // verify amount, convert to msats
-            match error_msg {
-                None => {
-                    error!("Error paying keysend: UNSUPPORTED IN IMPLEMENTATION");
-                    Response {
-                        result_type: method,
-                        error: Some(NIP47Error {
-                            code: ErrorCode::PaymentFailed,
-                            message: format!(
-                                "Failed to pay keysend: UNSUPPORTED IN IMPLEMENTATION"
-                            ),
-                        }),
-                        result: None,
-                    }
-                }
-                Some(err_msg) => Response {
-                    result_type: method,
-                    error: Some(NIP47Error {
-                        code: ErrorCode::QuotaExceeded,
-                        message: err_msg.to_string(),
-                    }),
-                    result: None,
-                },
-            }
-        }
+        RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, pm).await,
         RequestParams::MakeInvoice(params) => {
             let description = match params.description {
                 None => "".to_string(),
@@ -311,4 +235,107 @@ async fn handle_nwc_params(
         .await?;
 
     Ok(())
+}
+
+async fn handle_pay_invoice(
+    params: PayInvoiceRequestParams,
+    method: Method,
+    multimint: &MultiMintService,
+    pm: &mut PaymentsManager,
+) -> Response {
+    let invoice = match Bolt11Invoice::from_str(&params.invoice)
+        .map_err(|_| anyhow!("Failed to parse invoice"))
+    {
+        Ok(invoice) => invoice,
+        Err(e) => {
+            error!("Error parsing invoice: {e}");
+            return Response {
+                result_type: method,
+                error: Some(NIP47Error {
+                    code: ErrorCode::PaymentFailed,
+                    message: format!("Failed to parse invoice: {e}"),
+                }),
+                result: None,
+            };
+        }
+    };
+
+    let msats = invoice
+        .amount_milli_satoshis()
+        .or(params.amount)
+        .unwrap_or(0);
+    let dest = match invoice.payee_pub_key() {
+        Some(dest) => dest.to_string(),
+        None => "".to_string(), /* FIXME: this is a hack, should handle
+                                 * no pubkey case better */
+    };
+
+    let error_msg = pm.check_payment_limits(msats, dest.clone());
+
+    // verify amount, convert to msats
+    match error_msg {
+        None => {
+            match multimint.pay_invoice(invoice, method).await {
+                Ok(content) => {
+                    // add payment to tracker
+                    pm.add_payment(msats, dest);
+                    content
+                }
+                Err(e) => {
+                    error!("Error paying invoice: {e}");
+
+                    Response {
+                        result_type: method,
+                        error: Some(NIP47Error {
+                            code: ErrorCode::InsufficientBalance,
+                            message: format!("Failed to pay invoice: {e}"),
+                        }),
+                        result: None,
+                    }
+                }
+            }
+        }
+        Some(err_msg) => Response {
+            result_type: method,
+            error: Some(NIP47Error {
+                code: ErrorCode::QuotaExceeded,
+                message: err_msg.to_string(),
+            }),
+            result: None,
+        },
+    }
+}
+
+async fn handle_pay_keysend(
+    params: PayKeysendRequestParams,
+    method: Method,
+    pm: &mut PaymentsManager,
+) -> Response {
+    let d_tag = params.id.map(|id| Tag::identifier(id.clone()));
+    let msats = params.amount;
+    let dest = params.pubkey.clone();
+
+    let error_msg = pm.check_payment_limits(msats, dest);
+
+    match error_msg {
+        None => {
+            error!("Error paying keysend: UNSUPPORTED IN IMPLEMENTATION");
+            Response {
+                result_type: method,
+                error: Some(NIP47Error {
+                    code: ErrorCode::PaymentFailed,
+                    message: "Failed to pay keysend: UNSUPPORTED IN IMPLEMENTATION".to_string(),
+                }),
+                result: None,
+            }
+        }
+        Some(err_msg) => Response {
+            result_type: method,
+            error: Some(NIP47Error {
+                code: ErrorCode::QuotaExceeded,
+                message: err_msg,
+            }),
+            result: None,
+        },
+    }
 }
