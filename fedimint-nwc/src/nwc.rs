@@ -29,12 +29,6 @@ pub const METHODS: [Method; 8] = [
     Method::MultiPayKeysend,
 ];
 
-#[derive(Debug, Clone)]
-pub struct NwcConfig {
-    pub max_amount: u64,
-    pub daily_limit: u64,
-}
-
 pub async fn handle_nwc_request(state: &AppState, event: Event) -> Result<(), anyhow::Error> {
     let user_keys = state.nostr_service.user_keys();
     let decrypted = nip04::decrypt(user_keys.secret_key()?, &event.pubkey, &event.content)?;
@@ -113,9 +107,7 @@ async fn handle_nwc_params(
             handle_pay_invoice(params, method, multimint, pm).await
         }
         RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, pm).await,
-        RequestParams::MakeInvoice(params) => {
-            handle_make_invoice(params, method, multimint, pm).await
-        }
+        RequestParams::MakeInvoice(params) => handle_make_invoice(params, multimint).await,
         RequestParams::LookupInvoice(params) => {
             handle_lookup_invoice(params, method, multimint, pm).await
         }
