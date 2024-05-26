@@ -207,7 +207,6 @@ async fn handle_pay_keysend(
     method: Method,
     pm: &mut PaymentsManager,
 ) -> Response {
-    let d_tag = params.id.map(|id| Tag::identifier(id.clone()));
     let msats = params.amount;
     let dest = params.pubkey.clone();
 
@@ -238,9 +237,7 @@ async fn handle_pay_keysend(
 
 async fn handle_make_invoice(
     params: MakeInvoiceRequestParams,
-    method: Method,
     multimint: &MultiMintService,
-    pm: &mut PaymentsManager,
 ) -> Response {
     let description = match params.description {
         None => "".to_string(),
