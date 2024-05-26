@@ -3,7 +3,9 @@ use std::str::FromStr;
 use anyhow::{anyhow, Result};
 use lightning_invoice::Bolt11Invoice;
 use nostr::nips::nip04;
-use nostr::nips::nip47::{ErrorCode, Method, NIP47Error, Request, RequestParams, Response};
+use nostr::nips::nip47::{
+    ErrorCode, Method, NIP47Error, Request, RequestParams, Response, ResponseResult,
+};
 use nostr::Tag;
 use nostr_sdk::{Event, JsonUtil};
 use tokio::spawn;
@@ -164,35 +166,16 @@ async fn handle_nwc_params(
             // verify amount, convert to msats
             match error_msg {
                 None => {
-                    let pubkey = Pubkey::from_str(&params.pubkey)?;
-                    match multimint
-                        .pay_keysend(
-                            pubkey,
-                            params.preimage,
-                            params.tlv_records,
-                            msats,
-                            lnd,
-                            method,
-                        )
-                        .await
-                    {
-                        Ok(content) => {
-                            // add payment to tracker
-                            tracker.lock().await.add_payment(msats);
-                            content
-                        }
-                        Err(e) => {
-                            error!("Error paying keysend: {e}");
-
-                            Response {
-                                result_type: method,
-                                error: Some(NIP47Error {
-                                    code: ErrorCode::PaymentFailed,
-                                    message: format!("Failed to pay keysend: {e}"),
-                                }),
-                                result: None,
-                            }
-                        }
+                    error!("Error paying keysend: UNSUPPORTED IN IMPLEMENTATION");
+                    Response {
+                        result_type: method,
+                        error: Some(NIP47Error {
+                            code: ErrorCode::PaymentFailed,
+                            message: format!(
+                                "Failed to pay keysend: UNSUPPORTED IN IMPLEMENTATION"
+                            ),
+                        }),
+                        result: None,
                     }
                 }
                 Some(err_msg) => Response {
@@ -206,29 +189,23 @@ async fn handle_nwc_params(
             }
         }
         RequestParams::MakeInvoice(params) => {
-            let description_hash: Vec<u8> = match params.description_hash {
-                None => vec![],
-                Some(str) => FromHex::from_hex(&str)?,
+            let description = match params.description {
+                None => "".to_string(),
+                Some(desc) => desc,
             };
-            let inv = Invoice {
-                memo: params.description.unwrap_or_default(),
-                description_hash,
-                value_msat: params.amount as i64,
-                expiry: params.expiry.unwrap_or(86_400) as i64,
-                private: config.route_hints,
-                ..Default::default()
-            };
-            let res = lnd.add_invoice(inv).await?.into_inner();
-
-            info!("Created invoice: {}", res.payment_request);
-
-            Response {
-                result_type: Method::MakeInvoice,
-                error: None,
-                result: Some(ResponseResult::MakeInvoice(MakeInvoiceResponseResult {
-                    invoice: res.payment_request,
-                    payment_hash: ::hex::encode(res.r_hash),
-                })),
+            let res = multimint
+                .make_invoice(params.amount, description, params.expiry)
+                .await;
+            match res {
+                Ok(res) => res,
+                Err(e) => Response {
+                    result_type: Method::MakeInvoice,
+                    error: Some(NIP47Error {
+                        code: ErrorCode::PaymentFailed,
+                        message: format!("Failed to make invoice: {e}"),
+                    }),
+                    result: None,
+                },
             }
         }
         RequestParams::LookupInvoice(params) => {
