@@ -1,16 +1,18 @@
 use anyhow::Result;
 use clap::Parser;
 use nostr_sdk::{JsonUtil, Kind, RelayPoolNotification};
-use tokio::pin;
+use tokio::{pin, task};
 use tracing::{error, info};
 
 pub mod config;
 pub mod database;
 pub mod nwc;
 pub mod services;
-pub mod state;
 
+pub mod state;
+use axum::Router;
 use state::AppState;
+use tower_http::services::ServeDir;
 
 use crate::config::Cli;
 
@@ -27,6 +29,17 @@ async fn main() -> Result<()> {
     // Connect to the relay pool and broadcast the nwc info event on startup
     state.nostr_service.connect().await;
     state.nostr_service.broadcast_info_event().await?;
+
+    let server = Router::new().nest_service("/", ServeDir::new("frontend/assets"));
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+
+    // Spawn a new Tokio task for the server
+    let server_task = task::spawn(async move {
+        axum::serve(listener, server).await.unwrap();
+    });
+
+    // Wait for the server task to complete if necessary
+    server_task.await?;
 
     // Start the event loop
     event_loop(state.clone()).await?;
