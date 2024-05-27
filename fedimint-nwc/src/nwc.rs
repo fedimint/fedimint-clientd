@@ -4,9 +4,9 @@ use anyhow::{anyhow, Result};
 use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use nostr::nips::nip04;
 use nostr::nips::nip47::{
-    ErrorCode, GetBalanceResponseResult, LookupInvoiceRequestParams, LookupInvoiceResponseResult,
-    MakeInvoiceRequestParams, MakeInvoiceResponseResult, Method, NIP47Error,
-    PayInvoiceRequestParams, PayKeysendRequestParams, Request, RequestParams, Response,
+    ErrorCode, GetBalanceResponseResult, GetInfoResponseResult, LookupInvoiceRequestParams,
+    LookupInvoiceResponseResult, MakeInvoiceRequestParams, MakeInvoiceResponseResult, Method,
+    NIP47Error, PayInvoiceRequestParams, PayKeysendRequestParams, Request, RequestParams, Response,
     ResponseResult,
 };
 use nostr::util::hex;
@@ -109,11 +109,8 @@ async fn handle_nwc_params(
         RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, db).await,
         RequestParams::MakeInvoice(params) => handle_make_invoice(params, multimint, db).await,
         RequestParams::LookupInvoice(params) => handle_lookup_invoice(params, method, db).await,
-        RequestParams::GetBalance => handle_get_balance(method, db).await,
-        RequestParams::GetInfo => Err(NIP47Error {
-            code: ErrorCode::Unauthorized,
-            message: "GetInfo functionality is not implemented yet.".to_string(),
-        }),
+        RequestParams::GetBalance => handle_get_balance(db).await,
+        RequestParams::GetInfo => handle_get_info().await,
         _ => {
             return Err(anyhow!("Command not supported"));
         }
@@ -268,7 +265,7 @@ async fn handle_lookup_invoice(
     })
 }
 
-async fn handle_get_balance(method: Method, db: &Database) -> Result<Response, NIP47Error> {
+async fn handle_get_balance(db: &Database) -> Result<Response, NIP47Error> {
     let tracker = db.sum_payments().map_err(|e| NIP47Error {
         code: ErrorCode::Unauthorized,
         message: format!("Failed to get balance: {e}"),
@@ -276,7 +273,7 @@ async fn handle_get_balance(method: Method, db: &Database) -> Result<Response, N
     let remaining_msats = db.daily_limit * 1_000 - tracker;
     info!("Current balance: {remaining_msats}msats");
     Ok(Response {
-        result_type: method,
+        result_type: Method::GetBalance,
         error: None,
         result: Some(ResponseResult::GetBalance(GetBalanceResponseResult {
             balance: remaining_msats,
@@ -284,20 +281,20 @@ async fn handle_get_balance(method: Method, db: &Database) -> Result<Response, N
     })
 }
 
-// async fn handle_get_info(method: Method, nostr: &NostrService) -> Response {
-//     let lnd_info: GetInfoResponse = lnd.get_info(GetInfoRequest
-// {}).await?.into_inner();     info!("Getting info");
-//     Response {
-//         result_type: Method::GetInfo,
-//         error: None,
-//         result: Some(ResponseResult::GetInfo(GetInfoResponseResult {
-//             alias: lnd_info.alias,
-//             color: lnd_info.color,
-//             pubkey: lnd_info.identity_pubkey,
-//             network: "".to_string(),
-//             block_height: lnd_info.block_height,
-//             block_hash: lnd_info.block_hash,
-//             methods: METHODS.iter().map(|i| i.to_string()).collect(),
-//         })),
-//     }
-// }
+async fn handle_get_info() -> Result<Response, NIP47Error> {
+    Ok(Response {
+        result_type: Method::GetInfo,
+        error: None,
+        result: Some(ResponseResult::GetInfo(GetInfoResponseResult {
+            alias: "Fedimint NWC".to_string(),
+            color: "Fedimint Blue".to_string(),
+            pubkey: "0300000000000000000000000000000000000000000000000000000000000000000"
+                .to_string(),
+            network: "bitcoin".to_string(),
+            block_height: 0,
+            block_hash: "000000000000000000000000000000000000000000000000000000000000000000"
+                .to_string(),
+            methods: METHODS.iter().map(|i| i.to_string()).collect(),
+        })),
+    })
+}
