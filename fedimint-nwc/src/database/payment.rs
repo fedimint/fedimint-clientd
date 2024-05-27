@@ -1,21 +1,22 @@
+use lightning_invoice::Bolt11Invoice;
 use redb::{TableDefinition, TypeName, Value};
 use serde::{Deserialize, Serialize};
 
-pub const PAYMENTS_TABLE: TableDefinition<u64, Payment> = TableDefinition::new("payments");
+pub const PAYMENTS_TABLE: TableDefinition<&str, Payment> = TableDefinition::new("payments");
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Payment {
     pub time: u64,
     pub amount: u64,
-    pub destination: String,
+    pub invoice: Bolt11Invoice,
 }
 
 impl Payment {
-    pub fn new(time: u64, amount: u64, destination: &str) -> Self {
+    pub fn new(time: u64, amount: u64, invoice: Bolt11Invoice) -> Self {
         Self {
             time,
             amount,
-            destination: destination.to_string(),
+            invoice,
         }
     }
 }

@@ -1,4 +1,7 @@
-use lightning_invoice::Bolt11Invoice;
+use std::time::{Duration, UNIX_EPOCH};
+
+use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
+use nostr::util::hex;
 use redb::{TableDefinition, TypeName, Value};
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +9,48 @@ pub const INVOICES_TABLE: TableDefinition<&str, Invoice> = TableDefinition::new(
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Invoice {
-    invoice: Bolt11Invoice,
+    pub invoice: Bolt11Invoice,
+    pub preimage: Option<String>,
+    pub settle_date: Option<u64>,
+}
+
+impl Invoice {
+    pub fn created_at(&self) -> u64 {
+        self.invoice
+            .timestamp()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs()
+    }
+
+    pub fn expires_at(&self) -> u64 {
+        self.created_at() + self.invoice.expiry_time().as_secs()
+    }
+
+    pub fn settled_at(&self) -> Option<u64> {
+        self.settle_date
+            .map(|time| UNIX_EPOCH + Duration::from_secs(time))
+            .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
+            .map(|duration| duration.as_secs())
+    }
+
+    pub fn payment_hash(&self) -> String {
+        hex::encode(self.invoice.payment_hash().to_vec())
+    }
+
+    pub fn description(&self) -> Option<Bolt11InvoiceDescription> {
+        Some(self.invoice.description())
+    }
+}
+
+impl From<&Bolt11Invoice> for Invoice {
+    fn from(invoice: &Bolt11Invoice) -> Self {
+        Self {
+            invoice: invoice.clone(),
+            preimage: None,
+            settle_date: None,
+        }
+    }
 }
 
 impl Value for Invoice {

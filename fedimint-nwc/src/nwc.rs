@@ -1,12 +1,13 @@
 use std::str::FromStr;
+use std::time::UNIX_EPOCH;
 
 use anyhow::{anyhow, Result};
 use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use nostr::nips::nip04;
 use nostr::nips::nip47::{
     ErrorCode, LookupInvoiceRequestParams, LookupInvoiceResponseResult, MakeInvoiceRequestParams,
-    Method, NIP47Error, PayInvoiceRequestParams, PayKeysendRequestParams, Request, RequestParams,
-    Response, ResponseResult,
+    MakeInvoiceResponseResult, Method, NIP47Error, PayInvoiceRequestParams,
+    PayKeysendRequestParams, Request, RequestParams, Response, ResponseResult,
 };
 use nostr::util::hex;
 use nostr::Tag;
@@ -101,55 +102,50 @@ async fn handle_nwc_params(
     db: &Database,
 ) -> Result<(), anyhow::Error> {
     let d_tag: Option<Tag> = None;
-    let content = match params {
+    let response_result = match params {
         RequestParams::PayInvoice(params) => {
             handle_pay_invoice(params, method, multimint, db).await
         }
         RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, db).await,
-        RequestParams::MakeInvoice(params) => handle_make_invoice(params, multimint).await,
+        RequestParams::MakeInvoice(params) => handle_make_invoice(params, multimint, db).await,
         RequestParams::LookupInvoice(params) => {
-            // handle_lookup_invoice(params, method, multimint, db).await
-            Response {
-                result_type: method,
-                error: Some(NIP47Error {
-                    code: ErrorCode::Unauthorized,
-                    message: "LookupInvoice functionality is not implemented yet.".to_string(),
-                }),
-                result: None,
-            }
+            handle_lookup_invoice(params, method, multimint, db).await
         }
-        RequestParams::GetBalance => {
-            //handle_get_balance(method, db).await,
-            Response {
-                result_type: method,
-                error: Some(NIP47Error {
-                    code: ErrorCode::Unauthorized,
-                    message: "GetBalance functionality is not implemented yet.".to_string(),
-                }),
-                result: None,
-            }
-        }
-        RequestParams::GetInfo => {
-            // handle_get_info(method, nostr).await,
-            Response {
-                result_type: method,
-                error: Some(NIP47Error {
-                    code: ErrorCode::Unauthorized,
-                    message: "GetInfo functionality is not implemented yet.".to_string(),
-                }),
-                result: None,
-            }
-        }
+        RequestParams::GetBalance => Err(anyhow::Error::new(NIP47Error {
+            code: ErrorCode::Unauthorized,
+            message: "GetBalance functionality is not implemented yet.".to_string(),
+        })),
+        RequestParams::GetInfo => Err(anyhow::Error::new(NIP47Error {
+            code: ErrorCode::Unauthorized,
+            message: "GetInfo functionality is not implemented yet.".to_string(),
+        })),
         _ => {
             return Err(anyhow!("Command not supported"));
         }
     };
 
-    nostr
-        .send_encrypted_response(&event, content, d_tag)
-        .await?;
-
-    Ok(())
+    match response_result {
+        Ok(response) => {
+            nostr
+                .send_encrypted_response(&event, response, d_tag)
+                .await?;
+            Ok(())
+        }
+        Err(e) => {
+            let error_response = Response {
+                result_type: method,
+                error: Some(NIP47Error {
+                    code: ErrorCode::Unauthorized,
+                    message: format!("Internal error: {}", e),
+                }),
+                result: None,
+            };
+            nostr
+                .send_encrypted_response(&event, error_response, d_tag)
+                .await?;
+            Err(e)
+        }
+    }
 }
 
 async fn handle_pay_invoice(
@@ -157,178 +153,134 @@ async fn handle_pay_invoice(
     method: Method,
     multimint: &MultiMintService,
     db: &Database,
-) -> Response {
-    let invoice = match Bolt11Invoice::from_str(&params.invoice)
-        .map_err(|_| anyhow!("Failed to parse invoice"))
-    {
-        Ok(invoice) => invoice,
-        Err(e) => {
-            error!("Error parsing invoice: {e}");
-            return Response {
-                result_type: method,
-                error: Some(NIP47Error {
-                    code: ErrorCode::PaymentFailed,
-                    message: format!("Failed to parse invoice: {e}"),
-                }),
-                result: None,
-            };
-        }
-    };
+) -> Result<Response, NIP47Error> {
+    let invoice = Bolt11Invoice::from_str(&params.invoice).map_err(|e| NIP47Error {
+        code: ErrorCode::PaymentFailed,
+        message: format!("Failed to parse invoice: {e}"),
+    })?;
 
     let msats = invoice
         .amount_milli_satoshis()
         .or(params.amount)
         .unwrap_or(0);
-    let dest = match invoice.payee_pub_key() {
-        Some(dest) => dest.to_string(),
-        None => "".to_string(), /* FIXME: this is a hack, should handle
-                                 * no pubkey case better */
-    };
 
-    let error_msg = db.check_payment_limits(msats, dest.clone());
+    db.check_payment_limits(msats).map_err(|err| NIP47Error {
+        code: ErrorCode::QuotaExceeded,
+        message: err.to_string(),
+    })?;
 
-    // verify amount, convert to msats
-    match error_msg {
-        None => {
-            match multimint.pay_invoice(invoice, method).await {
-                Ok(content) => {
-                    // add payment to tracker
-                    // nosemgrep: use-of-unwrap
-                    db.add_payment(msats, dest).unwrap();
-                    content
-                }
-                Err(e) => {
-                    error!("Error paying invoice: {e}");
+    let response = multimint
+        .pay_invoice(invoice.clone(), method)
+        .await
+        .map_err(|e| NIP47Error {
+            code: ErrorCode::InsufficientBalance,
+            message: format!("Failed to pay invoice: {e}"),
+        })?;
 
-                    Response {
-                        result_type: method,
-                        error: Some(NIP47Error {
-                            code: ErrorCode::InsufficientBalance,
-                            message: format!("Failed to pay invoice: {e}"),
-                        }),
-                        result: None,
-                    }
-                }
-            }
-        }
-        Some(err_msg) => Response {
-            result_type: method,
-            error: Some(NIP47Error {
-                code: ErrorCode::QuotaExceeded,
-                message: err_msg.to_string(),
-            }),
-            result: None,
-        },
-    }
+    db.add_payment(invoice).map_err(|e| NIP47Error {
+        code: ErrorCode::Unauthorized,
+        message: format!("Failed to add payment to tracker: {e}"),
+    })?;
+
+    Ok(response)
 }
 
 async fn handle_pay_keysend(
     params: PayKeysendRequestParams,
-    method: Method,
+    _method: Method,
     db: &Database,
-) -> Response {
+) -> Result<Response, NIP47Error> {
     let msats = params.amount;
-    let dest = params.pubkey.clone();
 
-    let error_msg = db.check_payment_limits(msats, dest);
+    db.check_payment_limits(msats).map_err(|err| NIP47Error {
+        code: ErrorCode::QuotaExceeded,
+        message: err.to_string(),
+    })?;
 
-    match error_msg {
-        None => {
-            error!("Error paying keysend: UNSUPPORTED IN IMPLEMENTATION");
-            Response {
-                result_type: method,
-                error: Some(NIP47Error {
-                    code: ErrorCode::PaymentFailed,
-                    message: "Failed to pay keysend: UNSUPPORTED IN IMPLEMENTATION".to_string(),
-                }),
-                result: None,
-            }
-        }
-        Some(err_msg) => Response {
-            result_type: method,
-            error: Some(NIP47Error {
-                code: ErrorCode::QuotaExceeded,
-                message: err_msg,
-            }),
-            result: None,
-        },
-    }
+    Err(NIP47Error {
+        code: ErrorCode::PaymentFailed,
+        message: "Failed to pay keysend: UNSUPPORTED IN IMPLEMENTATION".to_string(),
+    })
 }
 
 async fn handle_make_invoice(
     params: MakeInvoiceRequestParams,
     multimint: &MultiMintService,
-) -> Response {
-    let description = match params.description {
-        None => "".to_string(),
-        Some(desc) => desc,
-    };
-    let res = multimint
+    db: &Database,
+) -> Result<Response, NIP47Error> {
+    let description = params.description.unwrap_or_default();
+    let invoice = multimint
         .make_invoice(params.amount, description, params.expiry)
-        .await;
-    match res {
-        Ok(res) => res,
-        Err(e) => Response {
-            result_type: Method::MakeInvoice,
-            error: Some(NIP47Error {
-                code: ErrorCode::PaymentFailed,
-                message: format!("Failed to make invoice: {e}"),
-            }),
-            result: None,
-        },
-    }
+        .await
+        .map_err(|e| NIP47Error {
+            code: ErrorCode::PaymentFailed,
+            message: format!("Failed to make invoice: {e}"),
+        })?;
+
+    db.add_invoice(&invoice).map_err(|e| NIP47Error {
+        code: ErrorCode::Unauthorized,
+        message: format!("Failed to add invoice to database: {e}"),
+    })?;
+
+    Ok(Response {
+        result_type: Method::MakeInvoice,
+        error: None,
+        result: Some(ResponseResult::MakeInvoice(MakeInvoiceResponseResult {
+            invoice: invoice.to_string(),
+            payment_hash: hex::encode(invoice.payment_hash()),
+        })),
+    })
 }
 
-// async fn handle_lookup_invoice(
-//     params: LookupInvoiceRequestParams,
-//     method: Method,
-//     multimint: &MultiMintService,
-//     db: &Database,
-// ) -> Response {
-//     let invoice = db.lookup_invoice(params).await;
+async fn handle_lookup_invoice(
+    params: LookupInvoiceRequestParams,
+    method: Method,
+    db: &Database,
+) -> Result<Response, NIP47Error> {
+    let invoice = db.lookup_invoice(params).map_err(|e| NIP47Error {
+        code: ErrorCode::Unauthorized,
+        message: format!("Failed to lookup invoice: {e}"),
+    })?;
+    let payment_hash = invoice.payment_hash();
 
-//     info!("Looked up invoice: {}", invoice.as_ref().unwrap().invoice);
+    info!("Looked up invoice: {}", payment_hash);
 
-//     let (description, description_hash) = match invoice {
-//         Some(inv) => match inv.description() {
-//             Bolt11InvoiceDescription::Direct(desc) =>
-// (Some(desc.to_string()), None),
-// Bolt11InvoiceDescription::Hash(hash) => (None, Some(hash.0.to_string())),
-//         },
-//         None => (None, None),
-//     };
+    let (description, description_hash) = match invoice.description() {
+        Some(Bolt11InvoiceDescription::Direct(desc)) => (Some(desc.to_string()), None),
+        Some(Bolt11InvoiceDescription::Hash(hash)) => (None, Some(hash.0.to_string())),
+        None => (None, None),
+    };
 
-//     let preimage = if res.r_preimage.is_empty() {
-//         None
-//     } else {
-//         Some(hex::encode(res.r_preimage))
-//     };
+    let preimage = match invoice.clone().preimage {
+        Some(preimage) => Some(hex::encode(preimage)),
+        None => None,
+    };
 
-//     let settled_at = if res.settle_date == 0 {
-//         None
-//     } else {
-//         Some(res.settle_date as u64)
-//     };
+    let settled_at = invoice.settled_at();
+    let created_at = invoice.created_at();
+    let expires_at = invoice.expires_at();
+    let invoice_str = invoice.invoice.to_string();
+    let amount = invoice.invoice.amount_milli_satoshis().unwrap_or(0) as u64;
 
-//     Response {
-//         result_type: Method::LookupInvoice,
-//         error: None,
-//         result:
-// Some(ResponseResult::LookupInvoice(LookupInvoiceResponseResult {
-// transaction_type: None,             invoice: Some(res.payment_request),
-//             description,
-//             description_hash,
-//             preimage,
-//             payment_hash: hex::encode(payment_hash),
-//             amount: res.value_msat as u64,
-//             fees_paid: 0,
-//             created_at: res.creation_date as u64,
-//             expires_at: (res.creation_date + res.expiry) as u64,
-//             settled_at,
-//             metadata: Default::default(),
-//         })),
-//     }
-// }
+    Ok(Response {
+        result_type: method,
+        error: None,
+        result: Some(ResponseResult::LookupInvoice(LookupInvoiceResponseResult {
+            transaction_type: None,
+            invoice: Some(invoice_str),
+            description,
+            description_hash,
+            preimage,
+            payment_hash,
+            amount: amount,
+            fees_paid: 0,
+            created_at,
+            expires_at,
+            settled_at,
+            metadata: Default::default(),
+        })),
+    })
+}
 
 // async fn handle_get_balance(method: Method, db: &Database) -> Response {
 //     let tracker = tracker.lock().await.sum_payments();

@@ -15,8 +15,7 @@ use multimint::fedimint_ln_client::{
 use multimint::fedimint_ln_common::LightningGateway;
 use multimint::MultiMint;
 use nostr::nips::nip47::{
-    ErrorCode, MakeInvoiceResponseResult, Method, NIP47Error, PayInvoiceResponseResult, Response,
-    ResponseResult,
+    ErrorCode, Method, NIP47Error, PayInvoiceResponseResult, Response, ResponseResult,
 };
 use nostr::util::hex;
 use tracing::info;
@@ -147,7 +146,7 @@ impl MultiMintService {
         amount_msat: u64,
         description: String,
         expiry_time: Option<u64>,
-    ) -> Result<Response> {
+    ) -> Result<Bolt11Invoice> {
         let client = self.get_client(None).await?;
         let gateway = self.get_gateway(&client).await?;
         let lightning_module = client.get_first_module::<LightningClientModule>();
@@ -162,14 +161,7 @@ impl MultiMintService {
             )
             .await?;
 
-        Ok(Response {
-            result_type: Method::MakeInvoice,
-            error: None,
-            result: Some(ResponseResult::MakeInvoice(MakeInvoiceResponseResult {
-                invoice: invoice.to_string(),
-                payment_hash: hex::encode(invoice.payment_hash()),
-            })),
-        })
+        Ok(invoice)
     }
 }
 
