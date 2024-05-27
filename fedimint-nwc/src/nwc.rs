@@ -265,6 +265,9 @@ async fn handle_lookup_invoice(
     })
 }
 
+// TODO: Implement this with multimint + db
+// should normally do multimint balance check + db payments manager balance
+// for throughput and limit checks
 async fn handle_get_balance(db: &Database) -> Result<Response, NIP47Error> {
     let tracker = db.sum_payments().map_err(|e| NIP47Error {
         code: ErrorCode::Unauthorized,
@@ -281,6 +284,7 @@ async fn handle_get_balance(db: &Database) -> Result<Response, NIP47Error> {
     })
 }
 
+// TODO: Implement this instead of the boilerplate
 async fn handle_get_info() -> Result<Response, NIP47Error> {
     Ok(Response {
         result_type: Method::GetInfo,
