@@ -16,8 +16,8 @@ use super::payment::{Payment, PAYMENTS_TABLE};
 #[derive(Debug, Clone)]
 pub struct Database {
     db: Arc<RedbDatabase>,
-    max_amount: u64,
-    daily_limit: u64,
+    pub max_amount: u64,
+    pub daily_limit: u64,
     _rate_limit: Duration,
 }
 
