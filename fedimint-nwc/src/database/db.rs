@@ -13,6 +13,12 @@ use redb::{Database as RedbDatabase, ReadTransaction, ReadableTable, WriteTransa
 use super::invoice::{Invoice, INVOICES_TABLE};
 use super::payment::{Payment, PAYMENTS_TABLE};
 
+/// Database for storing and retrieving payment information
+/// Invoices are invoices that we create as part of make_invoice
+/// Payments are payments that we perform as part of pay_invoice
+/// Any other configs here are just temporary until we have a better way to
+/// store them for making the more complex rate limiting and payments caveats
+/// for more interesting NWC usecases
 #[derive(Debug, Clone)]
 pub struct Database {
     db: Arc<RedbDatabase>,
