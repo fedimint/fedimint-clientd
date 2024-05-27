@@ -1,5 +1,4 @@
 use std::str::FromStr;
-use std::time::UNIX_EPOCH;
 
 use anyhow::{anyhow, Result};
 use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
@@ -13,7 +12,7 @@ use nostr::util::hex;
 use nostr::Tag;
 use nostr_sdk::{Event, JsonUtil};
 use tokio::spawn;
-use tracing::{error, info};
+use tracing::info;
 
 use crate::database::Database;
 use crate::services::{MultiMintService, NostrService};
@@ -108,42 +107,31 @@ async fn handle_nwc_params(
         }
         RequestParams::PayKeysend(params) => handle_pay_keysend(params, method, db).await,
         RequestParams::MakeInvoice(params) => handle_make_invoice(params, multimint, db).await,
-        RequestParams::LookupInvoice(params) => {
-            handle_lookup_invoice(params, method, multimint, db).await
-        }
-        RequestParams::GetBalance => Err(anyhow::Error::new(NIP47Error {
+        RequestParams::LookupInvoice(params) => handle_lookup_invoice(params, method, db).await,
+        RequestParams::GetBalance => Err(NIP47Error {
             code: ErrorCode::Unauthorized,
             message: "GetBalance functionality is not implemented yet.".to_string(),
-        })),
-        RequestParams::GetInfo => Err(anyhow::Error::new(NIP47Error {
+        }),
+        RequestParams::GetInfo => Err(NIP47Error {
             code: ErrorCode::Unauthorized,
             message: "GetInfo functionality is not implemented yet.".to_string(),
-        })),
+        }),
         _ => {
             return Err(anyhow!("Command not supported"));
         }
     };
 
     match response_result {
-        Ok(response) => {
-            nostr
-                .send_encrypted_response(&event, response, d_tag)
-                .await?;
-            Ok(())
-        }
+        Ok(response) => nostr.send_encrypted_response(&event, response, d_tag).await,
         Err(e) => {
             let error_response = Response {
                 result_type: method,
-                error: Some(NIP47Error {
-                    code: ErrorCode::Unauthorized,
-                    message: format!("Internal error: {}", e),
-                }),
+                error: Some(e),
                 result: None,
             };
             nostr
                 .send_encrypted_response(&event, error_response, d_tag)
-                .await?;
-            Err(e)
+                .await
         }
     }
 }
