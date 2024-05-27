@@ -68,7 +68,7 @@ impl Database {
     }
 
     pub fn add_payment(&self, invoice: Bolt11Invoice) -> Result<()> {
-        let payment_hash_encoded = hex::encode(invoice.payment_hash().to_vec());
+        let payment_hash_encoded = hex::encode(invoice.payment_hash());
         self.write_with(|dbtx| {
             let mut payments = dbtx.open_table(PAYMENTS_TABLE)?;
             let now = std::time::SystemTime::now()
@@ -103,7 +103,7 @@ impl Database {
     }
 
     pub fn add_invoice(&self, invoice: &Bolt11Invoice) -> Result<()> {
-        let payment_hash_encoded = hex::encode(invoice.payment_hash().to_vec());
+        let payment_hash_encoded = hex::encode(invoice.payment_hash());
         let invoice = Invoice::from(invoice);
         self.write_with(|dbtx| {
             let mut invoices = dbtx.open_table(INVOICES_TABLE)?;
@@ -129,8 +129,8 @@ impl Database {
                     })
             })
         } else if let Some(bolt11) = params.invoice {
-            let invoice = Bolt11Invoice::from_str(&bolt11).map_err(|e| anyhow::Error::new(e))?;
-            let payment_hash_encoded = hex::encode(invoice.payment_hash().to_vec());
+            let invoice = Bolt11Invoice::from_str(&bolt11).map_err(anyhow::Error::new)?;
+            let payment_hash_encoded = hex::encode(invoice.payment_hash());
             self.read_with(|dbtx| {
                 let invoices = dbtx.open_table(INVOICES_TABLE)?;
                 invoices

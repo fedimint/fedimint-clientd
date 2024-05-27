@@ -59,7 +59,7 @@ impl MultiMintService {
             }
             Err(e) => {
                 tracing::error!("Invalid federation invite code: {}", e);
-                Err(e.into())
+                Err(e)
             }
         }
     }
@@ -71,7 +71,7 @@ impl MultiMintService {
     ) -> Result<ClientHandleArc, anyhow::Error> {
         let federation_id = match federation_id {
             Some(id) => id,
-            None => match self.default_federation_id.clone() {
+            None => match self.default_federation_id {
                 Some(id) => id,
                 None => return Err(anyhow!("No default federation id set")),
             },

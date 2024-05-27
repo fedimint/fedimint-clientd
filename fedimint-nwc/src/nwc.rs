@@ -84,10 +84,10 @@ async fn handle_multiple_payments<T>(
         let event_clone = event.clone();
         let mm = state.multimint_service.clone();
         let nostr = state.nostr_service.clone();
-        let mut db = state.db.clone();
-        spawn(async move {
-            handle_nwc_params(params, method, &event_clone, &mm, &nostr, &mut db).await
-        })
+        let db = state.db.clone();
+        spawn(
+            async move { handle_nwc_params(params, method, &event_clone, &mm, &nostr, &db).await },
+        )
         .await??;
     }
     Ok(())
@@ -117,7 +117,7 @@ async fn handle_nwc_params(
     };
 
     match response_result {
-        Ok(response) => nostr.send_encrypted_response(&event, response, d_tag).await,
+        Ok(response) => nostr.send_encrypted_response(event, response, d_tag).await,
         Err(e) => {
             let error_response = Response {
                 result_type: method,
@@ -125,7 +125,7 @@ async fn handle_nwc_params(
                 result: None,
             };
             nostr
-                .send_encrypted_response(&event, error_response, d_tag)
+                .send_encrypted_response(event, error_response, d_tag)
                 .await
         }
     }
@@ -234,16 +234,13 @@ async fn handle_lookup_invoice(
         None => (None, None),
     };
 
-    let preimage = match invoice.clone().preimage {
-        Some(preimage) => Some(hex::encode(preimage)),
-        None => None,
-    };
+    let preimage = invoice.clone().preimage.map(hex::encode);
 
     let settled_at = invoice.settled_at();
     let created_at = invoice.created_at();
     let expires_at = invoice.expires_at();
     let invoice_str = invoice.invoice.to_string();
-    let amount = invoice.invoice.amount_milli_satoshis().unwrap_or(0) as u64;
+    let amount = invoice.invoice.amount_milli_satoshis().unwrap_or(0);
 
     Ok(Response {
         result_type: method,
@@ -255,7 +252,7 @@ async fn handle_lookup_invoice(
             description_hash,
             preimage,
             payment_hash,
-            amount: amount,
+            amount,
             fees_paid: 0,
             created_at,
             expires_at,

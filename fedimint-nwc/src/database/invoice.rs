@@ -35,7 +35,7 @@ impl Invoice {
     }
 
     pub fn payment_hash(&self) -> String {
-        hex::encode(self.invoice.payment_hash().to_vec())
+        hex::encode(self.invoice.payment_hash())
     }
 
     pub fn description(&self) -> Option<Bolt11InvoiceDescription> {

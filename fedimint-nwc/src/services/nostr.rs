@@ -144,7 +144,7 @@ impl NostrService {
         Ok(())
     }
 
-    pub async fn connect(&self) -> () {
+    pub async fn connect(&self) {
         self.client.connect().await
     }
 

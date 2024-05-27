@@ -82,8 +82,7 @@ impl AppState {
         let event_id = event.id;
         self.active_requests.lock().await.insert(event_id);
 
-        match tokio::time::timeout(Duration::from_secs(60), handle_nwc_request(&self, event)).await
-        {
+        match tokio::time::timeout(Duration::from_secs(60), handle_nwc_request(self, event)).await {
             Ok(Ok(_)) => {}
             Ok(Err(e)) => error!("Error processing request: {e}"),
             Err(e) => error!("Timeout error: {e}"),

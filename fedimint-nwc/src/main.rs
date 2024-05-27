@@ -51,28 +51,23 @@ async fn event_loop(state: AppState) -> Result<()> {
                 break;
             },
             notification = notifications.recv() => {
-                match notification {
-                    Ok(notification) => match notification {
-                        RelayPoolNotification::Event { event, .. } => {
-                            // Only handle nwc events
-                            if event.kind == Kind::WalletConnectRequest
-                                && event.pubkey == state.nostr_service.user_keys().public_key()
-                                && event.verify().is_ok() {
-                                    info!("Received event: {}", event.as_json());
-                                    state.handle_event(*event).await
-                            } else {
-                                error!("Invalid nwc event: {}", event.as_json());
-                            }
-                        },
-                        RelayPoolNotification::Shutdown => {
-                            info!("Relay pool shutdown");
-                            break;
-                        },
-                        _ => {
-                            error!("Unhandled relay pool notification: {notification:?}");
+                if let Ok(notification) = notification {
+                    if let RelayPoolNotification::Event { event, .. } = notification {
+                        // Only handle nwc events
+                        if event.kind == Kind::WalletConnectRequest
+                            && event.pubkey == state.nostr_service.user_keys().public_key()
+                            && event.verify().is_ok() {
+                                info!("Received event: {}", event.as_json());
+                                state.handle_event(*event).await
+                        } else {
+                            error!("Invalid nwc event: {}", event.as_json());
                         }
-                    },
-                    Err(_) => {},
+                    } else if let RelayPoolNotification::Shutdown = notification {
+                        info!("Relay pool shutdown");
+                        break;
+                    } else {
+                        error!("Unhandled relay pool notification: {notification:?}");
+                    }
                 }
             }
         }
