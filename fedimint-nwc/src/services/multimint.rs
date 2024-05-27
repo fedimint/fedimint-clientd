@@ -27,16 +27,19 @@ pub struct MultiMintService {
 }
 
 impl MultiMintService {
-    pub async fn new(db_path: PathBuf, invite_code: Option<InviteCode>) -> Result<Self> {
-        let clients = MultiMint::new(db_path).await?;
+    pub async fn new(
+        db_path: PathBuf,
+        invite_code: InviteCode,
+        manual_secret: Option<String>,
+    ) -> Result<Self> {
+        let mut clients = MultiMint::new(db_path).await?;
         clients
-            .register_new(invite_code)
-            .update_gateway_caches()
+            .register_new(invite_code.clone(), manual_secret.clone())
             .await?;
         clients.update_gateway_caches().await?;
         Ok(Self {
             multimint: clients,
-            default_federation_id,
+            default_federation_id: Some(invite_code.federation_id()),
         })
     }
 

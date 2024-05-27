@@ -25,6 +25,7 @@ pub struct AppState {
 impl AppState {
     pub async fn new(cli: Cli) -> Result<Self, anyhow::Error> {
         let invite_code = InviteCode::from_str(&cli.invite_code)?;
+        let manual_secret = cli.manual_secret;
 
         // Define paths for MultiMint and Redb databases within the work_dir
         let multimint_db_path = cli.work_dir.join("multimint_db");
@@ -36,7 +37,7 @@ impl AppState {
         let keys_file_path = cli.work_dir.join("keys.json");
 
         let multimint_service =
-            MultiMintService::new(multimint_db_path, Some(invite_code.federation_id())).await?;
+            MultiMintService::new(multimint_db_path, invite_code, manual_secret).await?;
         let nostr_service = NostrService::new(&keys_file_path, &cli.relays).await?;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));
