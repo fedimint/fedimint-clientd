@@ -27,11 +27,12 @@ pub struct MultiMintService {
 }
 
 impl MultiMintService {
-    pub async fn new(
-        db_path: PathBuf,
-        default_federation_id: Option<FederationId>,
-    ) -> Result<Self> {
+    pub async fn new(db_path: PathBuf, invite_code: Option<InviteCode>) -> Result<Self> {
         let clients = MultiMint::new(db_path).await?;
+        clients
+            .register_new(invite_code)
+            .update_gateway_caches()
+            .await?;
         clients.update_gateway_caches().await?;
         Ok(Self {
             multimint: clients,

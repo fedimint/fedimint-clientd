@@ -5,7 +5,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use multimint::fedimint_core::api::InviteCode;
-use nostr_sdk::{Event, EventId, JsonUtil, Kind};
+use nostr_sdk::{Event, EventId, JsonUtil};
 use tokio::sync::Mutex;
 use tracing::{debug, error, info};
 
@@ -34,8 +34,6 @@ impl AppState {
 
         let redb_db_path = db_directory.join("database.db");
         let keys_file_path = cli.work_dir.join("keys.json");
-
-        // Ensure directories exist
 
         let multimint_service =
             MultiMintService::new(multimint_db_path, Some(invite_code.federation_id())).await?;
@@ -79,22 +77,17 @@ impl AppState {
     /// Adds nwc events to active requests set while waiting for them to
     /// complete so they can finish processing before a shutdown.
     pub async fn handle_event(&self, event: Event) {
-        if event.kind == Kind::WalletConnectRequest && event.verify().is_ok() {
-            info!("Received event: {}", event.as_json());
-            let event_id = event.id;
-            self.active_requests.lock().await.insert(event_id);
+        info!("Received event: {}", event.as_json());
+        let event_id = event.id;
+        self.active_requests.lock().await.insert(event_id);
 
-            match tokio::time::timeout(Duration::from_secs(60), handle_nwc_request(&self, event))
-                .await
-            {
-                Ok(Ok(_)) => {}
-                Ok(Err(e)) => error!("Error processing request: {e}"),
-                Err(e) => error!("Timeout error: {e}"),
-            }
-
-            self.active_requests.lock().await.remove(&event_id);
-        } else {
-            error!("Invalid event: {}", event.as_json());
+        match tokio::time::timeout(Duration::from_secs(60), handle_nwc_request(&self, event)).await
+        {
+            Ok(Ok(_)) => {}
+            Ok(Err(e)) => error!("Error processing request: {e}"),
+            Err(e) => error!("Timeout error: {e}"),
         }
+
+        self.active_requests.lock().await.remove(&event_id);
     }
 }
