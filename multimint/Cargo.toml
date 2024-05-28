@@ -1,7 +1,7 @@
 [package]
 name = "multimint"
 description = "A library for managing fedimint clients across multiple federations"
-version = "0.3.6"
+version = "0.3.7"
 edition.workspace = true
 repository.workspace = true
 keywords.workspace = true
@@ -22,6 +22,7 @@ fedimint-core = { workspace = true }
 fedimint-wallet-client = { workspace = true }
 fedimint-mint-client = { workspace = true }
 fedimint-ln-client = { workspace = true }
+fedimint-ln-common = { workspace = true }
 fedimint-rocksdb = { workspace = true }
 futures-util = "0.3.30"
 rand = "0.8.5"

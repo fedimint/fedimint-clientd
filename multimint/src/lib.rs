@@ -80,7 +80,7 @@ use tracing::warn;
 use types::InfoResponse;
 // Reexport all the fedimint crates for ease of use
 pub use {
-    fedimint_client, fedimint_core, fedimint_ln_client, fedimint_mint_client,
+    fedimint_client, fedimint_core, fedimint_ln_client, fedimint_ln_common, fedimint_mint_client,
     fedimint_wallet_client,
 };
 
