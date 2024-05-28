@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fedimint - NWC Playground</title>
+    <link
+      rel="stylesheet"
+      media="(prefers-color-scheme:light)"
+      href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.1/cdn/themes/light.css"
+    />
+    <link
+      rel="stylesheet"
+      media="(prefers-color-scheme:dark)"
+      href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.1/cdn/themes/dark.css"
+      onload="document.documentElement.classList.add('sl-theme-dark');"
+    />
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.1/cdn/shoelace-autoloader.js"
+    ></script>
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Fedimint - NWC Playground</h1>
+      <h3>Welcome to the Fedimint NWC Playground.</h3>
+    </header>
+    <main>
+      <!-- STATUS -->
+      <!-- <div class="status">
+        <h2>Status</h2>
+        <sl-icon name="android"></sl-icon>
+        <sl-button size="small">Click me</sl-button>
+        <sl-button disabled>Click me</sl-button>
+      </div>
+      <sl-divider></sl-divider> -->
+      <!-- Create Invoice -->
+      <sl-dialog label="Create Invoice" class="create-invoice-dialog">
+        <form class="invoice-form">
+          <sl-input
+            placeholder="0"
+            min="1"
+            name="amount"
+            label="Amount"
+            type="number"
+            help-text="Size of the invoice in satoshis"
+            required
+          >
+            <sl-icon
+              style="color: orange"
+              name="currency-bitcoin"
+              slot="prefix"
+            >
+            </sl-icon>
+          </sl-input>
+          <br />
+          <sl-button slot="footer" variant="primary">
+            Generate Invoice
+          </sl-button>
+          <sl-copy-button value="Sample invoice"></sl-copy-button>
+        </form>
+      </sl-dialog>
+
+      <!-- WALLET -->
+      <div class="wallet">
+        <sl-card class="wallet-card">
+          <!-- <sl-details summary="Wallet"> This is your wallet. </sl-details> -->
+          <!-- <div slot="header">
+          </div> -->
+          <h2>Wallet</h2>
+
+          <small>6 weeks old</small>
+          <br />
+          <br />
+          <strong>Balance:</strong>
+          <sl-format-number value="1000"></sl-format-number>
+          sats
+
+          <div slot="footer">
+            <sl-button class="create-invoice">Create Invoice</sl-button>
+            <sl-button class="pay-invoice">Pay Invoice</sl-button>
+          </div>
+        </sl-card>
+      </div>
+      <sl-divider></sl-divider>
+      <!-- NWC Form -->
+      <div class="nwc-link">
+        <h2>NWC Link</h2>
+        <div class="qr-container">
+          <sl-qr-code
+            value="https://google.com/"
+            label="scan this qr"
+            class="qr-code"
+          ></sl-qr-code>
+        </div>
+
+        <form class="input-form">
+          <sl-input name="name" label="Name" required></sl-input>
+          <br />
+          <sl-select label="Favorite Animal" clearable required>
+            <sl-option value="birds">Birds</sl-option>
+            <sl-option value="cats">Cats</sl-option>
+            <sl-option value="dogs">Dogs</sl-option>
+            <sl-option value="other">Other</sl-option>
+          </sl-select>
+          <br />
+          <sl-textarea name="comment" label="Comment" required></sl-textarea>
+          <br />
+          <sl-checkbox required>Check me before submitting</sl-checkbox>
+          <br /><br />
+          <sl-button type="submit" variant="primary">Submit</sl-button>
+        </form>
+      </div>
+      <sl-divider></sl-divider>
+    </main>
+    <footer>
+      FOSS
+      <sl-icon-button
+        name="github"
+        href="https://github.com/fedimint/fedimint-clientd"
+        target="_blank"
+      ></sl-icon-button>
+    </footer>
+  </body>
+</html>
