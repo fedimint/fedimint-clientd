@@ -80,12 +80,13 @@ pub async fn wait_for_ln_payment(
 
             while let Some(update) = updates.next().await {
                 match update {
-                    InternalPayState::Preimage(_preimage) => {
+                    InternalPayState::Preimage(preimage) => {
                         return Ok(Some(LnPayResponse {
                             operation_id,
                             payment_type,
                             contract_id,
                             fee: Amount::ZERO,
+                            preimage: hex::encode(preimage.0),
                         }));
                     }
                     InternalPayState::RefundSuccess { out_points, error } => {
@@ -120,12 +121,13 @@ pub async fn wait_for_ln_payment(
             while let Some(update) = updates.next().await {
                 let update_clone = update.clone();
                 match update_clone {
-                    LnPayState::Success { preimage: _ } => {
+                    LnPayState::Success { preimage } => {
                         return Ok(Some(LnPayResponse {
                             operation_id,
                             payment_type,
                             contract_id,
                             fee: Amount::ZERO,
+                            preimage,
                         }));
                     }
                     LnPayState::Refunded { gateway_error } => {

@@ -56,7 +56,7 @@ async fn _invoice(
             req.amount_msat,
             Bolt11InvoiceDescription::Direct(&Description::new(req.description)?),
             req.expiry_time,
-            req.external_pubkey.clone(),
+            req.external_pubkey,
             req.tweak,
             (),
             Some(gateway),
