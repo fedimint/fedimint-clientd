@@ -23,7 +23,7 @@ class FedimintClient(
     var activeGatewayId: String? = null
 ) {
     init {
-        baseUrl= "$baseUrl/v2/"
+        baseUrl = "$baseUrl/v2/"
     }
 
     private val client = HttpClient(CIO) {
@@ -39,36 +39,36 @@ class FedimintClient(
         }
     }
 
-    suspend fun _get(endpoint: String): String? {
+    suspend fun _get(endpoint: String): Pair<String?, String?> {
         try {
             val response = client.get("${baseUrl}${endpoint}")
-            return response.body()
+            return Pair(response.body(), null)
         } catch (e: Exception) {
-            println("🐛🐛🐛$endpoint: ${e.localizedMessage}🐛🐛🐛")
+            return Pair(null, e.localizedMessage)
         }
-        return null
     }
 
-    suspend fun _post(endpoint: String, data: String? = null): String? {
+    suspend fun _post(endpoint: String, data: String? = null): Pair<String?, String?> {
         try {
             val response = client.post("${baseUrl}${endpoint}") {
                 contentType(ContentType.Application.Json)
                 setBody(data)
             }
-            if (response.status.value == 200) {
-                return response.bodyAsText()
+            return if (response.status.value == 200) {
+                Pair(response.bodyAsText(), null)
+            } else {
+                Pair(null, "${response.status}")
             }
         } catch (e: Exception) {
-            println("🐛🐛🐛Error: ${e.localizedMessage ?: "Error Processing Request"}🐛🐛🐛")
+            return Pair(null, e.localizedMessage)
         }
-        return null
     }
 
     suspend fun _postWithFederationId(
         endpoint: String,
         federationId: String? = null,
         data: Map<String, Any> = emptyMap()
-    ): String? {
+    ): Pair<String?, String?> {
         try {
             val data = data.toMutableMap()
             data["federationId"] = federationId ?: this.activeFederationId
@@ -76,9 +76,8 @@ class FedimintClient(
             val response = this._post(endpoint, body)
             return response
         } catch (e: Exception) {
-            println("🐛🐛🐛Error: ${e.localizedMessage}🐛🐛🐛")
+            return Pair(null, e.localizedMessage)
         }
-        return null
     }
 
     suspend fun _postWithGatewayIdAndFederationId(
@@ -86,7 +85,7 @@ class FedimintClient(
         federationId: String? = null,
         gatewayId: String? = null,
         data: Map<String, Any?> = emptyMap()
-    ): String? {
+    ): Pair<String?, String?> {
         try {
             val data = data.toMutableMap()
             data["federationId"] = federationId ?: this.activeFederationId
@@ -95,38 +94,37 @@ class FedimintClient(
             val response = this._post(endpoint, body)
             return response
         } catch (e: Exception) {
-            println("🐛🐛🐛$endpoint: ${e.localizedMessage}🐛🐛🐛")
+            return Pair(null, e.localizedMessage)
         }
-        return null
     }
 
-    suspend fun info(): String? {
+    suspend fun info(): Pair<String?, String?> {
         return this._get("admin/info")
     }
 
-    suspend fun config(): String? {
+    suspend fun config(): Pair<String?, String?> {
         return this._get("admin/config")
     }
 
-    suspend fun discoverVersion(threshold: Int): String? {
+    suspend fun discoverVersion(threshold: Int): Pair<String?, String?> {
         val data = mutableMapOf<String, Int>("inviteCode" to threshold)
-        return this._post("admin/discover-version", data = Json.encodeToString(data))?.toString()
+        return this._post("admin/discover-version", data = Json.encodeToString(data))
     }
 
-    suspend fun federationIds(): String? {
+    suspend fun federationIds(): Pair<String?, String?> {
         return this._get("admin/federation-ids")
     }
 
-    suspend fun join(inviteCode: String, useManualSecret: Boolean = false): String? {
+    suspend fun join(inviteCode: String, useManualSecret: Boolean = false): Pair<String?, String?> {
         val data = buildJsonObject {
             put("useManualSecret", useManualSecret)
             put("inviteCode", inviteCode)
         }
-        return _post("admin/join", data = data.toString()).toString()
+        return _post("admin/join", data = data.toString())
     }
 
-    suspend fun listOperations(limit: Int): String? {
-        return this._postWithFederationId("admin/list-operations", data = mapOf("limit" to limit)).toString()
+    suspend fun listOperations(limit: Int): Pair<String?, String?> {
+        return this._postWithFederationId("admin/list-operations", data = mapOf("limit" to limit))
     }
 
     inner class MintModule {
@@ -138,39 +136,40 @@ class FedimintClient(
             timeout: Int,
             includeInvite: Boolean,
             federationId: String? = null
-        ): MintSpendResponse? {
+        ): Pair<MintSpendResponse?, String?> {
             val mintSpendRequest = mapOf(
                 "amountMsat" to amountMsat,
                 "allowOverpay" to allowOverpay,
                 "timeout" to timeout,
                 "includeInvite" to includeInvite,
             )
-            val res= _postWithFederationId(
+            val res = _postWithFederationId(
                 "mint/spend",
                 federationId = federationId,
                 data = mintSpendRequest
             )
-
-            if (res != null) {
-                return json.decodeFromString<MintSpendResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<MintSpendResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
 
-        suspend fun decodeNotes(notes: String, federationId: String? = null): MintDecodeNotesResponse? {
-            val res= _postWithFederationId(
+        suspend fun decodeNotes(notes: String, federationId: String? = null): Pair<MintDecodeNotesResponse?, String?> {
+            val res = _postWithFederationId(
                 "mint/decode-notes",
                 federationId = federationId,
                 data = mapOf("notes" to notes)
             )
 
-            if (res != null) {
-                return json.decodeFromString<MintDecodeNotesResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<MintDecodeNotesResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
 
-        suspend fun encodeNotes(notes: NotesJson, federationId: String? = null): String? {
+        suspend fun encodeNotes(notes: NotesJson, federationId: String? = null): Pair<String?, String?> {
             return _postWithFederationId(
                 "mint/encode-notes",
                 federationId = federationId,
@@ -178,7 +177,7 @@ class FedimintClient(
             )
         }
 
-        suspend fun validate(notes: String, federationId: String? = null): String? {
+        suspend fun validate(notes: String, federationId: String? = null): Pair<String?, String?> {
             return _postWithFederationId(
                 "mint/validate",
                 federationId = federationId,
@@ -186,7 +185,7 @@ class FedimintClient(
             )
         }
 
-        suspend fun combine(notesVec: List<String>, federationId: String? = null): String? {
+        suspend fun combine(notesVec: List<String>, federationId: String? = null): Pair<String?, String?> {
             return _postWithFederationId(
                 "mint/combine",
                 federationId = federationId,
@@ -194,7 +193,7 @@ class FedimintClient(
             )
         }
 
-        suspend fun reissue(notes: String, federationId: String? = null): String? {
+        suspend fun reissue(notes: String, federationId: String? = null): Pair<String?, String?> {
             return _postWithFederationId(
                 "mint/reissue",
                 federationId = federationId,
@@ -202,7 +201,7 @@ class FedimintClient(
             )
         }
 
-        suspend fun split(notes: String, federationId: String? = null): String? {
+        suspend fun split(notes: String, federationId: String? = null): Pair<String?, String?> {
             return _postWithFederationId(
                 "mint/split",
                 federationId = federationId,
@@ -218,9 +217,9 @@ class FedimintClient(
             try {
                 val res = _postWithFederationId(
                     "ln/list-gateways",
-                ) as String?
-                if (res != null) {
-                    return json.decodeFromString<List<Gateway>>(res)
+                )
+                if (res.first != null) {
+                    return json.decodeFromString<List<Gateway>>(res.first!!)
                 }
             } catch (e: Exception) {
                 println(e.localizedMessage)
@@ -234,7 +233,7 @@ class FedimintClient(
             expiryTime: Int? = null,
             federationId: String? = null,
             gatewayId: String? = null
-        ): LightningCreateInvoiceResponse? {
+        ): Pair<LightningCreateInvoiceResponse?, String?> {
             val request = mutableMapOf<String, Any>(
                 "amountMsat" to amountMsat,
                 "description" to description,
@@ -248,16 +247,17 @@ class FedimintClient(
                 gatewayId = gatewayId,
                 data = request
             )
-            if (res != null) {
-                return json.decodeFromString<LightningCreateInvoiceResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<LightningCreateInvoiceResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
 
         suspend fun awaitInvoice(
             operationId: String,
             federationId: String? = null,
-        ): LightningPaymentResponse? {
+        ): Pair<LightningPaymentResponse?, String?> {
             val request = mutableMapOf<String, Any>(
                 "operationId" to operationId,
             )
@@ -267,10 +267,11 @@ class FedimintClient(
                 data = request
             )
 
-            if (res != null) {
-                return json.decodeFromString<LightningPaymentResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<LightningPaymentResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
 
         suspend fun pay(
@@ -279,7 +280,7 @@ class FedimintClient(
             lightningUrlComment: String? = null,
             federationId: String? = null,
             gatewayId: String? = null
-        ): LightningPayResponse? {
+        ): Pair<LightningPayResponse?, String?> {
             val request = mutableMapOf<String, Any?>(
                 "amountMsat" to amountMsat,
                 "lightningUrlComment" to lightningUrlComment,
@@ -292,16 +293,17 @@ class FedimintClient(
                 gatewayId = gatewayId,
                 data = request
             )
-            if (res != null) {
-                return json.decodeFromString<LightningPayResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<LightningPayResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
 
         suspend fun awaitPay(
             operationId: String,
             federationId: String? = null,
-        ): String? {
+        ): Pair<String?, String?> {
             val request = mutableMapOf<String, Any>(
                 "operationId" to operationId,
             )
@@ -320,7 +322,7 @@ class FedimintClient(
             expiryTime: Int? = null,
             federationId: String? = null,
             gatewayId: String? = null
-        ): LightningInvoiceForPubkeyTweakResponse? {
+        ): Pair<LightningInvoiceForPubkeyTweakResponse?, String?> {
             val request = mutableMapOf<String, Any>(
                 "tweak" to tweak,
                 "externalPubkey" to pubkey,
@@ -337,17 +339,19 @@ class FedimintClient(
                 data = request
             )
 
-            if (res != null) {
-                return json.decodeFromString<LightningInvoiceForPubkeyTweakResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<LightningInvoiceForPubkeyTweakResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
+
             }
-            return null
         }
 
         suspend fun claimPubkeyTweakReceives(
             privateKey: String,
             tweaks: List<String>,
             federationId: String? = null,
-        ): LightningPaymentResponse? {
+        ): Pair<LightningPaymentResponse?, String?> {
             val request = mapOf(
                 "tweaks" to tweaks,
                 "privateKey" to privateKey,
@@ -359,45 +363,59 @@ class FedimintClient(
                 data = request
             )
 
-            if (res != null) {
-                return json.decodeFromString<LightningPaymentResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<LightningPaymentResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
     }
 
     inner class OnChainModule {
         private val json = Json { ignoreUnknownKeys = true }
 
-        suspend fun createDepositAddress(timeout: Int, federationId: String? = null): OnchainCreateAddressResponse? {
+        suspend fun createDepositAddress(
+            timeout: Int,
+            federationId: String? = null
+        ): Pair<OnchainCreateAddressResponse?, String?> {
             val res = _postWithFederationId(
                 "onchain/deposit-address",
                 federationId = federationId,
                 data = mapOf("timeout" to timeout)
             )
-            if (res != null) {
-                return json.decodeFromString<OnchainCreateAddressResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<OnchainCreateAddressResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
 
-        suspend fun awaitDeposit(operationId: String, federationId: String? = null): OnchainAwaitDepositResponse? {
+        suspend fun awaitDeposit(
+            operationId: String,
+            federationId: String? = null
+        ): Pair<OnchainAwaitDepositResponse?, String?> {
             val res = _postWithFederationId(
                 "onchain/await-deposit",
                 federationId = federationId,
                 data = mapOf("operationId" to operationId)
             )
 
-            if (res != null) {
-                return json.decodeFromString<OnchainAwaitDepositResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<OnchainAwaitDepositResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
 
-        suspend fun withdraw(address: String, amountSat: Int?, withdrawAllSats:Boolean=false, federationId: String? = null): OnchainWithdrawResponse? {
-            var amnt=amountSat.toString()
-            if(withdrawAllSats && amountSat==null){
-                amnt="all"
+        suspend fun withdraw(
+            address: String,
+            amountSat: Int?,
+            withdrawAllSats: Boolean = false,
+            federationId: String? = null
+        ): Pair<OnchainWithdrawResponse?, String?> {
+            var amnt = amountSat.toString()
+            if (withdrawAllSats && amountSat == null) {
+                amnt = "all"
             }
 
             val res = _postWithFederationId(
@@ -406,10 +424,11 @@ class FedimintClient(
                 data = mapOf("address" to address, "amountSat" to amnt)
             )
 
-            if (res != null) {
-                return json.decodeFromString<OnchainWithdrawResponse>(res)
+            return if (res.first != null) {
+                Pair(json.decodeFromString<OnchainWithdrawResponse>(res.first!!), null)
+            } else {
+                Pair(null, res.second)
             }
-            return null
         }
     }
 }
