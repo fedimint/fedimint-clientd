@@ -19,17 +19,6 @@ use crate::database::Database;
 use crate::services::{MultiMintService, NostrService};
 use crate::state::AppState;
 
-pub const METHODS: [Method; 8] = [
-    Method::GetInfo,
-    Method::MakeInvoice,
-    Method::GetBalance,
-    Method::LookupInvoice,
-    Method::PayInvoice,
-    Method::MultiPayInvoice,
-    Method::PayKeysend,
-    Method::MultiPayKeysend,
-];
-
 pub async fn handle_nwc_request(state: &AppState, event: Event) -> Result<(), anyhow::Error> {
     let user_keys = state.nostr_service.user_keys();
     let decrypted = nip04::decrypt(user_keys.secret_key()?, &event.pubkey, &event.content)?;
@@ -295,7 +284,7 @@ async fn handle_get_info() -> Result<Response, NIP47Error> {
             block_height: 0,
             block_hash: "000000000000000000000000000000000000000000000000000000000000000000"
                 .to_string(),
-            methods: METHODS.iter().map(|i| i.to_string()).collect(),
+            methods: super::METHODS.iter().map(|i| i.to_string()).collect(),
         })),
     })
 }
