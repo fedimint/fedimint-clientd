@@ -1,14 +1,15 @@
 use std::fs::File;
 use std::io::{BufReader, Write};
 use std::path::PathBuf;
+use std::str::FromStr;
 
 use anyhow::{anyhow, Context, Result};
 use nostr::nips::nip04;
-use nostr::nips::nip47::Response;
+use nostr::nips::nip47::{NostrWalletConnectURI, Response};
 use nostr_sdk::secp256k1::SecretKey;
 use nostr_sdk::{
     Client, Event, EventBuilder, EventId, Filter, JsonUtil, Keys, Kind, RelayPoolNotification, Tag,
-    Timestamp,
+    Timestamp, Url,
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast::Receiver;
@@ -25,6 +26,7 @@ pub struct NostrService {
     #[serde(default)]
     pub sent_info: bool,
     pub keys_file_path: PathBuf,
+    pub relays: Vec<String>,
 }
 
 impl NostrService {
@@ -41,6 +43,14 @@ impl NostrService {
             }
         };
 
+        let lines = relays.split(',').collect::<Vec<_>>();
+        let relays = lines
+            .iter()
+            .map(|line| line.trim())
+            .filter(|line| !line.is_empty())
+            .map(|line| line.to_string())
+            .collect::<Vec<_>>();
+
         let client = Client::new(&Keys::new(server_key.into()));
         let service = Self {
             client,
@@ -48,9 +58,10 @@ impl NostrService {
             user_key,
             sent_info,
             keys_file_path: keys_file_path.clone(),
+            relays,
         };
 
-        service.add_relays(relays).await?;
+        service.add_relays().await?;
 
         if !sent_info {
             service.write_keys().context("Failed to write keys")?;
@@ -88,15 +99,8 @@ impl NostrService {
         Keys::new(self.user_key.into())
     }
 
-    async fn add_relays(&self, relays: &str) -> Result<()> {
-        let lines = relays.split(',').collect::<Vec<_>>();
-        let relays = lines
-            .iter()
-            .map(|line| line.trim())
-            .filter(|line| !line.is_empty())
-            .map(|line| line.to_string())
-            .collect::<Vec<_>>();
-        for relay in relays {
+    async fn add_relays(&self) -> Result<()> {
+        for relay in self.relays.iter() {
             self.client.add_relay(relay).await?;
         }
         Ok(())
@@ -135,6 +139,7 @@ impl NostrService {
 
     pub async fn broadcast_info_event(&mut self) -> Result<(), anyhow::Error> {
         if self.sent_info {
+            info!("Already sent info event");
             return Ok(());
         }
         let content = METHODS
@@ -183,5 +188,19 @@ impl NostrService {
         self.client.subscribe(vec![subscription], None).await;
 
         info!("Listening for nip 47 requests...");
+    }
+
+    pub async fn new_nwc_uri(&self) -> Result<NostrWalletConnectURI> {
+        let relay = self
+            .relays
+            .first()
+            .ok_or_else(|| anyhow::anyhow!("No relays provided, cannot generate URI"))?;
+        let uri = NostrWalletConnectURI::new(
+            self.server_keys().public_key(),
+            Url::from_str(relay)?,
+            self.user_keys().secret_key()?.clone(),
+            None,
+        );
+        Ok(uri)
     }
 }

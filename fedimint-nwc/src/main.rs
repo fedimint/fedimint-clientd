@@ -9,6 +9,7 @@ pub mod nwc;
 pub mod server;
 pub mod services;
 pub mod state;
+pub mod utils;
 
 use crate::config::Cli;
 use crate::server::run_server;
@@ -23,6 +24,10 @@ async fn main() -> Result<()> {
     state.nostr_service.connect().await;
     state.nostr_service.broadcast_info_event().await?;
     state.nostr_service.subscribe_nwc().await;
+
+    let uri = state.nostr_service.new_nwc_uri().await?;
+    info!("\nUri: {uri}\n");
+    utils::print_as_qr_code(&uri.to_string()).await?;
 
     let server_handle = tokio::spawn(async {
         match run_server().await {
@@ -78,6 +83,10 @@ async fn handle_notification(notification: RelayPoolNotification, state: &AppSta
             } else {
                 error!("Invalid nwc event: {}", event.as_json());
             }
+            Ok(())
+        }
+        RelayPoolNotification::RelayStatus { relay_url, status } => {
+            info!("Relay status: {relay_url:?} {status:?}");
             Ok(())
         }
         RelayPoolNotification::Shutdown => {
