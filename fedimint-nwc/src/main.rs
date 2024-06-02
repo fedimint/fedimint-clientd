@@ -18,10 +18,11 @@ use crate::state::AppState;
 async fn main() -> Result<()> {
     init_logging_and_env()?;
     let cli = Cli::parse();
-    let state = AppState::new(cli).await?;
+    let mut state = AppState::new(cli).await?;
 
     state.nostr_service.connect().await;
     state.nostr_service.broadcast_info_event().await?;
+    state.nostr_service.subscribe_nwc().await;
 
     let server_handle = tokio::spawn(async {
         match run_server().await {

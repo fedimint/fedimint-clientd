@@ -7,7 +7,8 @@ use nostr::nips::nip04;
 use nostr::nips::nip47::Response;
 use nostr_sdk::secp256k1::SecretKey;
 use nostr_sdk::{
-    Client, Event, EventBuilder, EventId, JsonUtil, Keys, Kind, RelayPoolNotification, Tag,
+    Client, Event, EventBuilder, EventId, Filter, JsonUtil, Keys, Kind, RelayPoolNotification, Tag,
+    Timestamp,
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast::Receiver;
@@ -23,31 +24,43 @@ pub struct NostrService {
     user_key: SecretKey,
     #[serde(default)]
     pub sent_info: bool,
+    pub keys_file_path: PathBuf,
 }
 
 impl NostrService {
     pub async fn new(keys_file_path: &PathBuf, relays: &str) -> Result<Self> {
-        let (server_key, user_key) = match File::open(keys_file_path) {
+        let (server_key, user_key, sent_info) = match File::open(keys_file_path) {
             Ok(file) => {
                 let reader = BufReader::new(file);
                 let keys: Self = serde_json::from_reader(reader).context("Failed to parse JSON")?;
-                (keys.server_key, keys.user_key)
+                (keys.server_key, keys.user_key, keys.sent_info)
             }
             Err(_) => {
                 let (server_key, user_key) = Self::generate_keys()?;
-                Self::write_keys(server_key, user_key, keys_file_path)?;
-                (server_key, user_key)
+                (server_key, user_key, false)
             }
         };
 
         let client = Client::new(&Keys::new(server_key.into()));
-        Self::add_relays(&client, relays).await?;
-        Ok(Self {
+        let service = Self {
             client,
             server_key,
             user_key,
-            sent_info: false,
-        })
+            sent_info,
+            keys_file_path: keys_file_path.clone(),
+        };
+
+        service.add_relays(relays).await?;
+
+        if !sent_info {
+            service.write_keys().context("Failed to write keys")?;
+        }
+
+        Ok(service)
+    }
+
+    pub fn set_sent_info(&mut self, sent_info: bool) {
+        self.sent_info = sent_info;
     }
 
     fn generate_keys() -> Result<(SecretKey, SecretKey)> {
@@ -58,20 +71,10 @@ impl NostrService {
         Ok((**server_key, **user_key))
     }
 
-    fn write_keys(
-        server_key: SecretKey,
-        user_key: SecretKey,
-        keys_file_path: &PathBuf,
-    ) -> Result<()> {
-        let keys = Self {
-            server_key,
-            user_key,
-            sent_info: false,
-            client: Client::new(&Keys::new(server_key.into())), /* Dummy client for struct
-                                                                 * initialization */
-        };
-        let json_str = serde_json::to_string(&keys).context("Failed to serialize data")?;
-        let mut file = File::create(keys_file_path).context("Failed to create file")?;
+    fn write_keys(&self) -> Result<()> {
+        let json_str = serde_json::to_string(&self).context("Failed to serialize data")?;
+        let mut file =
+            File::create(self.keys_file_path.clone()).context("Failed to create file")?;
         file.write_all(json_str.as_bytes())
             .context("Failed to write to file")?;
         Ok(())
@@ -85,7 +88,7 @@ impl NostrService {
         Keys::new(self.user_key.into())
     }
 
-    async fn add_relays(client: &Client, relays: &str) -> Result<()> {
+    async fn add_relays(&self, relays: &str) -> Result<()> {
         let lines = relays.split(',').collect::<Vec<_>>();
         let relays = lines
             .iter()
@@ -94,7 +97,7 @@ impl NostrService {
             .map(|line| line.to_string())
             .collect::<Vec<_>>();
         for relay in relays {
-            client.add_relay(relay).await?;
+            self.client.add_relay(relay).await?;
         }
         Ok(())
     }
@@ -130,7 +133,10 @@ impl NostrService {
         Ok(())
     }
 
-    pub async fn broadcast_info_event(&self) -> Result<(), anyhow::Error> {
+    pub async fn broadcast_info_event(&mut self) -> Result<(), anyhow::Error> {
+        if self.sent_info {
+            return Ok(());
+        }
         let content = METHODS
             .iter()
             .map(ToString::to_string)
@@ -139,8 +145,10 @@ impl NostrService {
         let info = EventBuilder::new(Kind::WalletConnectInfo, content, [])
             .to_event(&self.server_keys())?;
         info!("Broadcasting info event: {}", info.as_json());
-        let event_id = self.client.send_event(info).await?;
+        let event_id = self.send_event(info).await?;
         info!("Broadcasted info event: {}", event_id);
+        self.sent_info = true;
+        self.write_keys()?;
         Ok(())
     }
 
@@ -163,5 +171,17 @@ impl NostrService {
         event.kind == Kind::WalletConnectRequest
             && event.verify().is_ok()
             && event.pubkey == self.user_keys().public_key()
+    }
+
+    pub async fn subscribe_nwc(&self) {
+        let subscription = Filter::new()
+            .kinds(vec![Kind::WalletConnectRequest])
+            .author(self.user_keys().public_key())
+            .pubkey(self.server_keys().public_key())
+            .since(Timestamp::now());
+
+        self.client.subscribe(vec![subscription], None).await;
+
+        info!("Listening for nip 47 requests...");
     }
 }
