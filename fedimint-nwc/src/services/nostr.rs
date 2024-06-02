@@ -3,9 +3,11 @@ use std::io::{BufReader, Write};
 use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
+use multimint::fedimint_ln_common::bitcoin::util::bip32::ExtendedPrivKey;
 use nostr::nips::nip04;
 use nostr::nips::nip47::Response;
-use nostr_sdk::secp256k1::SecretKey;
+use nostr_sdk::bitcoin::bip32::{ChildNumber, DerivationPath};
+use nostr_sdk::secp256k1::{Secp256k1, SecretKey, Signing};
 use nostr_sdk::{
     Client, Event, EventBuilder, EventId, JsonUtil, Keys, Kind, RelayPoolNotification, Tag,
 };
@@ -13,7 +15,10 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast::Receiver;
 use tracing::info;
 
-use crate::nwc::METHODS;
+use crate::nwc::types::METHODS;
+
+const PROFILE_ACCOUNT_INDEX: u32 = 0;
+const NWC_ACCOUNT_INDEX: u32 = 1;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct NostrService {
@@ -164,4 +169,51 @@ impl NostrService {
             && event.verify().is_ok()
             && event.pubkey == self.user_keys().public_key()
     }
+}
+
+/// Derives the client and server keys for Nostr Wallet Connect given a profile
+/// index The left key is the client key and the right key is the server key
+pub(crate) fn derive_nwc_keys<C: Signing>(
+    context: &Secp256k1<C>,
+    xprivkey: ExtendedPrivKey,
+    profile_index: u32,
+) -> Result<(Keys, Keys), anyhow::Error> {
+    let client_key = derive_nostr_key(
+        context,
+        xprivkey,
+        NWC_ACCOUNT_INDEX,
+        Some(profile_index),
+        Some(0),
+    )?;
+    let server_key = derive_nostr_key(
+        context,
+        xprivkey,
+        NWC_ACCOUNT_INDEX,
+        Some(profile_index),
+        Some(1),
+    )?;
+
+    Ok((client_key, server_key))
+}
+
+pub fn derive_nostr_key<C: Signing>(
+    context: &Secp256k1<C>,
+    xprivkey: ExtendedPrivKey,
+    account: u32,
+    chain: Option<u32>,
+    index: Option<u32>,
+) -> Result<Keys, anyhow::Error> {
+    let chain = match chain {
+        Some(chain) => ChildNumber::from_hardened_idx(chain)?,
+        None => ChildNumber::from_normal_idx(0)?,
+    };
+
+    let index = match index {
+        Some(index) => ChildNumber::from_hardened_idx(index)?,
+        None => ChildNumber::from_normal_idx(0)?,
+    };
+
+    let path = DerivationPath::from_str(&format!("m/44'/1237'/{account}'/{chain}/{index}"))?;
+    let key = xprivkey.derive_priv(context, &path)?;
+    Ok(Keys::new(key.private_key.into()))
 }

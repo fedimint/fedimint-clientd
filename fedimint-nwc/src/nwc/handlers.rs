@@ -15,20 +15,10 @@ use nostr_sdk::{Event, JsonUtil};
 use tokio::spawn;
 use tracing::info;
 
+use super::types::METHODS;
 use crate::database::Database;
 use crate::services::{MultiMintService, NostrService};
 use crate::state::AppState;
-
-pub const METHODS: [Method; 8] = [
-    Method::GetInfo,
-    Method::MakeInvoice,
-    Method::GetBalance,
-    Method::LookupInvoice,
-    Method::PayInvoice,
-    Method::MultiPayInvoice,
-    Method::PayKeysend,
-    Method::MultiPayKeysend,
-];
 
 pub async fn handle_nwc_request(state: &AppState, event: Event) -> Result<(), anyhow::Error> {
     let user_keys = state.nostr_service.user_keys();

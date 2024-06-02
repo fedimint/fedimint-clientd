@@ -1494,6 +1494,7 @@ dependencies = [
  "axum",
  "axum-macros",
  "bincode",
+ "chrono",
  "clap 4.5.4",
  "dotenv",
  "futures-util",

@@ -11,7 +11,7 @@ use tracing::{debug, error, info};
 
 use crate::config::Cli;
 use crate::database::Database;
-use crate::nwc::handle_nwc_request;
+use crate::nwc::handlers::handle_nwc_request;
 use crate::services::{MultiMintService, NostrService};
 
 #[derive(Debug, Clone)]
