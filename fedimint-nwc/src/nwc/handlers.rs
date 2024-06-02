@@ -15,6 +15,7 @@ use nostr_sdk::{Event, JsonUtil};
 use tokio::spawn;
 use tracing::info;
 
+use super::types::METHODS;
 use crate::database::Database;
 use crate::services::{MultiMintService, NostrService};
 use crate::state::AppState;
@@ -284,7 +285,7 @@ async fn handle_get_info() -> Result<Response, NIP47Error> {
             block_height: 0,
             block_hash: "000000000000000000000000000000000000000000000000000000000000000000"
                 .to_string(),
-            methods: super::METHODS.iter().map(|i| i.to_string()).collect(),
+            methods: METHODS.iter().map(|i| i.to_string()).collect(),
         })),
     })
 }

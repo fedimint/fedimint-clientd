@@ -9,6 +9,7 @@ pub mod nwc;
 pub mod server;
 pub mod services;
 pub mod state;
+pub mod utils;
 
 use crate::config::Cli;
 use crate::server::run_server;
