@@ -1,0 +1,17 @@
+[package]
+name = "fedimint_clientd_rs"
+version = "0.0.1"
+edition = "2021"
+description = "Rust client for hitting the REST endpoints on a fedimint clientd"
+repository = "https://github.com/fedimint/fedimint-clientd"
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/fedimint/fedimint-clientd"
+
+[dependencies]
+reqwest = { version = "0.12.4", features = ["json"] }
+serde = { version = "1.0.197", features = ["derive"] }
+serde_json = "1.0.117"
+tracing = "0.1.40"
+tokio = { version = "1.38.0", features = ["full"] }
+bitcoin = "0.32.2"

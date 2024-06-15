@@ -97,7 +97,7 @@ export class FedimintClientBuilder {
       this.baseUrl,
       this.password,
       this.activeFederationId,
-      this.activeGatewayId
+      this.activeGatewayId,
     );
 
     return client;
@@ -121,14 +121,14 @@ export class FedimintClient {
     baseUrl: string,
     password: string,
     activeFederationId: string,
-    activeGatewayId: string = ""
+    activeGatewayId: string = "",
   ) {
     this.baseUrl = baseUrl + "/v2";
     this.password = password;
     this.activeFederationId = activeFederationId;
     this.activeGatewayId = activeGatewayId;
     console.log(
-      "Fedimint Client initialized, must set activeGatewayId after intitalization to use lightning module methods or manually pass in gateways"
+      "Fedimint Client initialized, must set activeGatewayId after intitalization to use lightning module methods or manually pass in gateways",
     );
   }
 
@@ -153,7 +153,7 @@ export class FedimintClient {
       });
     } else {
       console.log(
-        "Clearing active gateway id, must be set manually on lightning calls or setDefaultGatewayId to true"
+        "Clearing active gateway id, must be set manually on lightning calls or setDefaultGatewayId to true",
       );
       this.activeGatewayId = "";
     }
@@ -196,7 +196,7 @@ export class FedimintClient {
 
     if (!res.ok) {
       throw new Error(
-        `GET request failed. Status: ${res.status}, Body: ${await res.text()}`
+        `GET request failed. Status: ${res.status}, Body: ${await res.text()}`,
       );
     }
 
@@ -222,7 +222,7 @@ export class FedimintClient {
 
     if (!res.ok) {
       throw new Error(
-        `POST request failed. Status: ${res.status}, Body: ${await res.text()}`
+        `POST request failed. Status: ${res.status}, Body: ${await res.text()}`,
       );
     }
 
@@ -241,7 +241,7 @@ export class FedimintClient {
   private async postWithFederationId<T>(
     endpoint: string,
     body: any,
-    federationId?: string
+    federationId?: string,
   ): Promise<T> {
     const effectiveFederationId = federationId || this.activeFederationId;
 
@@ -265,7 +265,7 @@ export class FedimintClient {
     endpoint: string,
     body: any,
     gatewayId?: string,
-    federationId?: string
+    federationId?: string,
   ): Promise<T> {
     try {
       const effectiveGatewayId = gatewayId || this.activeGatewayId;
@@ -273,7 +273,7 @@ export class FedimintClient {
 
       if (effectiveFederationId === "" || effectiveGatewayId === "") {
         throw new Error(
-          "Must set active federation and gateway id before posting with them"
+          "Must set active federation and gateway id before posting with them",
         );
       }
 
@@ -323,13 +323,13 @@ export class FedimintClient {
    * Returns the common API version to use to communicate with the federation and modules
    */
   public async discoverVersion(
-    threshold?: number
+    threshold?: number,
   ): Promise<DiscoverVersionResponse> {
     const request: DiscoverVersionRequest = threshold ? { threshold } : {};
 
     return this.post<DiscoverVersionResponse>(
       "/admin/discover-version",
-      request
+      request,
     );
   }
 
@@ -340,14 +340,14 @@ export class FedimintClient {
    */
   public async listOperations(
     limit: number,
-    federationId?: string
+    federationId?: string,
   ): Promise<OperationOutput[]> {
     const request: ListOperationsRequest = { limit };
 
     return await this.postWithFederationId<OperationOutput[]>(
       "/admin/list-operations",
       request,
-      federationId
+      federationId,
     );
   }
 
@@ -372,7 +372,7 @@ export class FedimintClient {
     inviteCode: string,
     setActiveFederationId: boolean,
     useDefaultGateway: boolean,
-    useManualSecret: boolean = false
+    useManualSecret: boolean = false,
   ): Promise<JoinResponse> {
     const request: JoinRequest = { inviteCode, useManualSecret };
 
@@ -395,13 +395,13 @@ export class FedimintClient {
     createInvoice: async (
       request: LightningInvoiceRequest,
       gatewayId?: string,
-      federationId?: string
+      federationId?: string,
     ): Promise<LightningInvoiceResponse> => {
       return await this.postWithGatewayIdAndFederationId<LightningInvoiceResponse>(
         "/ln/invoice",
         request,
         gatewayId,
-        federationId
+        federationId,
       );
     },
 
@@ -420,13 +420,13 @@ export class FedimintClient {
     createInvoiceForPubkeyTweak: async (
       request: LightningInvoiceExternalPubkeyTweakedRequest,
       gatewayId?: string,
-      federationId?: string
+      federationId?: string,
     ): Promise<LightningInvoiceResponse> => {
       return await this.postWithGatewayIdAndFederationId<LightningInvoiceExternalPubkeyTweakedResponse>(
         "/ln/invoice-external-pubkey-tweaked",
         request,
         gatewayId,
-        federationId
+        federationId,
       );
     },
 
@@ -439,12 +439,12 @@ export class FedimintClient {
      */
     claimPubkeyTweakReceives: async (
       request: LightningClaimPubkeyTweakReceivesRequest,
-      federationId: string
+      federationId: string,
     ): Promise<LightningPaymentResponse> => {
       return await this.postWithFederationId<LightningPaymentResponse>(
         "/ln/claim-external-receive-tweaked",
         request,
-        federationId
+        federationId,
       );
     },
 
@@ -455,14 +455,14 @@ export class FedimintClient {
      */
     awaitInvoice: async (
       operationId: string,
-      federationId?: string
+      federationId?: string,
     ): Promise<LightningPaymentResponse> => {
       const request: LightningAwaitInvoiceRequest = { operationId };
 
       return await this.postWithFederationId<LightningPaymentResponse>(
         "/ln/await-invoice",
         request,
-        federationId
+        federationId,
       );
     },
 
@@ -472,13 +472,13 @@ export class FedimintClient {
     pay: async (
       request: LightningPayRequest,
       gatewayId?: string,
-      federationId?: string
+      federationId?: string,
     ): Promise<LightningPayResponse> => {
       return await this.postWithGatewayIdAndFederationId<LightningPayResponse>(
         "/ln/pay",
         request,
         gatewayId,
-        federationId
+        federationId,
       );
     },
 
@@ -503,7 +503,7 @@ export class FedimintClient {
 
       return await this.post<MintDecodeNotesResponse>(
         "/mint/decode-notes",
-        request
+        request,
       );
     },
 
@@ -511,7 +511,7 @@ export class FedimintClient {
      * Encodes json notes to hex encoded binary notes
      */
     encodeNotes: async (
-      notesJson: NotesJson
+      notesJson: NotesJson,
     ): Promise<MintEncodeNotesResponse> => {
       const request: MintEncodeNotesRequest = {
         notesJsonStr: JSON.stringify(notesJson),
@@ -519,7 +519,7 @@ export class FedimintClient {
 
       return await this.post<MintEncodeNotesResponse>(
         "/mint/encode-notes",
-        request
+        request,
       );
     },
 
@@ -530,14 +530,14 @@ export class FedimintClient {
      */
     reissue: async (
       notes: string,
-      federationId?: string
+      federationId?: string,
     ): Promise<MintReissueResponse> => {
       const request: MintReissueRequest = { notes };
 
       return await this.postWithFederationId<MintReissueResponse>(
         "/mint/reissue",
         request,
-        federationId
+        federationId,
       );
     },
 
@@ -553,12 +553,12 @@ export class FedimintClient {
      */
     spend: async (
       request: MintSpendRequest,
-      federationId?: string
+      federationId?: string,
     ): Promise<MintSpendResponse> => {
       return await this.postWithFederationId<MintSpendResponse>(
         "/mint/spend",
         request,
-        federationId
+        federationId,
       );
     },
 
@@ -567,14 +567,14 @@ export class FedimintClient {
      */
     validate: async (
       notes: string,
-      federationId?: string
+      federationId?: string,
     ): Promise<MintValidateResponse> => {
       const request: MintValidateRequest = { notes };
 
       return await this.postWithFederationId<MintValidateResponse>(
         "/mint/validate",
         request,
-        federationId
+        federationId,
       );
     },
 
@@ -616,14 +616,14 @@ export class FedimintClient {
      */
     createDepositAddress: async (
       timeout: number,
-      federationId?: string
+      federationId?: string,
     ): Promise<OnchainDepositAddressResponse> => {
       const request: OnchainDepositAddressRequest = { timeout };
 
       return await this.postWithFederationId<OnchainDepositAddressResponse>(
         "/onchain/deposit-address",
         request,
-        federationId
+        federationId,
       );
     },
 
@@ -635,14 +635,14 @@ export class FedimintClient {
      */
     awaitDeposit: async (
       operationId: string,
-      federationId?: string
+      federationId?: string,
     ): Promise<OnchainAwaitDepositResponse> => {
       const request: OnchainAwaitDepositRequest = { operationId };
 
       return await this.postWithFederationId<OnchainAwaitDepositResponse>(
         "/onchain/await-deposit",
         request,
-        federationId
+        federationId,
       );
     },
 
@@ -659,14 +659,14 @@ export class FedimintClient {
     withdraw: async (
       address: string,
       amountSat: number | "all",
-      federationId?: string
+      federationId?: string,
     ): Promise<OnchainWithdrawResponse> => {
       const request: OnchainWithdrawRequest = { address, amountSat };
 
       return await this.postWithFederationId<OnchainWithdrawResponse>(
         "/onchain/withdraw",
         request,
-        federationId
+        federationId,
       );
     },
   };

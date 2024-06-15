@@ -1,5 +1,5 @@
 [workspace]
-members = ["multimint", "fedimint-clientd", "fedimint-nwc"]
+members = ["multimint", "fedimint-clientd", "fedimint-nwc", "wrappers/fedimint_clientd_rs"]
 resolver = "2"
 
 [workspace.package]
