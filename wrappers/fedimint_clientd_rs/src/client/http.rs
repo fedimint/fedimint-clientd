@@ -9,7 +9,9 @@ impl FedimintClient {
         T: DeserializeOwned,
     {
         if !self.built {
-            panic!("Fedimint Client not built. Call `.build()` after initializing.")
+            return Err(
+                "Fedimint Client not built. Call `.build()` after initializing.".to_string(),
+            );
         }
 
         let client = reqwest::Client::new();

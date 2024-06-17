@@ -33,17 +33,17 @@ impl FedimintClient {
         self
     }
 
-    pub fn build(mut self) -> Self {
+    pub fn build(mut self) -> Result<Self, String> {
         if self.base_url.is_empty()
             || self.password.is_empty()
             || self.active_federation_id.is_empty()
         {
-            panic!("base_url, password, and active_federation_id must be set");
+            return Err("base_url, password, and active_federation_id must be set".to_string());
         }
 
         self.built = true;
 
-        self
+        Ok(self)
     }
 
     pub async fn set_active_federation_id(
