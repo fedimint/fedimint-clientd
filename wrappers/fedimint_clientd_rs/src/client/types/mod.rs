@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Deserialize, Serialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -37,7 +36,7 @@ pub enum LnReceiveState {
     Claimed,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Gateway {
     pub federation_id: String,
     pub info: GatewayInfo,
@@ -45,7 +44,7 @@ pub struct Gateway {
     pub ttl: GatewayTTL,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct GatewayInfo {
     pub api: String,
     pub fees: GatewayFees,
@@ -58,25 +57,25 @@ pub struct GatewayInfo {
     pub supports_private_payments: bool,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct GatewayTTL {
     pub nanos: u32,
     pub secs: u64,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct GatewayFees {
     pub base_msat: u32,
     pub proportional_millionths: u32,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct NotesJson {
     pub federation_id_prefix: String,
     pub notes: HashMap<String, Vec<Note>>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Note {
     pub signature: String,
     pub spend_key: String,

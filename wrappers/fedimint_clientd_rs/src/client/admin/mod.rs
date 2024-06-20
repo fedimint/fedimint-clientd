@@ -1,13 +1,8 @@
-use serde_json::Value;
+pub mod types;
 
-use crate::{
-    options::JoinOptions,
-    types::{
-        DiscoverVersionRequest, DiscoverVersionResponse, FederationIdsResponse, InfoResponse,
-        JoinRequest, JoinResponse, ListOperationsRequest, ListOperationsResponse,
-    },
-    FedimintClient,
-};
+use crate::FedimintClient;
+use serde_json::Value;
+pub use types::*;
 
 impl FedimintClient {
     /// Returns info about each joined federation
@@ -65,7 +60,7 @@ impl FedimintClient {
             Ok(res) => {
                 if options.set_active_federation_id {
                     let _ = self
-                        .set_active_federation_id(
+                        .switch_federation_id(
                             res.clone().this_federation_id,
                             options.use_default_gateway,
                         )

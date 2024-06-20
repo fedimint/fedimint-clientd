@@ -1,10 +1,7 @@
-use crate::{
-    types::{
-        AwaitDepositRequest, AwaitDepositResponse, CreateDepositAddressRequest,
-        CreateDepositAddressResponse,
-    },
-    FedimintClient,
-};
+pub mod types;
+
+use crate::FedimintClient;
+pub use types::*;
 
 impl FedimintClient {
     pub async fn create_deposit_address(

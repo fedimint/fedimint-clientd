@@ -1870,7 +1870,7 @@ dependencies = [
 
 [[package]]
 name = "fedimint_clientd_rs"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "bitcoin 0.32.2",
  "reqwest 0.12.4",

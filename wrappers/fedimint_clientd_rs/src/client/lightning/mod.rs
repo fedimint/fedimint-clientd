@@ -1,12 +1,8 @@
-use crate::{
-    options::{InvoiceOptions, PayOptions, TweakedInvoiceOptions},
-    types::{
-        AwaitInvoiceRequest, AwaitInvoiceResponse, ClaimPubkeyTweakRequest, CreateInvoiceRequest,
-        CreateInvoiceResponse, CreateTweakedInvoiceRequest, Gateway, LightningPayRequest,
-        LightningPayResponse, LightningPaymentResponse, ListGatewaysRequest,
-    },
-    FedimintClient,
-};
+pub mod types;
+
+use super::types::Gateway;
+use crate::FedimintClient;
+pub use types::*;
 
 impl FedimintClient {
     pub async fn create_invoice(

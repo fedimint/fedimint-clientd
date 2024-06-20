@@ -1,13 +1,9 @@
-use crate::{
-    options::SpendOptions,
-    types::{
-        CombineRequest, CombineResponse, DecodeNotesRequest, DecodeNotesResponse,
-        EncodeNotesRequest, EncodeNotesResponse, NotesJson, ReissueRequest, ReissueResponse,
-        SpendRequest, SpendResponse, SplitRequest, SplitResponse, ValidateRequest,
-        ValidateResponse,
-    },
-    FedimintClient,
-};
+pub mod types;
+
+use crate::FedimintClient;
+pub use types::*;
+
+use super::types::NotesJson;
 
 impl FedimintClient {
     pub async fn decode_notes(&self, notes: String) -> Result<DecodeNotesResponse, String> {

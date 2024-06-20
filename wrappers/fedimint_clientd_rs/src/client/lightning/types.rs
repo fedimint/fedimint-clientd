@@ -1,3 +1,94 @@
+#![allow(non_snake_case)]
+
+use serde::{Deserialize, Serialize};
+
+use crate::client::types::LnReceiveState;
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateInvoiceResponse {
+    pub operation_id: String,
+    pub invoice: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LightningPaymentResponse {
+    pub status: LnReceiveState,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AwaitInvoiceResponse {
+    pub status: LnReceiveState,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LightningPayResponse {
+    pub operation_id: String,
+    pub payment_type: PayType,
+    pub contract_id: String,
+    pub fee: u64,
+    pub preimage: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PayType {
+    // Payment from this client to another user within the federation
+    Internal(String),
+    // Payment from this client to another user, facilitated by a gateway
+    Lightning(String),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct CreateInvoiceRequest {
+    pub gatewayId: String,
+    pub federationId: String,
+    pub amountMsat: u64,
+    pub description: String,
+    pub expiryTime: Option<u64>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct CreateTweakedInvoiceRequest {
+    pub gatewayId: String,
+    pub federationId: String,
+    pub amountMsat: u64,
+    pub tweak: u64,
+    pub description: String,
+    pub expiryTime: Option<u64>,
+    pub externalPubkey: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ClaimPubkeyTweakRequest {
+    pub federationId: String,
+    pub privateKey: String,
+    pub tweaks: Vec<usize>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct AwaitInvoiceRequest {
+    pub federationId: String,
+    pub operationId: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct LightningPayRequest {
+    pub federationId: String,
+    pub gatewayId: String,
+    pub paymentInfo: String,
+    pub amountMsat: Option<u64>,
+    pub LightningurlComment: Option<String>,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct ListGatewaysRequest {
+    pub federationId: String,
+}
+
 pub struct InvoiceOptions {
     pub amount_msat: u64,
     pub description: String,

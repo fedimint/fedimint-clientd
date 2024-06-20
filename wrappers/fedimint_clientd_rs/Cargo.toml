@@ -1,6 +1,6 @@
 [package]
 name = "fedimint_clientd_rs"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "Rust client for hitting the REST endpoints on a fedimint clientd"
 repository = "https://github.com/fedimint/fedimint-clientd"
