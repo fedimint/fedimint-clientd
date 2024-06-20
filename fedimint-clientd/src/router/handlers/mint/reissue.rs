@@ -3,6 +3,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use futures_util::StreamExt;
+use multimint::cdk::amount::SplitTarget;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_core::Amount;
 use multimint::fedimint_mint_client::{MintClientModule, OOBNotes, ReissueExternalNotesState};
@@ -13,10 +14,16 @@ use tracing::info;
 use crate::error::AppError;
 use crate::state::AppState;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
+pub enum Ecash {
+    Notes(OOBNotes),
+    Token(String),
+}
+
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ReissueRequest {
-    pub notes: OOBNotes,
+    pub ecash: Ecash,
 }
 
 #[derive(Debug, Serialize)]
@@ -25,15 +32,12 @@ pub struct ReissueResponse {
     pub amount_msat: Amount,
 }
 
-async fn _reissue(
-    client: ClientHandleArc,
-    req: ReissueRequest,
-) -> Result<ReissueResponse, AppError> {
-    let amount_msat = req.notes.total_amount();
+async fn _reissue(client: ClientHandleArc, notes: OOBNotes) -> Result<ReissueResponse, AppError> {
+    let amount_msat = notes.total_amount();
 
     let mint = client.get_first_module::<MintClientModule>();
 
-    let operation_id = mint.reissue_external_notes(req.notes, ()).await?;
+    let operation_id = mint.reissue_external_notes(notes, ()).await?;
     let mut updates = mint
         .subscribe_reissue_external_notes(operation_id)
         .await
@@ -55,12 +59,29 @@ async fn _reissue(
 pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<ReissueRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
-    let client = state
-        .get_client_by_prefix(&v.notes.federation_id_prefix())
-        .await?;
-    let reissue = _reissue(client, v).await?;
-    let reissue_json = json!(reissue);
-    Ok(reissue_json)
+    let ecash = v.ecash.clone();
+    match ecash {
+        Ecash::Notes(notes) => {
+            let client = state
+                .get_client_by_prefix(&notes.federation_id_prefix())
+                .await?;
+            let reissue = _reissue(client, notes).await?;
+            let reissue_json = json!(reissue);
+            Ok(reissue_json)
+        }
+        Ecash::Token(token) => {
+            let amount = state
+                .multimint
+                .cashu_wallet
+                .lock()
+                .await
+                .receive(&token, &SplitTarget::None, None)
+                .await?;
+            Ok(json!(ReissueResponse {
+                amount_msat: Amount::from_sats(u64::from(amount)),
+            }))
+        }
+    }
 }
 
 #[axum_macros::debug_handler]
@@ -68,9 +89,26 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<ReissueRequest>,
 ) -> Result<Json<ReissueResponse>, AppError> {
-    let client = state
-        .get_client_by_prefix(&req.notes.federation_id_prefix())
-        .await?;
-    let reissue = _reissue(client, req).await?;
-    Ok(Json(reissue))
+    let ecash = req.ecash.clone();
+    match ecash {
+        Ecash::Notes(notes) => {
+            let client = state
+                .get_client_by_prefix(&notes.federation_id_prefix())
+                .await?;
+            let reissue = _reissue(client, notes).await?;
+            Ok(Json(reissue))
+        }
+        Ecash::Token(token) => {
+            let amount = state
+                .multimint
+                .cashu_wallet
+                .lock()
+                .await
+                .receive(&token, &SplitTarget::None, None)
+                .await?;
+            Ok(Json(ReissueResponse {
+                amount_msat: Amount::from_sats(u64::from(amount)),
+            }))
+        }
+    }
 }

@@ -78,12 +78,12 @@ use fedimint_ln_client::LightningClientModule;
 use fedimint_mint_client::MintClientModule;
 use fedimint_wallet_client::WalletClientModule;
 use tokio::sync::Mutex;
-use tracing::warn;
+use tracing::{info, warn};
 use types::InfoResponse;
 // Reexport all the fedimint crates for ease of use
 pub use {
-    fedimint_client, fedimint_core, fedimint_ln_client, fedimint_ln_common, fedimint_mint_client,
-    fedimint_wallet_client,
+    cdk, fedimint_client, fedimint_core, fedimint_ln_client, fedimint_ln_common,
+    fedimint_mint_client, fedimint_wallet_client,
 };
 
 pub mod client;
@@ -166,6 +166,7 @@ impl MultiMint {
             secret_key.as_slice(),
             vec![],
         )));
+        info!("Cashu wallet loaded");
 
         Ok(Self {
             db,
