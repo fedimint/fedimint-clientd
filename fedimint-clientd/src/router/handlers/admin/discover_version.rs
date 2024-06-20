@@ -20,7 +20,7 @@ async fn _discover_version(
     threshold: Option<usize>,
 ) -> Result<Value, AppError> {
     let mut api_versions = HashMap::new();
-    for (id, client) in multimint.clients.lock().await.iter() {
+    for (id, client) in multimint.fedimint_clients.lock().await.iter() {
         api_versions.insert(
             *id,
             json!({"version" : client.discover_common_api_version(threshold).await?}),

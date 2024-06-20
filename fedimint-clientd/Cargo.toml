@@ -37,7 +37,7 @@ time = { version = "0.3.25", features = ["formatting"] }
 chrono = "0.4.31"
 futures-util = "0.3.30"
 clap = { version = "3", features = ["derive", "env"] }
-multimint = { version = "0.3.6" }
-# multimint = { path = "../multimint" }
+# multimint = { version = "0.3.6" }
+multimint = { path = "../multimint" }
 axum-otel-metrics = "0.8.0"
 hex = "0.4.3"

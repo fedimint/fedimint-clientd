@@ -28,11 +28,11 @@ pub struct MultiMintService {
 
 impl MultiMintService {
     pub async fn new(
-        db_path: PathBuf,
+        work_dir: PathBuf,
         invite_code: InviteCode,
         secret_key: [u8; 64],
     ) -> Result<Self> {
-        let mut clients = MultiMint::new(db_path, secret_key).await?;
+        let mut clients = MultiMint::new(work_dir, secret_key).await?;
         clients.add_fedimint_client(invite_code.clone()).await?;
         clients.update_gateway_caches().await?;
         Ok(Self {

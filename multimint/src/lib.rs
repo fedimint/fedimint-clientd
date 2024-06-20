@@ -156,7 +156,7 @@ impl MultiMint {
 
         let local_store = Arc::new(RedbWalletDatabase::new(
             work_dir
-                .join("cashu_wallet")
+                .join("cashu_wallet.redb")
                 .to_str()
                 .ok_or(anyhow!("Failed to convert path to string"))?,
         )?);

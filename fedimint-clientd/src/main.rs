@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use axum::http::Method;
 use multimint::fedimint_core::api::InviteCode;
 use router::handlers::{admin, ln, mint, onchain};
@@ -55,8 +55,8 @@ struct Cli {
     invite_code: String,
 
     /// Path to FM database
-    #[clap(long, env = "FEDIMINT_CLIENTD_DB_PATH", required = true)]
-    db_path: PathBuf,
+    #[clap(long, env = "FEDIMINT_CLIENTD_WORK_DIR", required = true)]
+    work_dir: PathBuf,
 
     /// Password
     #[clap(long, env = "FEDIMINT_CLIENTD_PASSWORD", required = true)]
@@ -66,9 +66,9 @@ struct Cli {
     #[clap(long, env = "FEDIMINT_CLIENTD_ADDR", required = true)]
     addr: String,
 
-    /// Manual secret
-    #[clap(long, env = "FEDIMINT_CLIENTD_MANUAL_SECRET", required = false)]
-    manual_secret: Option<String>,
+    /// Secret Key
+    #[clap(long, env = "FEDIMINT_CLIENTD_SECRET_KEY", required = false)]
+    secret_key: String,
 
     /// Mode: ws, rest
     #[clap(long, env = "FEDIMINT_CLIENTD_MODE", default_value = "rest")]
@@ -84,22 +84,16 @@ async fn main() -> Result<()> {
 
     let cli: Cli = Cli::parse();
 
-    let mut state = AppState::new(cli.db_path).await?;
+    let secret_key = hex::decode(cli.secret_key).map_err(|_| anyhow!("Invalid secret key"))?;
+    let secret_key: [u8; 64] = secret_key
+        .try_into()
+        .map_err(|_| anyhow!("Invalid secret key"))?;
 
-    let manual_secret = match cli.manual_secret {
-        Some(secret) => Some(secret),
-        None => match std::env::var("FEDIMINT_CLIENTD_MANUAL_SECRET") {
-            Ok(secret) => Some(secret),
-            Err(_) => None,
-        },
-    };
+    let mut state = AppState::new(cli.work_dir, secret_key).await?;
 
     match InviteCode::from_str(&cli.invite_code) {
         Ok(invite_code) => {
-            let federation_id = state
-                .multimint
-                .register_new(invite_code, manual_secret)
-                .await?;
+            let federation_id = state.multimint.add_fedimint_client(invite_code).await?;
             info!("Created client for federation id: {:?}", federation_id);
         }
         Err(e) => {

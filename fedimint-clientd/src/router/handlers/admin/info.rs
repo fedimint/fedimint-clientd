@@ -27,7 +27,7 @@ pub struct InfoResponse {
 async fn _info(multimint: MultiMint) -> Result<HashMap<FederationId, InfoResponse>, Error> {
     let mut info = HashMap::new();
 
-    for (id, client) in multimint.clients.lock().await.iter() {
+    for (id, client) in multimint.fedimint_clients.lock().await.iter() {
         let mint_client = client.get_first_module::<MintClientModule>();
         let wallet_client = client.get_first_module::<WalletClientModule>();
         let summary = mint_client
