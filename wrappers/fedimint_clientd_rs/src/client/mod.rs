@@ -47,18 +47,15 @@ impl FedimintClient {
 
     /// Sets the default active lightning gateway ID
     pub fn active_gateway_id(mut self, active_gateway_id: String) -> Self {
-        self.active_federation_id = active_gateway_id;
+        self.active_gateway_id = active_gateway_id;
         self
     }
 
     /// Builds the client. If `base_url`, `password`, and `active_federation_id` are set, returns
     /// Ok(FedimintClient). Errors if any are empty
     pub fn build(mut self) -> Result<Self, String> {
-        if self.base_url.is_empty()
-            || self.password.is_empty()
-            || self.active_federation_id.is_empty()
-        {
-            return Err("base_url, password, and active_federation_id must be set".to_string());
+        if self.base_url.is_empty() || self.password.is_empty() {
+            return Err("base_url and password must be set".to_string());
         }
 
         self.built = true;

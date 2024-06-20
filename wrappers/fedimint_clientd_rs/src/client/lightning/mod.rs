@@ -9,10 +9,16 @@ impl FedimintClient {
         &self,
         opts: InvoiceOptions,
     ) -> Result<CreateInvoiceResponse, String> {
+        let federation_id = self.active_federation_id.clone();
+
+        if federation_id.is_empty() {
+            return Err("Federation ID Required".to_string());
+        }
+
         self.post::<CreateInvoiceRequest, CreateInvoiceResponse>(
             "/ln/invoice",
             CreateInvoiceRequest {
-                federationId: self.active_federation_id.to_owned(),
+                federationId: federation_id,
                 gatewayId: self.active_gateway_id.to_owned(),
                 amountMsat: opts.amount_msat,
                 description: opts.description,
@@ -26,10 +32,16 @@ impl FedimintClient {
         &self,
         opts: TweakedInvoiceOptions,
     ) -> Result<CreateInvoiceResponse, String> {
+        let federation_id = self.active_federation_id.clone();
+
+        if federation_id.is_empty() {
+            return Err("Federation ID Required".to_string());
+        }
+
         self.post::<CreateTweakedInvoiceRequest, CreateInvoiceResponse>(
             "/ln/invoice-external-pubkey-tweaked",
             CreateTweakedInvoiceRequest {
-                federationId: self.active_federation_id.to_owned(),
+                federationId: federation_id,
                 gatewayId: self.active_gateway_id.to_owned(),
                 amountMsat: opts.amount_msat,
                 description: opts.description,
@@ -46,10 +58,16 @@ impl FedimintClient {
         private_key: String,
         tweaks: Vec<usize>,
     ) -> Result<LightningPaymentResponse, String> {
+        let federation_id = self.active_federation_id.clone();
+
+        if federation_id.is_empty() {
+            return Err("Federation ID Required".to_string());
+        }
+
         self.post::<ClaimPubkeyTweakRequest, LightningPaymentResponse>(
             "/ln/claim-external-receive-tweaked",
             ClaimPubkeyTweakRequest {
-                federationId: self.active_federation_id.to_owned(),
+                federationId: federation_id,
                 privateKey: private_key,
                 tweaks,
             },
@@ -61,10 +79,16 @@ impl FedimintClient {
         &self,
         operation_id: String,
     ) -> Result<AwaitInvoiceResponse, String> {
+        let federation_id = self.active_federation_id.clone();
+
+        if federation_id.is_empty() {
+            return Err("Federation ID Required".to_string());
+        }
+
         self.post::<AwaitInvoiceRequest, AwaitInvoiceResponse>(
             "/ln/await-invoice",
             AwaitInvoiceRequest {
-                federationId: self.active_federation_id.to_owned(),
+                federationId: federation_id,
                 operationId: operation_id,
             },
         )
@@ -72,10 +96,16 @@ impl FedimintClient {
     }
 
     pub async fn pay(&self, args: PayOptions) -> Result<LightningPayResponse, String> {
+        let federation_id = self.active_federation_id.clone();
+
+        if federation_id.is_empty() {
+            return Err("Federation ID Required".to_string());
+        }
+
         self.post::<LightningPayRequest, LightningPayResponse>(
             "/ln/pay",
             LightningPayRequest {
-                federationId: self.active_federation_id.to_owned(),
+                federationId: federation_id,
                 gatewayId: self.active_gateway_id.to_owned(),
                 paymentInfo: args.payment_info,
                 amountMsat: args.amount_msat,

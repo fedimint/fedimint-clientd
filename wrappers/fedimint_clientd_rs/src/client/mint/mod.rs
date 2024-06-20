@@ -30,10 +30,16 @@ impl FedimintClient {
     }
 
     pub async fn reissue(&self, notes: String) -> Result<ReissueResponse, String> {
+        let federation_id = self.active_federation_id.clone();
+
+        if federation_id.is_empty() {
+            return Err("Federation ID Required".to_string());
+        }
+
         self.post::<ReissueRequest, ReissueResponse>(
             "/mint/reissue",
             ReissueRequest {
-                federationId: self.active_federation_id.to_owned(),
+                federationId: federation_id,
                 notes,
             },
         )
@@ -41,10 +47,16 @@ impl FedimintClient {
     }
 
     pub async fn spend(&self, request: SpendOptions) -> Result<SpendResponse, String> {
+        let federation_id = self.active_federation_id.clone();
+
+        if federation_id.is_empty() {
+            return Err("Federation ID Required".to_string());
+        }
+
         self.post::<SpendRequest, SpendResponse>(
             "/mint/spend",
             SpendRequest {
-                federationId: self.active_federation_id.to_owned(),
+                federationId: federation_id,
                 allowOverpay: request.allow_overpay,
                 amountMsat: request.amount_msat,
                 includeInvite: request.include_invite,
@@ -55,9 +67,15 @@ impl FedimintClient {
     }
 
     pub async fn validate(&self, notes: String) -> Result<ValidateResponse, String> {
+        let federation_id = self.active_federation_id.clone();
+
+        if federation_id.is_empty() {
+            return Err("Federation ID Required".to_string());
+        }
+
         self.post::<ValidateRequest, ValidateResponse>("/mint/validate", {
             ValidateRequest {
-                federationId: self.active_federation_id.to_owned(),
+                federationId: federation_id,
                 notes,
             }
         })
