@@ -28,3 +28,5 @@ futures-util = "0.3.30"
 rand = "0.8.5"
 tracing = "0.1.40"
 hex = "0.4.3"
+cdk = { git = "https://github.com/cashubtc/cdk", branch = "main" }
+cdk-redb = { git = "https://github.com/cashubtc/cdk", branch = "main" }

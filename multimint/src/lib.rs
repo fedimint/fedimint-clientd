@@ -66,7 +66,9 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use cdk::Wallet as CashuWallet;
+use cdk_redb::RedbWalletDatabase;
 use fedimint_client::ClientHandleArc;
 use fedimint_core::api::InviteCode;
 use fedimint_core::config::{FederationId, FederationIdPrefix, JsonClientConfig};
@@ -96,8 +98,10 @@ use crate::db::FederationConfig;
 #[derive(Debug, Clone)]
 pub struct MultiMint {
     db: Database,
-    pub client_builder: LocalClientBuilder,
-    pub clients: Arc<Mutex<BTreeMap<FederationId, ClientHandleArc>>>,
+    pub fedimint_client_builder: LocalClientBuilder,
+    pub fedimint_clients: Arc<Mutex<BTreeMap<FederationId, ClientHandleArc>>>,
+    pub cashu_wallet: Arc<Mutex<CashuWallet>>,
+    pub secret_key: [u8; 64],
 }
 
 impl MultiMint {
@@ -139,27 +143,41 @@ impl MultiMint {
     ///   Ok(())
     /// }
     /// ```
-    pub async fn new(work_dir: PathBuf) -> Result<Self> {
+    pub async fn new(work_dir: PathBuf, secret_key: [u8; 64]) -> Result<Self> {
         let db = Database::new(
-            fedimint_rocksdb::RocksDb::open(work_dir.join("multimint.db"))?,
+            fedimint_rocksdb::RocksDb::open(work_dir.join("multimint/multimint.db"))?,
             Default::default(),
         );
 
-        let client_builder = LocalClientBuilder::new(work_dir);
+        let fedimint_client_builder = LocalClientBuilder::new(work_dir.clone());
+        let fedimint_clients = Arc::new(Mutex::new(BTreeMap::new()));
+        Self::load_fedimint_clients(&mut fedimint_clients.clone(), &db, &fedimint_client_builder)
+            .await?;
 
-        let clients = Arc::new(Mutex::new(BTreeMap::new()));
+        let local_store = Arc::new(RedbWalletDatabase::new(
+            work_dir
+                .join("cashu_wallet")
+                .to_str()
+                .ok_or(anyhow!("Failed to convert path to string"))?,
+        )?);
 
-        Self::load_clients(&mut clients.clone(), &db, &client_builder).await?;
+        let cashu_wallet = Arc::new(Mutex::new(CashuWallet::new(
+            local_store,
+            secret_key.as_slice(),
+            vec![],
+        )));
 
         Ok(Self {
             db,
-            client_builder,
-            clients,
+            fedimint_client_builder,
+            fedimint_clients,
+            cashu_wallet,
+            secret_key,
         })
     }
 
     /// Load the clients from from the top level database in the work directory
-    async fn load_clients(
+    async fn load_fedimint_clients(
         clients: &mut Arc<Mutex<BTreeMap<FederationId, ClientHandleArc>>>,
         db: &Database,
         client_builder: &LocalClientBuilder,
@@ -189,25 +207,10 @@ impl MultiMint {
     /// You can provide a manual secret to use for the client's keypair. If you
     /// don't provide a secret, a 64 byte random secret will be generated, which
     /// you can extract from the client if needed.
-    pub async fn register_new(
-        &mut self,
-        invite_code: InviteCode,
-        manual_secret: Option<String>,
-    ) -> Result<FederationId> {
-        let manual_secret: Option<[u8; 64]> = match manual_secret {
-            Some(manual_secret) => {
-                let bytes = hex::decode(manual_secret)?;
-                Some(
-                    bytes
-                        .try_into()
-                        .map_err(|_| anyhow::anyhow!("Manual secret must be 64 bytes long"))?,
-                )
-            }
-            None => None,
-        };
+    pub async fn add_fedimint_client(&mut self, invite_code: InviteCode) -> Result<FederationId> {
         let federation_id = invite_code.federation_id();
         if self
-            .clients
+            .fedimint_clients
             .lock()
             .await
             .get(&invite_code.federation_id())
@@ -223,14 +226,17 @@ impl MultiMint {
         let client_cfg = FederationConfig { invite_code };
 
         let client = self
-            .client_builder
-            .build(client_cfg.clone(), manual_secret)
+            .fedimint_client_builder
+            .build(client_cfg.clone(), Some(self.secret_key.clone()))
             .await?;
 
-        self.clients.lock().await.insert(federation_id, client);
+        self.fedimint_clients
+            .lock()
+            .await
+            .insert(federation_id, client);
 
         let dbtx = self.db.begin_transaction().await;
-        self.client_builder
+        self.fedimint_client_builder
             .save_config(client_cfg.clone(), dbtx)
             .await?;
 
@@ -239,17 +245,26 @@ impl MultiMint {
 
     /// Get all the clients in the multimint.
     pub async fn all(&self) -> Vec<ClientHandleArc> {
-        self.clients.lock().await.values().cloned().collect()
+        self.fedimint_clients
+            .lock()
+            .await
+            .values()
+            .cloned()
+            .collect()
     }
 
     /// Get the ids of the federations the multimint has clients for.
     pub async fn ids(&self) -> Vec<FederationId> {
-        self.clients.lock().await.keys().cloned().collect()
+        self.fedimint_clients.lock().await.keys().cloned().collect()
     }
 
     /// Get a client by its federation id.
     pub async fn get(&self, federation_id: &FederationId) -> Option<ClientHandleArc> {
-        self.clients.lock().await.get(federation_id).cloned()
+        self.fedimint_clients
+            .lock()
+            .await
+            .get(federation_id)
+            .cloned()
     }
 
     /// Get a client by its federation id as a string. (Useful for passing in
@@ -266,7 +281,7 @@ impl MultiMint {
         federation_id_prefix: &FederationIdPrefix,
     ) -> Option<ClientHandleArc> {
         let keys = self
-            .clients
+            .fedimint_clients
             .lock()
             .await
             .keys()
@@ -284,17 +299,23 @@ impl MultiMint {
 
     /// Update a client by its federation id.
     pub async fn update(&self, federation_id: &FederationId, new_client: ClientHandleArc) {
-        self.clients.lock().await.insert(*federation_id, new_client);
+        self.fedimint_clients
+            .lock()
+            .await
+            .insert(*federation_id, new_client);
     }
 
     /// Remove a client by its federation id.
     pub async fn remove(&self, federation_id: &FederationId) {
-        self.clients.lock().await.remove(federation_id);
+        self.fedimint_clients.lock().await.remove(federation_id);
     }
 
     /// Check if a client exists by its federation id.
     pub async fn has(&self, federation_id: &FederationId) -> bool {
-        self.clients.lock().await.contains_key(federation_id)
+        self.fedimint_clients
+            .lock()
+            .await
+            .contains_key(federation_id)
     }
 
     /// Check if a client exists by its federation id as a string.
@@ -310,7 +331,7 @@ impl MultiMint {
     /// Get the configs for all the clients in the multimint.
     pub async fn configs(&self) -> Result<BTreeMap<FederationId, JsonClientConfig>> {
         let mut configs_map = BTreeMap::new();
-        let clients = self.clients.lock().await;
+        let clients = self.fedimint_clients.lock().await;
 
         for (federation_id, client) in clients.iter() {
             let client_config = client.get_config_json();
@@ -323,7 +344,7 @@ impl MultiMint {
     /// Get the balances for all the clients in the multimint.
     pub async fn ecash_balances(&self) -> Result<BTreeMap<FederationId, Amount>> {
         let mut balances = BTreeMap::new();
-        let clients = self.clients.lock().await;
+        let clients = self.fedimint_clients.lock().await;
 
         for (federation_id, client) in clients.iter() {
             let balance = client.get_balance().await;
@@ -336,7 +357,7 @@ impl MultiMint {
     /// Get the info for all the clients in the multimint.
     pub async fn info(&self) -> Result<BTreeMap<FederationId, InfoResponse>> {
         let mut info_map = BTreeMap::new();
-        let clients = self.clients.lock().await;
+        let clients = self.fedimint_clients.lock().await;
 
         for (federation_id, client) in clients.iter() {
             let mint_client = client.get_first_module::<MintClientModule>();
@@ -369,7 +390,7 @@ impl MultiMint {
     /// Update the gateway caches for all the lightning modules in the
     /// multimint.
     pub async fn update_gateway_caches(&self) -> Result<()> {
-        let clients = self.clients.lock().await;
+        let clients = self.fedimint_clients.lock().await;
 
         for (_, client) in clients.iter() {
             let lightning_client = client.get_first_module::<LightningClientModule>();

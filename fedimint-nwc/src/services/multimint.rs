@@ -30,12 +30,10 @@ impl MultiMintService {
     pub async fn new(
         db_path: PathBuf,
         invite_code: InviteCode,
-        manual_secret: Option<String>,
+        secret_key: [u8; 64],
     ) -> Result<Self> {
-        let mut clients = MultiMint::new(db_path).await?;
-        clients
-            .register_new(invite_code.clone(), manual_secret.clone())
-            .await?;
+        let mut clients = MultiMint::new(db_path, secret_key).await?;
+        clients.add_fedimint_client(invite_code.clone()).await?;
         clients.update_gateway_caches().await?;
         Ok(Self {
             multimint: clients,
@@ -43,17 +41,10 @@ impl MultiMintService {
         })
     }
 
-    pub async fn init_multimint(
-        &mut self,
-        invite_code: &str,
-        manual_secret: Option<String>,
-    ) -> Result<()> {
+    pub async fn init_multimint(&mut self, invite_code: &str) -> Result<()> {
         match InviteCode::from_str(invite_code) {
             Ok(invite_code) => {
-                let federation_id = self
-                    .multimint
-                    .register_new(invite_code, manual_secret)
-                    .await?;
+                let federation_id = self.multimint.add_fedimint_client(invite_code).await?;
                 tracing::info!("Created client for federation id: {:?}", federation_id);
                 Ok(())
             }

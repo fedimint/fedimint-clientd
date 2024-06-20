@@ -849,6 +849,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "cdk"
+version = "0.1.0"
+source = "git+https://github.com/cashubtc/cdk?branch=main#b066b92a8d44cfc58bb8eb128a2aace600068fef"
+dependencies = [
+ "async-trait",
+ "base64 0.22.0",
+ "bitcoin 0.30.2",
+ "getrandom",
+ "http 1.1.0",
+ "instant",
+ "lightning-invoice 0.31.0",
+ "once_cell",
+ "reqwest 0.12.4",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "url",
+ "uuid",
+]
+
+[[package]]
+name = "cdk-redb"
+version = "0.1.0"
+source = "git+https://github.com/cashubtc/cdk?branch=main#b066b92a8d44cfc58bb8eb128a2aace600068fef"
+dependencies = [
+ "async-trait",
+ "cdk",
+ "redb",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "cexpr"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -907,6 +946,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-targets 0.52.5",
 ]
@@ -1175,6 +1215,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b42b6fa04a440b495c8b04d0e71b707c585f83cb9cb28cf8cd0d976c315e31b4"
 dependencies = [
  "powerfmt",
+ "serde",
 ]
 
 [[package]]
@@ -1408,7 +1449,7 @@ dependencies = [
  "hex",
  "itertools 0.12.1",
  "lazy_static",
- "lightning-invoice",
+ "lightning-invoice 0.26.0",
  "lnurl-rs",
  "multimint 0.3.6",
  "reqwest 0.12.4",
@@ -1457,8 +1498,8 @@ dependencies = [
  "jsonrpsee-types",
  "jsonrpsee-wasm-client",
  "jsonrpsee-ws-client",
- "lightning",
- "lightning-invoice",
+ "lightning 0.0.118",
+ "lightning-invoice 0.26.0",
  "lru",
  "macro_rules_attribute",
  "miniscript 10.0.0",
@@ -1533,7 +1574,7 @@ dependencies = [
  "fedimint-threshold-crypto",
  "futures",
  "itertools 0.12.1",
- "lightning-invoice",
+ "lightning-invoice 0.26.0",
  "rand",
  "reqwest 0.11.27",
  "secp256k1 0.24.3",
@@ -1565,8 +1606,8 @@ dependencies = [
  "fedimint-threshold-crypto",
  "futures",
  "itertools 0.12.1",
- "lightning",
- "lightning-invoice",
+ "lightning 0.0.118",
+ "lightning-invoice 0.26.0",
  "rand",
  "secp256k1 0.24.3",
  "serde",
@@ -1663,7 +1704,7 @@ dependencies = [
  "futures-util",
  "image",
  "itertools 0.13.0",
- "lightning-invoice",
+ "lightning-invoice 0.26.0",
  "multimint 0.3.7",
  "nostr",
  "nostr-sdk",
@@ -2501,6 +2542,7 @@ checksum = "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99"
 dependencies = [
  "autocfg",
  "hashbrown 0.12.3",
+ "serde",
 ]
 
 [[package]]
@@ -2511,6 +2553,7 @@ checksum = "168fb715dda47215e360912c096649d23d58bf392ac62f73919e831745e40f26"
 dependencies = [
  "equivalent",
  "hashbrown 0.14.3",
+ "serde",
 ]
 
 [[package]]
@@ -2802,6 +2845,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "lightning"
+version = "0.0.123"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5fd92d4aa159374be430c7590e169b4a6c0fb79018f5bc4ea1bffde536384db3"
+dependencies = [
+ "bitcoin 0.30.2",
+ "hex-conservative",
+]
+
+[[package]]
 name = "lightning-invoice"
 version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2810,9 +2863,22 @@ dependencies = [
  "bech32 0.9.1",
  "bitcoin 0.29.2",
  "bitcoin_hashes 0.11.0",
- "lightning",
+ "lightning 0.0.118",
  "num-traits",
  "secp256k1 0.24.3",
+ "serde",
+]
+
+[[package]]
+name = "lightning-invoice"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26d07d01cf197bf2184b929b7dc94aa70d935aac6df896c256a3a9475b7e9d40"
+dependencies = [
+ "bech32 0.9.1",
+ "bitcoin 0.30.2",
+ "lightning 0.0.123",
+ "secp256k1 0.27.0",
  "serde",
 ]
 
@@ -3028,6 +3094,8 @@ name = "multimint"
 version = "0.3.7"
 dependencies = [
  "anyhow",
+ "cdk",
+ "cdk-redb",
  "fedimint-client",
  "fedimint-core",
  "fedimint-ln-client",
@@ -4308,6 +4376,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_with"
+version = "3.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ad483d2ab0149d5a5ebcd9972a3852711e0153d863bf5a5d0391d28883c4a20"
+dependencies = [
+ "base64 0.22.0",
+ "chrono",
+ "hex",
+ "indexmap 1.9.3",
+ "indexmap 2.2.6",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "serde_with_macros",
+ "time",
+]
+
+[[package]]
+name = "serde_with_macros"
+version = "3.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65569b702f41443e8bc8bbb1c5779bd0450bbe723b56198980e80ec45780bce2"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.60",
+]
+
+[[package]]
 name = "sha-1"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5076,6 +5174,15 @@ name = "utf8parse"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
+
+[[package]]
+name = "uuid"
+version = "1.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a183cf7feeba97b4dd1c0d46788634f6221d87fa961b305bed08c851829efcc0"
+dependencies = [
+ "getrandom",
+]
 
 [[package]]
 name = "v_frame"

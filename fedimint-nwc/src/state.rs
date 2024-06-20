@@ -4,7 +4,9 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
+use anyhow::anyhow;
 use multimint::fedimint_core::api::InviteCode;
+use nostr::util::hex;
 use nostr_sdk::{Event, EventId, JsonUtil};
 use tokio::sync::Mutex;
 use tracing::{debug, error, info};
@@ -25,7 +27,10 @@ pub struct AppState {
 impl AppState {
     pub async fn new(cli: Cli) -> Result<Self, anyhow::Error> {
         let invite_code = InviteCode::from_str(&cli.invite_code)?;
-        let manual_secret = cli.manual_secret;
+        let secret_key = hex::decode(cli.secret_key)?;
+        let secret_key: [u8; 64] = secret_key
+            .try_into()
+            .map_err(|_| anyhow!("Invalid secret key"))?;
 
         // Define paths for MultiMint and Redb databases within the work_dir
         let multimint_db_path = cli.work_dir.join("multimint_db");
@@ -37,7 +42,7 @@ impl AppState {
         let keys_file_path = cli.work_dir.join("keys.json");
 
         let multimint_service =
-            MultiMintService::new(multimint_db_path, invite_code, manual_secret).await?;
+            MultiMintService::new(multimint_db_path, invite_code, secret_key).await?;
         let nostr_service = NostrService::new(&keys_file_path, &cli.relays).await?;
 
         let active_requests = Arc::new(Mutex::new(BTreeSet::new()));
@@ -59,7 +64,7 @@ impl AppState {
 
     pub async fn init(&mut self, cli: &Cli) -> Result<(), anyhow::Error> {
         self.multimint_service
-            .init_multimint(&cli.invite_code, cli.manual_secret.clone())
+            .init_multimint(&cli.invite_code)
             .await?;
         Ok(())
     }

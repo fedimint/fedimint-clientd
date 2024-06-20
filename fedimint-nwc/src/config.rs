@@ -17,9 +17,9 @@ pub struct Cli {
     /// Working directory for all files
     #[clap(long, env = "FEDIMINT_CLIENTD_WORK_DIR", required = true)]
     pub work_dir: PathBuf,
-    /// Manual secret
-    #[clap(long, env = "FEDIMINT_CLIENTD_MANUAL_SECRET", required = false)]
-    pub manual_secret: Option<String>,
+    /// Secret key
+    #[clap(long, env = "FEDIMINT_CLIENTD_SECRET_KEY", required = false)]
+    pub secret_key: String,
     /// Nostr relay to use
     #[clap(long, env = "FEDIMINT_NWC_RELAYS", default_value_t = String::from("wss://relay.damus.io"))]
     pub relays: String,
