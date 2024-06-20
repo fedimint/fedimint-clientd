@@ -8,11 +8,11 @@ use serde::{de::DeserializeOwned, Serialize};
 use tracing::info;
 
 pub struct FedimintClient {
-    base_url: String,
-    password: String,
-    active_federation_id: String,
-    active_gateway_id: String,
-    built: bool,
+    pub base_url: String,
+    pub password: String,
+    pub active_federation_id: String,
+    pub active_gateway_id: String,
+    pub built: bool,
 }
 
 impl FedimintClient {
