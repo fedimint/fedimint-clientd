@@ -13,14 +13,30 @@
         <input type="text" id="federationId" name="federationId"><br><br>
         <label for="gatewayId">Gateway ID</label><br>
         <input type="text" id="gatewayId" name="gatewayId"><br><br>
-        <label for="amountMsat">Amount (msat)</label><br>
-        <input type="number" id="amountMsat" name="amountMsat"><br><br>
         <label for="lnurlComment">Lnurl Comment</label><br>
         <input type="text" id="lnurlComment" name="lnurlComment"><br><br>
         <label for="paymentInfo">Payment Info</label><br>
         <input type="text" id="paymentInfo" name="paymentInfo"><br><br>
         <input type="submit" value="Submit">
     </form>
+
+
+    {{if .OperationId}}
+    <p>Payment Successful</p>
+    <p>Operation ID: {{.OperationId}}</p>
+    {{if .PaymentType.Internal}}
+        <p>Payment Type (Internal): {{.PaymentType.Internal}}</p>
+    {{end}}
+    <p>Contract ID: {{.ContractId}}</p>
+    {{if ne .Fee 0}}
+        <p>Fee: {{.Fee}}</p>
+    {{else}}
+        <p>Fee: 0</p>
+    {{end}}
+{{else}}
+    <p>Payment Failed</p>
+{{end}}
+
 
 
 </body>
