@@ -115,14 +115,7 @@ func (h *Handler) LnPayHandler(w http.ResponseWriter, r *http.Request) {
 		fedIDStr := r.FormValue("federationId")
 		lnurlComment := r.FormValue("lnurlComment")
 		paymentInfo := r.FormValue("paymentInfo")
-		amountMsatStr := r.FormValue("amountMsat")
-		amountMsat, err := strconv.ParseUint(amountMsatStr, 10, 64)
-		if err != nil {
-			http.Error(w, "Invalid amountMsat: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		lnPayResponse, err := h.Fc.Ln.Pay(paymentInfo, &gwIDStr, &amountMsat, &lnurlComment, &fedIDStr)
+		lnPayResponse, err := h.Fc.Ln.Pay(paymentInfo, &gwIDStr, nil, &lnurlComment, &fedIDStr)
 		if err != nil {
 			// Check if the error message contains "malformed public key" indicating a problem with gatewayId
 			if strings.Contains(err.Error(), "malformed public key") {
