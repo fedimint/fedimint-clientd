@@ -9,7 +9,7 @@ use std::collections::HashMap;
 pub struct FederationInfo {
     pub network: String,
     pub meta: HashMap<String, String>,
-    pub total_amount_msat: usize,
+    pub total_amount_msat: u64,
     pub total_num_notes: usize,
     pub denominations_msat: HashMap<String, u64>,
 }
@@ -51,7 +51,7 @@ pub struct GatewayInfo {
     pub gateway_id: String,
     pub gateway_redeem_key: String,
     pub lightning_alias: String,
-    pub mint_channel_id: usize,
+    pub mint_channel_id: u64,
     pub node_pub_key: String,
     pub route_hints: Vec<Value>,
     pub supports_private_payments: bool,

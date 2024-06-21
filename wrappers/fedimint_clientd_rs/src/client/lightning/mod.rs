@@ -56,7 +56,7 @@ impl FedimintClient {
     pub async fn claim_pubkey_tweak_receives(
         &self,
         private_key: String,
-        tweaks: Vec<usize>,
+        tweaks: Vec<u64>,
     ) -> Result<LightningPaymentResponse, String> {
         let federation_id = self.active_federation_id.clone();
 

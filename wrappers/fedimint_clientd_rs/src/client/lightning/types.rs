@@ -66,7 +66,7 @@ pub struct CreateTweakedInvoiceRequest {
 pub struct ClaimPubkeyTweakRequest {
     pub federationId: String,
     pub privateKey: String,
-    pub tweaks: Vec<usize>,
+    pub tweaks: Vec<u64>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
