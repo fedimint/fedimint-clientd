@@ -8,12 +8,13 @@ pub mod list_operations;
 pub mod module;
 pub mod restore;
 
-use info::InfoResponse;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_mint_client::MintClientModule;
 use multimint::fedimint_wallet_client::WalletClientModule;
 
-pub async fn _get_note_summary(client: &ClientHandleArc) -> anyhow::Result<InfoResponse> {
+use self::info::FedimintClientInfo;
+
+pub async fn _get_note_summary(client: &ClientHandleArc) -> anyhow::Result<FedimintClientInfo> {
     let mint_client = client.get_first_module::<MintClientModule>();
     let wallet_client = client.get_first_module::<WalletClientModule>();
     let summary = mint_client
@@ -25,7 +26,7 @@ pub async fn _get_note_summary(client: &ClientHandleArc) -> anyhow::Result<InfoR
                 .to_ref_with_prefix_module_id(1),
         )
         .await;
-    Ok(InfoResponse {
+    Ok(FedimintClientInfo {
         network: wallet_client.get_network().to_string(),
         meta: client.get_config().global.meta.clone(),
         total_amount_msat: summary.total_amount(),

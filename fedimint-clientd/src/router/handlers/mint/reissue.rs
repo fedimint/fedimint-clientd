@@ -1,9 +1,12 @@
+use std::str::FromStr;
+
 use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
 use futures_util::StreamExt;
 use multimint::cdk::amount::SplitTarget;
+use multimint::cdk::nuts::Token;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_core::Amount;
 use multimint::fedimint_mint_client::{MintClientModule, OOBNotes, ReissueExternalNotesState};
@@ -13,17 +16,10 @@ use tracing::info;
 
 use crate::error::AppError;
 use crate::state::AppState;
-
-#[derive(Debug, Deserialize, Clone)]
-pub enum Ecash {
-    Notes(OOBNotes),
-    Token(String),
-}
-
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ReissueRequest {
-    pub ecash: Ecash,
+    pub ecash: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -60,27 +56,29 @@ pub async fn handle_ws(state: AppState, v: Value) -> Result<Value, AppError> {
     let v = serde_json::from_value::<ReissueRequest>(v)
         .map_err(|e| AppError::new(StatusCode::BAD_REQUEST, anyhow!("Invalid request: {}", e)))?;
     let ecash = v.ecash.clone();
-    match ecash {
-        Ecash::Notes(notes) => {
-            let client = state
-                .get_client_by_prefix(&notes.federation_id_prefix())
-                .await?;
-            let reissue = _reissue(client, notes).await?;
-            let reissue_json = json!(reissue);
-            Ok(reissue_json)
-        }
-        Ecash::Token(token) => {
-            let amount = state
-                .multimint
-                .cashu_wallet
-                .lock()
-                .await
-                .receive(&token, &SplitTarget::None, None)
-                .await?;
-            Ok(json!(ReissueResponse {
-                amount_msat: Amount::from_sats(u64::from(amount)),
-            }))
-        }
+    if let Ok(notes) = serde_json::from_str::<OOBNotes>(&ecash) {
+        let client = state
+            .get_client_by_prefix(&notes.federation_id_prefix())
+            .await?;
+        let reissue = _reissue(client, notes).await?;
+        let reissue_json = json!(reissue);
+        Ok(reissue_json)
+    } else if let Ok(token) = Token::from_str(&ecash) {
+        let amount = state
+            .multimint
+            .cashu_wallet
+            .lock()
+            .await
+            .receive(&token.to_string(), &SplitTarget::None, None)
+            .await?;
+        Ok(json!(ReissueResponse {
+            amount_msat: Amount::from_sats(u64::from(amount)),
+        }))
+    } else {
+        Err(AppError::new(
+            StatusCode::BAD_REQUEST,
+            anyhow!("Invalid ecash format"),
+        ))
     }
 }
 
@@ -89,26 +87,31 @@ pub async fn handle_rest(
     State(state): State<AppState>,
     Json(req): Json<ReissueRequest>,
 ) -> Result<Json<ReissueResponse>, AppError> {
-    let ecash = req.ecash.clone();
-    match ecash {
-        Ecash::Notes(notes) => {
-            let client = state
-                .get_client_by_prefix(&notes.federation_id_prefix())
-                .await?;
-            let reissue = _reissue(client, notes).await?;
-            Ok(Json(reissue))
-        }
-        Ecash::Token(token) => {
+    match Token::from_str(&req.ecash) {
+        Ok(token) => {
             let amount = state
                 .multimint
                 .cashu_wallet
                 .lock()
                 .await
-                .receive(&token, &SplitTarget::None, None)
+                .receive(&token.to_string(), &SplitTarget::None, None)
                 .await?;
             Ok(Json(ReissueResponse {
                 amount_msat: Amount::from_sats(u64::from(amount)),
             }))
         }
+        Err(_) => match serde_json::from_str::<OOBNotes>(&req.ecash) {
+            Ok(notes) => {
+                let client = state
+                    .get_client_by_prefix(&notes.federation_id_prefix())
+                    .await?;
+                let reissue = _reissue(client, notes).await?;
+                Ok(Json(reissue))
+            }
+            Err(e) => Err(AppError::new(
+                StatusCode::BAD_REQUEST,
+                anyhow!("Invalid ecash format: {}", e),
+            )),
+        },
     }
 }
