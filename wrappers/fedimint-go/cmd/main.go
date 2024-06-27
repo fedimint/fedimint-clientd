@@ -279,8 +279,8 @@ func lnMethods(fc *fedimint.FedimintClient, kp KeyPair) {
 
 	logInputAndOutput(invoiceData.OperationId, awaitInvoiceResponseData)
 
-	// `/v1/ln/invoice-external-pubkey-tweaked`
-	logMethod("/v1/ln/invoice-external-pubkey-tweaked")
+	// `/v2/ln/invoice-external-pubkey-tweaked`
+	logMethod("/v2/ln/invoice-external-pubkey-tweaked")
 	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(kp.PublicKey, 1, 10000, "test", fc.GetActiveGatewayId(), nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY_TWEAK: ", err)
@@ -289,13 +289,13 @@ func lnMethods(fc *fedimint.FedimintClient, kp KeyPair) {
 
 	jsonBytes, err = json.Marshal(tweakInvoice)
 	if err != nil {
-		fmt.Println("Error marshaling JSON(await-invoice):", err)
+		fmt.Println("Error marshaling JSON(invoice-external-pubkey-tweaked):", err)
 		return
 	}
 	var tweakInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &tweakInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON(await-invoice):", err)
+		fmt.Println("Error unmarshalling JSON(invoice-external-pubkey-tweaked):", err)
 		return
 	}
 
@@ -304,8 +304,8 @@ func lnMethods(fc *fedimint.FedimintClient, kp KeyPair) {
 	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, nil, nil, nil, nil)
 	fmt.Println("Paid locked invoice!")
 
-	// `/v1/ln/claim-external-pubkey-tweaked`
-	logMethod("/v1/ln/claim-external-pubkey-tweaked")
+	// `/v2/ln/claim-external-receive-tweaked`
+	logMethod("/v2/ln/claim-external-receive-tweaked")
 	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(kp.PrivateKey, []uint64{1}, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
@@ -314,13 +314,13 @@ func lnMethods(fc *fedimint.FedimintClient, kp KeyPair) {
 
 	jsonBytes, err = json.Marshal(claimInvoice)
 	if err != nil {
-		fmt.Println("Error marshaling JSON(claim-external-pubkey-tweaked):", err)
+		fmt.Println("Error marshaling JSON(claim-external-receive-tweaked):", err)
 		return
 	}
 	var claimInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &claimInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON(claim-external-pubkey-tweaked):", err)
+		fmt.Println("Error unmarshalling JSON(claim-external-receive-tweaked):", err)
 		return
 	}
 
@@ -572,20 +572,20 @@ func onchainMethods(fc *fedimint.FedimintClient) {
 }
 
 func main() {
-	// fc := buildTestClient()
-	// fc.UseDefaultGateway()
-	// keyPair := newKeyPair()
-	// fmt.Printf("Generated Key Pair: ")
-	// fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
-	// fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
+	fc := buildTestClient()
+	fc.UseDefaultGateway()
+	keyPair := newKeyPair()
+	fmt.Printf("Generated Key Pair: ")
+	fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
+	fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
 
-	// // admin methods
+	// admin methods
 	// adminMethods(fc)
-	// //lightening methods
+	//lightening methods
 	// lnMethods(fc, keyPair)
-	// // mint methods
+	// mint methods
 	// mintMethods(fc)
-	// //onchain methods
+	//onchain methods
 	// onchainMethods(fc)
 
 	handlers := &handlers.Handler{
@@ -597,8 +597,11 @@ func main() {
 	r.HandleFunc("/", handlers.Index)
 	r.HandleFunc("/admin/config", handlers.AdminConfigHandler)
 	r.HandleFunc("/ln/invoice", handlers.InvoiceHandler)
-	r.HandleFunc("/create-invoice", handlers.CreateInvoiceHandler)
-	r.HandleFunc("/ln-pay", handlers.LnPayHandler)
+	r.HandleFunc("/create_invoice", handlers.CreateInvoiceHandler)
+	r.HandleFunc("/ln_pay", handlers.LnPayHandler)
+	r.HandleFunc("/create_invoice_pubkey_tweak", handlers.CreatePubKeyTweakInvoiceHandler)
+	r.HandleFunc("/claim_external", handlers.ClaimExternalReceiveTweak)
+	r.HandleFunc("/claim_invoice", handlers.ClaimInvoice)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 
