@@ -204,3 +204,78 @@ func (h *Handler) CreatePubKeyTweakInvoiceHandler(w http.ResponseWriter, r *http
 	}
 
 }
+
+func (h *Handler) ClaimExternalReceiveTweak(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		privKey := r.FormValue("privateKey")
+		tweaks := r.FormValue("tweaks")
+
+		num, err := strconv.ParseUint(tweaks, 10, 64)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		var nums []uint64
+
+		nums = append(nums, num)
+
+		gwIDStr := r.FormValue("gatewayId")
+		fedIDStr := r.FormValue("federationId")
+
+		response, err := h.Fc.Ln.ClaimPubkeyTweakReceive(privKey, nums, &gwIDStr, &fedIDStr)
+		if err != nil {
+			// Check if the error message contains "malformed public key" indicating a problem with gatewayId
+			if strings.Contains(err.Error(), "malformed public key") {
+				http.Error(w, "Invalid gatewayId provided", http.StatusBadRequest)
+				return
+			}
+			http.Error(w, "Error checking claim: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = h.Tmpl.ExecuteTemplate(w, "claim_external.gohtml", response.Status)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "claim_external.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func (h *Handler) ClaimInvoice(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		operationId := r.FormValue("operationId")
+
+		gwIDStr := r.FormValue("gatewayId")
+		fedIDStr := r.FormValue("federationId")
+
+		response, err := h.Fc.Ln.AwaitInvoice(operationId, gwIDStr, &fedIDStr)
+		if err != nil {
+			// Check if the error message contains "malformed public key" indicating a problem with gatewayId
+			if strings.Contains(err.Error(), "malformed public key") {
+				http.Error(w, "Invalid gatewayId provided", http.StatusBadRequest)
+				return
+			}
+			http.Error(w, "Error checking claim: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = h.Tmpl.ExecuteTemplate(w, "claim_invoice.gohtml", response.Status)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "claim_invoice.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
