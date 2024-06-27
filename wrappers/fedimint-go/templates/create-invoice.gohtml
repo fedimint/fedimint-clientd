@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Invoice</title>
+</head>
+<body>
+    <h1>Create Invoice</h1>
+
+    <form id="invoiceForm" action="/create_invoice" method="post">
+        <label for="amountMsat">Amount (msat)</label><br>
+        <input type="number" id="amountMsat" name="amountMsat" required><br><br>
+        <label for="description">Description</label><br>
+        <input type="text" id="description" name="description" required><br><br>
+        <label for="expiryTime">Expiry Time</label><br>
+        <input type="number" id="expiryTime" name="expiryTime"><br><br>
+        <label for="gatewayId">Gateway ID</label><br>
+        <input type="text" id="gatewayId" name="gatewayId"><br><br>
+        <label for="FederationId">Federation ID</label><br>
+        <input type="text" id="FederationId" name="federationId"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+
+
+    {{if .}}
+        <p>Invoice: {{.}}</p>
+    {{end}}
+
+</body>
+</html>

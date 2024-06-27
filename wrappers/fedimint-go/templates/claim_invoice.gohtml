@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Claim invoice </title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Claim Invoice</h1>
+        <form action="/claim_invoice" method="POST">
+            <div class="form-group">
+                <label for="operationId">Operation ID:</label>
+                <input type="text" id="operationId" name="operationId" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="gatewayId">Gateway ID:</label>
+                <input type="text" id="gatewayId" name="gatewayId" required>
+            </div>
+            <div class="form-group">
+                <label for="federationId">Federation ID:</label>
+                <input type="text" id="federationId" name="federationId" required>
+            </div>
+            <div class="form-group">
+                <button type="submit"> Check Claim </button>
+            </div>
+        </form>
+
+
+    {{if .}}
+        {{if eq (printf "%T" .) "modules.Claimed"}}
+            <p>Status: Claimed</p>
+        {{else if eq (printf "%T" .) "modules.Canceled"}}
+            <p>Status: Canceled</p>
+            <p>Reason: {{.Reason}}</p>
+        {{else}}
+            <p>Status: Unknown</p>
+        {{end}}
+    {{else}}
+        <p>No status available</p>
+    {{end}}
+
+     
+
+    </div>
+   
+</body>
+</html>
