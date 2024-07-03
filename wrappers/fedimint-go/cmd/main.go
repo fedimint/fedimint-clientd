@@ -602,6 +602,9 @@ func main() {
 	r.HandleFunc("/create_invoice_pubkey_tweak", handlers.CreatePubKeyTweakInvoiceHandler)
 	r.HandleFunc("/claim_external", handlers.ClaimExternalReceiveTweak)
 	r.HandleFunc("/claim_invoice", handlers.ClaimInvoice)
+	r.HandleFunc("/onchain", handlers.OnchainHandler)
+	r.HandleFunc("/deposit", handlers.DepositHandler)
+	r.HandleFunc("/withdraw", handlers.WithdrawHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 

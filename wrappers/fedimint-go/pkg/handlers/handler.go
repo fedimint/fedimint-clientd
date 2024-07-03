@@ -279,3 +279,80 @@ func (h *Handler) ClaimInvoice(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+func (h *Handler) OnchainHandler(w http.ResponseWriter, r *http.Request) {
+
+	err := h.Tmpl.ExecuteTemplate(w, "onchain.gohtml", nil)
+	if err != nil {
+		http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) DepositHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		timeoutStr := r.FormValue("timeout")
+		timeout, err := strconv.Atoi(timeoutStr)
+		if err != nil {
+			http.Error(w, "Invalid timeout: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		fedIDStr := r.FormValue("federationId")
+
+		response, err := h.Fc.Onchain.CreateDepositAddress(timeout, &fedIDStr)
+		if err != nil {
+			http.Error(w, "Error creating deposit address: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "deposit.gohtml", response.Address)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "deposit.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) WithdrawHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		address := r.FormValue("address")
+
+		amountSatStr := r.FormValue("amountSat")
+		amountSat, err := strconv.Atoi(amountSatStr)
+		if err != nil {
+			http.Error(w, "Invalid amount: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		fedIDStr := r.FormValue("federationId")
+
+		response, err := h.Fc.Onchain.Withdraw(address, amountSat, &fedIDStr)
+		if err != nil {
+			http.Error(w, "Error withdrawing sats from address: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "withdraw.gohtml", response)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "withdraw.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
