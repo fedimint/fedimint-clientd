@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fedimint-go-client/pkg/fedimint"
+	"fedimint-go-client/pkg/fedimint/types/modules"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -349,6 +351,257 @@ func (h *Handler) WithdrawHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		err := h.Tmpl.ExecuteTemplate(w, "withdraw.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) MintHandler(w http.ResponseWriter, r *http.Request) {
+
+	err := h.Tmpl.ExecuteTemplate(w, "mint.gohtml", nil)
+	if err != nil {
+		http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) SpendHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		allowOverpay := r.FormValue("allowOverpay")
+		allowOverpayBool, err := strconv.ParseBool(allowOverpay)
+		if err != nil {
+			fmt.Fprintf(w, "Invalid boolean value: %v", allowOverpay)
+			return
+		}
+
+		timeoutStr := r.FormValue("timeout")
+		timeout, err := strconv.ParseUint(timeoutStr, 10, 64)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		amountMsatStr := r.FormValue("amountMsat")
+		if amountMsatStr == "" {
+			http.Error(w, "Amount (msat) is required", http.StatusBadRequest)
+			return
+		}
+		amountMsat, err := strconv.ParseUint(amountMsatStr, 10, 64)
+		if err != nil {
+			http.Error(w, "Invalid amountMsat: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		includeInvite := r.FormValue("includeInvite")
+		includeInviteBool, err := strconv.ParseBool(includeInvite)
+		if err != nil {
+			fmt.Fprintf(w, "Invalid boolean value: %v", includeInvite)
+			return
+		}
+
+		fedIDStr := r.FormValue("federationId")
+
+		response, err := h.Fc.Mint.Spend(amountMsat, allowOverpayBool, timeout, includeInviteBool, &fedIDStr)
+		if err != nil {
+			http.Error(w, "Error spending: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "spend.gohtml", response)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "spend.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) DecodeNotesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		notes := r.FormValue("notes")
+		if notes == "" {
+			http.Error(w, "Notes is required", http.StatusBadRequest)
+			return
+		}
+
+		response, err := h.Fc.Mint.DecodeNotes(notes)
+		if err != nil {
+			http.Error(w, "Error decoding notes: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "decode.gohtml", response)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "decode.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) EncodeNotesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		r.ParseForm()
+		notesJsonStr := r.FormValue("notesJsonStr")
+		var notesJson modules.NotesJson
+		if err := json.Unmarshal([]byte(notesJsonStr), &notesJson); err != nil {
+			http.Error(w, "Error decoding JSON", http.StatusBadRequest)
+			return
+		}
+		response, err := h.Fc.Mint.EncodeNotes(notesJson)
+		if err != nil {
+			http.Error(w, "Error encoding notes: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "encode.gohtml", response.Notes)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "encode.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) ValidateNotesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		notes := r.FormValue("notes")
+		if notes == "" {
+			http.Error(w, "Notes is required", http.StatusBadRequest)
+			return
+		}
+
+		federationId := r.FormValue("federationId")
+
+		response, err := h.Fc.Mint.Validate(notes, &federationId)
+		if err != nil {
+			http.Error(w, "Error validating notes: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "validate.gohtml", response)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "validate.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) ReissueNotesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		notes := r.FormValue("notes")
+		if notes == "" {
+			http.Error(w, "Notes is required", http.StatusBadRequest)
+			return
+		}
+
+		federationId := r.FormValue("federationId")
+
+		response, err := h.Fc.Mint.Reissue(notes, &federationId)
+		if err != nil {
+			http.Error(w, "Error validating notes: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "reissue.gohtml", response)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "reissue.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) SplitNotesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		notes := r.FormValue("notes")
+		if notes == "" {
+			http.Error(w, "Notes is required", http.StatusBadRequest)
+			return
+		}
+
+		response, err := h.Fc.Mint.Split(notes)
+		if err != nil {
+			http.Error(w, "Error spliting notes: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "split.gohtml", response)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "split.gohtml", nil)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+}
+
+func (h *Handler) CombineHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+
+		notesVec := strings.Split(r.FormValue("notesVec"), "\n")
+		// Trim whitespace from each note
+		for i := range notesVec {
+			notesVec[i] = strings.TrimSpace(notesVec[i])
+		}
+
+		response, err := h.Fc.Mint.Combine(notesVec)
+		if err != nil {
+			http.Error(w, "Error spliting notes: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = h.Tmpl.ExecuteTemplate(w, "combine.gohtml", response)
+		if err != nil {
+			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		err := h.Tmpl.ExecuteTemplate(w, "combine.gohtml", nil)
 		if err != nil {
 			http.Error(w, "Error executing template: "+err.Error(), http.StatusInternalServerError)
 			return
