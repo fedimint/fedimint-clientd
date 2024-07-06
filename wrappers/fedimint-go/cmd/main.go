@@ -386,7 +386,7 @@ func mintMethods(fc *fedimint.FedimintClient) {
 	}
 	encodedData, err := fc.Mint.EncodeNotes(decodedData.NotesJson)
 	if err != nil {
-		fmt.Println("Error calling DECODE_NOTES: ", err)
+		fmt.Println("Error calling ENCODE_NOTES: ", err)
 		return
 	}
 
@@ -574,10 +574,10 @@ func onchainMethods(fc *fedimint.FedimintClient) {
 func main() {
 	fc := buildTestClient()
 	fc.UseDefaultGateway()
-	keyPair := newKeyPair()
-	fmt.Printf("Generated Key Pair: ")
-	fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
-	fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
+	// keyPair := newKeyPair()
+	// fmt.Printf("Generated Key Pair: ")
+	// fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
+	// fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
 
 	// admin methods
 	// adminMethods(fc)
@@ -605,6 +605,14 @@ func main() {
 	r.HandleFunc("/onchain", handlers.OnchainHandler)
 	r.HandleFunc("/deposit", handlers.DepositHandler)
 	r.HandleFunc("/withdraw", handlers.WithdrawHandler)
+	r.HandleFunc("/mint", handlers.MintHandler)
+	r.HandleFunc("/spend", handlers.SpendHandler)
+	r.HandleFunc("/decode_notes", handlers.DecodeNotesHandler)
+	r.HandleFunc("/encode_notes", handlers.EncodeNotesHandler)
+	r.HandleFunc("/validate", handlers.ValidateNotesHandler)
+	r.HandleFunc("/reissue", handlers.ReissueNotesHandler)
+	r.HandleFunc("/split", handlers.SplitNotesHandler)
+	r.HandleFunc("/combine", handlers.CombineHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 
