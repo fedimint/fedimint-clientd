@@ -1,7 +1,10 @@
-use fedimint_core::api::InviteCode;
+use fedimint_api_client::api::net::Connector;
 use fedimint_core::config::FederationId;
 use fedimint_core::encoding::{Decodable, Encodable};
+use fedimint_core::invite_code::InviteCode;
 use fedimint_core::{impl_db_lookup, impl_db_record};
+use fedimint_ln_common::lightning_invoice::RoutingFees;
+use fedimint_ln_common::serde_routing_fees;
 use serde::{Deserialize, Serialize};
 
 #[repr(u8)]
@@ -27,6 +30,14 @@ pub struct FederationIdKeyPrefix;
 #[derive(Debug, Clone, Eq, PartialEq, Encodable, Decodable, Serialize, Deserialize)]
 pub struct FederationConfig {
     pub invite_code: InviteCode,
+    // Unique integer identifier per-federation that is assigned when the gateways joins a
+    // federation.
+    #[serde(alias = "mint_channel_id")]
+    pub federation_index: u64,
+    pub timelock_delta: u64,
+    #[serde(with = "serde_routing_fees")]
+    pub fees: RoutingFees,
+    pub connector: Connector,
 }
 
 impl_db_record!(

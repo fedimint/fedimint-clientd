@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Result;
+use fedimint_client::module::init::ClientModuleInitRegistry;
 use fedimint_client::secret::{PlainRootSecretStrategy, RootSecretStrategy};
 use fedimint_client::Client;
 use fedimint_core::config::ClientConfig;
@@ -16,7 +17,6 @@ use fedimint_core::db::{
 use fedimint_ln_client::LightningClientInit;
 use fedimint_mint_client::MintClientInit;
 use fedimint_wallet_client::WalletClientInit;
-use futures_util::StreamExt;
 use rand::thread_rng;
 use tracing::info;
 
@@ -50,36 +50,40 @@ impl LocalClientBuilder {
             Default::default(),
         );
 
-        let mut client_builder = Client::builder(db);
-        client_builder.with_module(WalletClientInit(None));
-        client_builder.with_module(MintClientInit);
-        client_builder.with_module(LightningClientInit);
+        let mut registry = ClientModuleInitRegistry::default();
+
+        registry.attach(WalletClientInit(None));
+        registry.attach(MintClientInit);
+        registry.attach(LightningClientInit {gateway_conn: });
+
+        let mut client_builder = Client::builder(db).await?;
+        client_builder.with_module_inits(registry);
         client_builder.with_primary_module(1);
 
         let client_secret =
-            match Client::load_decodable_client_secret::<[u8; 64]>(client_builder.db()).await {
+            match Client::load_decodable_client_secret::<[u8; 64]>(client_builder.db_no_decoders()).await {
                 Ok(secret) => secret,
                 Err(_) => {
                     if let Some(manual_secret) = manual_secret {
                         info!("Using manual secret provided by user and writing to client storage");
-                        Client::store_encodable_client_secret(client_builder.db(), manual_secret)
+                        Client::store_encodable_client_secret(client_builder.db_no_decoders(), manual_secret)
                             .await?;
                         manual_secret
                     } else {
                         info!("Generating new secret and writing to client storage");
                         let secret = PlainRootSecretStrategy::random(&mut thread_rng());
-                        Client::store_encodable_client_secret(client_builder.db(), secret).await?;
+                        Client::store_encodable_client_secret(client_builder.db_no_decoders(), secret).await?;
                         secret
                     }
                 }
             };
 
         let root_secret = PlainRootSecretStrategy::to_root_secret(&client_secret);
-        let client_res = if Client::is_initialized(client_builder.db()).await {
+        let client_res = if Client::is_initialized(client_builder.db_no_decoders()).await {
             client_builder.open(root_secret).await
         } else {
             let client_config =
-                ClientConfig::download_from_invite_code(&config.invite_code).await?;
+                config.connector.download_from_invite_code(&config.invite_code).await?;
             client_builder
                 // TODO: make this configurable?
                 .join(root_secret, client_config.to_owned())

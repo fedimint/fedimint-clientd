@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use fedimint_core::config::FederationId;
-use fedimint_core::{Amount, TieredSummary};
+use fedimint_core::Amount;
 use serde::Serialize;
 
 /// InfoResponse for getting the Federation Config info

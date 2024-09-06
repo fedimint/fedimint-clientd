@@ -12,13 +12,13 @@ readme = "README.md"
 authors = ["The Fedimint Developers"]
 
 [workspace.dependencies]
-fedimint-client = "0.3.1"
-fedimint-core = "0.3.1"
-fedimint-wallet-client = "0.3.1"
-fedimint-mint-client = "0.3.1"
-fedimint-ln-client = "0.3.1"
-fedimint-ln-common = "0.3.1"
-fedimint-rocksdb = "0.3.1"
+fedimint-client = "0.4.0"
+fedimint-core = "0.4.0"
+fedimint-wallet-client = "0.4.0"
+fedimint-mint-client = "0.4.0"
+fedimint-ln-client = "0.4.0"
+fedimint-ln-common = "0.4.0"
+fedimint-rocksdb = "0.4.0"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
