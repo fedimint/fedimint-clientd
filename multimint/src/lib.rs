@@ -371,9 +371,15 @@ impl MultiMint {
     pub async fn update_gateway_caches(&self) -> Result<()> {
         let clients = self.clients.lock().await;
 
-        for (_, client) in clients.iter() {
+        for (federation_id, client) in clients.iter() {
+            warn!("Updating gateway cache for {:?}", federation_id);
             let lightning_client = client.get_first_module::<LightningClientModule>();
-            lightning_client.update_gateway_cache().await?;
+            if let Err(e) = lightning_client.update_gateway_cache().await {
+                warn!(
+                    "Failed to update gateway cache for {:?}: {:?}",
+                    federation_id, e
+                );
+            }
         }
 
         Ok(())
