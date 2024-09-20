@@ -59,6 +59,7 @@
             nativeBuildInputs =
               [ pkgs.wasm-bindgen-cli pkgs.geckodriver pkgs.wasm-pack ]
               ++ lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.firefox ];
+            FEDIMINT_BUILD_FORCE_GIT_HASH = "1";
           };
         } // lib.optionalAttrs pkgs.stdenv.isDarwin {
           # on Darwin newest stdenv doesn't seem to work
@@ -88,6 +89,7 @@
               craneLib = (craneLib'.overrideArgs {
                 pname = "flexbox-multibuild";
                 src = rustSrc;
+                FEDIMINT_BUILD_FORCE_GIT_HASH = "1";
               }).overrideArgs commonArgs;
             in rec {
               workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
