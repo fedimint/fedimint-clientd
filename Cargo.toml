@@ -3,7 +3,7 @@ members = ["multimint", "fedimint-clientd", "fedimint-nwc"]
 resolver = "2"
 
 [workspace.package]
-version = "0.3.6"
+version = "0.3.7"
 edition = "2021"
 repository = "https://github.com/fedimint/fedimint-clientd"
 keywords = ["fedimint", "bitcoin", "lightning", "ecash"]

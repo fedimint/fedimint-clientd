@@ -1391,7 +1391,7 @@ dependencies = [
 
 [[package]]
 name = "fedimint-clientd"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "anyhow",
  "async-utility",
@@ -1653,7 +1653,7 @@ dependencies = [
 
 [[package]]
 name = "fedimint-nwc"
-version = "0.3.6"
+version = "0.3.7"
 dependencies = [
  "anyhow",
  "axum",
