@@ -39,5 +39,8 @@ futures-util = "0.3.30"
 clap = { version = "3", features = ["derive", "env"] }
 multimint = { version = "0.3.8" }
 # multimint = { path = "../multimint" }
-axum-otel-metrics = "0.8.0"
 hex = "0.4.3"
+
+futures = "0.3"
+metrics = { version = "0.23", default-features = false }
+metrics-exporter-prometheus = { version = "0.15.3", default-features = false }
