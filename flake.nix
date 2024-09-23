@@ -44,30 +44,33 @@
             ".cargo"
             "src"
             "multimint"
+            "fedimint-nwc"
             "fedimint-clientd"
             "clientd-stateless"
           ];
         };
 
-        toolchainArgs = let llvmPackages = pkgs.llvmPackages_11;
-        in {
-          extraRustFlags = "--cfg tokio_unstable";
+        toolchainArgs =
+          let llvmPackages = pkgs.llvmPackages_11;
+          in {
+            extraRustFlags = "--cfg tokio_unstable";
 
-          components = [ "rustc" "cargo" "clippy" "rust-analyzer" "rust-src" ];
+            components = [ "rustc" "cargo" "clippy" "rust-analyzer" "rust-src" ];
 
-          args = {
-            nativeBuildInputs =
-              [ pkgs.wasm-bindgen-cli pkgs.geckodriver pkgs.wasm-pack ]
-              ++ lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.firefox ];
+            args = {
+              nativeBuildInputs =
+                [ pkgs.wasm-bindgen-cli pkgs.geckodriver pkgs.wasm-pack ]
+                  ++ lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.firefox ];
+              FEDIMINT_BUILD_FORCE_GIT_HASH = "1";
+            };
+          } // lib.optionalAttrs pkgs.stdenv.isDarwin {
+            # on Darwin newest stdenv doesn't seem to work
+            # linking rocksdb
+            stdenv = pkgs.clang11Stdenv;
+            clang = llvmPackages.clang;
+            libclang = llvmPackages.libclang.lib;
+            clang-unwrapped = llvmPackages.clang-unwrapped;
           };
-        } // lib.optionalAttrs pkgs.stdenv.isDarwin {
-          # on Darwin newest stdenv doesn't seem to work
-          # linking rocksdb
-          stdenv = pkgs.clang11Stdenv;
-          clang = llvmPackages.clang;
-          libclang = llvmPackages.libclang.lib;
-          clang-unwrapped = llvmPackages.clang-unwrapped;
-        };
 
         # all standard toolchains provided by flakebox
         toolchainsStd = flakeboxLib.mkStdFenixToolchains toolchainArgs;
@@ -88,8 +91,10 @@
               craneLib = (craneLib'.overrideArgs {
                 pname = "flexbox-multibuild";
                 src = rustSrc;
+                FEDIMINT_BUILD_FORCE_GIT_HASH = "1";
               }).overrideArgs commonArgs;
-            in rec {
+            in
+            rec {
               workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
               workspaceBuild =
                 craneLib.buildWorkspace { cargoArtifacts = workspaceDeps; };
@@ -99,7 +104,8 @@
                 mainProgram = "fedimint-clientd";
               };
             });
-      in {
+      in
+      {
         legacyPackages = outputs;
         packages = { default = outputs.fedimint-clientd; };
         devShells = flakeboxLib.mkShells {
