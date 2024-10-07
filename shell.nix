@@ -1,6 +1,6 @@
 # save this as shell.nix
-{ pkgs ? import <nixpkgs> {}}:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
-pkgs.mkShell {
-  packages = [ pkgs.hello ];
-}
+pkgs.mkShell { packages = [ pkgs.hello ]; }

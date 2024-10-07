@@ -54,8 +54,14 @@ impl From<&Bolt11Invoice> for Invoice {
 }
 
 impl Value for Invoice {
-    type SelfType<'a> = Self where Self: 'a;
-    type AsBytes<'a> = Vec<u8> where Self: 'a;
+    type SelfType<'a>
+        = Self
+    where
+        Self: 'a;
+    type AsBytes<'a>
+        = Vec<u8>
+    where
+        Self: 'a;
 
     fn as_bytes<'a, 'b: 'a>(value: &'a Self::SelfType<'b>) -> Vec<u8> {
         // nosemgrep: use-of-unwrap

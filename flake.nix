@@ -1,31 +1,33 @@
 {
-  description =
-    "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin and ecash";
+  description = "A fedimint client daemon for server side applications to hold, use, and manage Bitcoin and ecash";
 
   inputs = {
-    nixpkgs = { url = "github:nixos/nixpkgs/nixos-23.11"; };
-
-    fenix = {
-      url = "github:nix-community/fenix";
-      inputs.nixpkgs.follows = "nixpkgs";
+    nixpkgs = {
+      url = "github:nixos/nixpkgs/nixos-24.05";
     };
 
     flakebox = {
-      url = "github:dpc/flakebox?rev=226d584e9a288b9a0471af08c5712e7fac6f87dc";
+      url = "github:rustshop/flakebox?rev=ee39d59b2c3779e5827f8fa2d269610c556c04c8";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.fenix.follows = "fenix";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
 
     fedimint = {
-      url =
-        "github:fedimint/fedimint?rev=dbabb5f44de5401d24ca9414534a36a22e89c6df";
+      url = "github:fedimint/fedimint";
     };
   };
 
-  outputs = { self, nixpkgs, flakebox, fenix, flake-utils, fedimint }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flakebox,
+      flake-utils,
+      fedimint,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs {
           inherit system;
@@ -49,59 +51,69 @@
           ];
         };
 
-        toolchainArgs = let llvmPackages = pkgs.llvmPackages_11;
-        in {
-          extraRustFlags = "--cfg tokio_unstable";
+        toolchainArgs =
+          let
+            llvmPackages = pkgs.llvmPackages_11;
+          in
+          {
+            extraRustFlags = "--cfg tokio_unstable";
 
-          components = [ "rustc" "cargo" "clippy" "rust-analyzer" "rust-src" ];
+            components = [
+              "rustc"
+              "cargo"
+              "clippy"
+              "rust-analyzer"
+              "rust-src"
+            ];
 
-          args = {
-            nativeBuildInputs =
-              [ pkgs.wasm-bindgen-cli pkgs.geckodriver pkgs.wasm-pack ]
-              ++ lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.firefox ];
+            args = {
+              nativeBuildInputs = [
+                pkgs.wasm-bindgen-cli
+                pkgs.geckodriver
+                pkgs.wasm-pack
+              ] ++ lib.optionals (!pkgs.stdenv.isDarwin) [ pkgs.firefox ];
+            };
           };
-        } // lib.optionalAttrs pkgs.stdenv.isDarwin {
-          # on Darwin newest stdenv doesn't seem to work
-          # linking rocksdb
-          stdenv = pkgs.clang11Stdenv;
-          clang = llvmPackages.clang;
-          libclang = llvmPackages.libclang.lib;
-          clang-unwrapped = llvmPackages.clang-unwrapped;
-        };
 
         # all standard toolchains provided by flakebox
         toolchainsStd = flakeboxLib.mkStdFenixToolchains toolchainArgs;
 
         toolchainsNative = (pkgs.lib.getAttrs [ "default" ] toolchainsStd);
 
-        toolchainNative =
-          flakeboxLib.mkFenixMultiToolchain { toolchains = toolchainsNative; };
+        toolchainNative = flakeboxLib.mkFenixMultiToolchain { toolchains = toolchainsNative; };
 
         commonArgs = {
-          buildInputs = [ ] ++ lib.optionals pkgs.stdenv.isDarwin
-            [ pkgs.darwin.apple_sdk.frameworks.SystemConfiguration ];
+          buildInputs =
+            [ ]
+            ++ lib.optionals pkgs.stdenv.isDarwin [ pkgs.darwin.apple_sdk.frameworks.SystemConfiguration ];
           nativeBuildInputs = [ pkgs.pkg-config ];
         };
-        outputs = (flakeboxLib.craneMultiBuild { toolchains = toolchainsStd; })
-          (craneLib':
-            let
-              craneLib = (craneLib'.overrideArgs {
+        outputs = (flakeboxLib.craneMultiBuild { toolchains = toolchainsStd; }) (
+          craneLib':
+          let
+            craneLib =
+              (craneLib'.overrideArgs {
                 pname = "flexbox-multibuild";
                 src = rustSrc;
-              }).overrideArgs commonArgs;
-            in rec {
-              workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
-              workspaceBuild =
-                craneLib.buildWorkspace { cargoArtifacts = workspaceDeps; };
-              fedimint-clientd = craneLib.buildPackageGroup {
-                pname = "fedimint-clientd";
-                packages = [ "fedimint-clientd" ];
-                mainProgram = "fedimint-clientd";
-              };
-            });
-      in {
+              }).overrideArgs
+                commonArgs;
+          in
+          rec {
+            workspaceDeps = craneLib.buildWorkspaceDepsOnly { };
+            workspaceBuild = craneLib.buildWorkspace { cargoArtifacts = workspaceDeps; };
+            fedimint-clientd = craneLib.buildPackageGroup {
+              pname = "fedimint-clientd";
+              packages = [ "fedimint-clientd" ];
+              mainProgram = "fedimint-clientd";
+            };
+          }
+        );
+      in
+      {
         legacyPackages = outputs;
-        packages = { default = outputs.fedimint-clientd; };
+        packages = {
+          default = outputs.fedimint-clientd;
+        };
         devShells = flakeboxLib.mkShells {
           packages = [ ];
           buildInputs = commonArgs.buildInputs;
@@ -125,5 +137,6 @@
             export RUST_LOG="info"
           '';
         };
-      });
+      }
+    );
 }
