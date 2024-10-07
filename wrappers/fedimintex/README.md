@@ -2,7 +2,7 @@
 
 # Fedimintex: Fedimint SDK in Elixir
 
-This is an elixir library that consumes Fedimint HTTP (https://github.com/kodylow/fedimint-http-client)[https://github.com/kodylow/fedimint-http-client], communicating with it via REST endpoints + passowrd. It's a hacky prototype, but it works until we can get a proper elixir client for Fedimint. All of the federation handling code happens in the fedimint-http, this just exposes a simple API for interacting with the client from elixir (mirrored in Go, Python, and TS).
+This is an elixir library that consumes Fedimint HTTP (https://github.com/kodylow/fedimint-http-client)[https://github.com/kodylow/fedimint-http-client], communicating with it via REST endpoints + password. It's a hacky prototype, but it works until we can get a proper elixir client for Fedimint. All of the federation handling code happens in the fedimint-http, this just exposes a simple API for interacting with the client from elixir (mirrored in Go, Python, and TS).
 
 Start the following in the fedimint-http-client `.env` file:
 
