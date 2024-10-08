@@ -4,11 +4,12 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use bitcoin::Address;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_core::config::FederationId;
 use multimint::fedimint_core::core::OperationId;
 use multimint::fedimint_core::time::now;
+use multimint::fedimint_ln_common::bitcoin::Address;
+use multimint::fedimint_wallet_client::client_db::TweakIdx;
 use multimint::fedimint_wallet_client::WalletClientModule;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -28,6 +29,7 @@ pub struct DepositAddressRequest {
 pub struct DepositAddressResponse {
     pub address: Address,
     pub operation_id: OperationId,
+    pub tweak_idx: TweakIdx,
 }
 
 async fn _deposit_address(
@@ -35,13 +37,14 @@ async fn _deposit_address(
     req: DepositAddressRequest,
 ) -> Result<DepositAddressResponse, AppError> {
     let wallet_module = client.get_first_module::<WalletClientModule>();
-    let (operation_id, address) = wallet_module
-        .get_deposit_address(now() + Duration::from_secs(req.timeout), ())
+    let (operation_id, address, tweak_idx) = wallet_module
+        .allocate_deposit_address_expert_only(now() + Duration::from_secs(req.timeout))
         .await?;
 
     Ok(DepositAddressResponse {
         address,
         operation_id,
+        tweak_idx,
     })
 }
 

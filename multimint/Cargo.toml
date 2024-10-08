@@ -13,6 +13,7 @@ authors.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+fedimint-api-client = { workspace = true }
 fedimint-client = { workspace = true }
 anyhow = "1.0.75"
 serde = "1.0.193"
