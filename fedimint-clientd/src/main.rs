@@ -1,8 +1,16 @@
+use std::future::ready;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::time::Instant;
 
 use anyhow::Result;
+use axum::extract::{MatchedPath, Request};
 use axum::http::Method;
+use axum::middleware::{self, Next};
+use axum::response::IntoResponse;
+use futures::future::TryFutureExt;
+use futures::try_join;
+use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
 use multimint::fedimint_core::api::InviteCode;
 use router::handlers::{admin, ln, mint, onchain};
 use router::ws::websocket_handler;
@@ -17,7 +25,6 @@ mod utils;
 
 use axum::routing::{get, post};
 use axum::Router;
-use axum_otel_metrics::HttpMetricsLayerBuilder;
 use clap::{Parser, Subcommand, ValueEnum};
 use state::AppState;
 // use tower_http::cors::{Any, CorsLayer};
@@ -65,6 +72,10 @@ struct Cli {
     /// Addr
     #[clap(long, env = "FEDIMINT_CLIENTD_ADDR", required = true)]
     addr: String,
+
+    /// Prometheus addr
+    #[clap(long, env = "PROMETHEUS_ADDR", default_value = "127.0.0.1:3001")]
+    prometheus_addr: String,
 
     /// Manual secret
     #[clap(long, env = "FEDIMINT_CLIENTD_MANUAL_SECRET", required = false)]
@@ -114,48 +125,100 @@ async fn main() -> Result<()> {
         return Err(anyhow::anyhow!("No clients found, must have at least one client to start the server. Try providing a federation invite code with the `--invite-code` flag or setting the `FEDIMINT_CLIENTD_INVITE_CODE` environment variable."));
     }
 
-    let app = match cli.mode {
+    let main_server = start_main_server(&cli.addr, &cli.password, cli.mode, state)
+        .map_err(|e| e.context("main server has failed"));
+    let metrics_server = start_metrics_server(&cli.prometheus_addr)
+        .map_err(|e| e.context("metrics server has failed"));
+
+    try_join!(main_server, metrics_server)?;
+    Ok(())
+}
+
+async fn start_main_server(
+    addr: &str,
+    password: &str,
+    mode: Mode,
+    state: AppState,
+) -> anyhow::Result<()> {
+    let app = match mode {
         Mode::Rest => Router::new()
             .nest("/v2", fedimint_v2_rest())
             .with_state(state)
-            .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
+            .layer(ValidateRequestHeaderLayer::bearer(password)),
         Mode::Ws => Router::new()
             .route("/ws", get(websocket_handler))
             .with_state(state)
-            .layer(ValidateRequestHeaderLayer::bearer(&cli.password)),
+            .layer(ValidateRequestHeaderLayer::bearer(password)),
     };
-    info!("Starting server in {:?} mode", cli.mode);
+    info!("Starting server in {mode:?} mode");
 
     let cors = CorsLayer::new()
-        // allow `GET` and `POST` when accessing the resource
         .allow_methods([Method::GET, Method::POST])
-        // allow requests from any origin
         .allow_origin(Any)
-        // allow auth header
         .allow_headers(Any);
-
-    let metrics = HttpMetricsLayerBuilder::new()
-        .with_service_name("fedimint-clientd".to_string())
-        .build();
 
     let app = app
         .layer(cors)
-        .layer(TraceLayer::new_for_http()) // tracing requests
-        // no traces for routes bellow
-        .route("/health", get(|| async { "Server is up and running!" })) // for health check
-        // metrics for all routes above
-        .merge(metrics.routes())
-        .layer(metrics);
+        .layer(TraceLayer::new_for_http())
+        .route("/health", get(|| async { "Server is up and running!" }))
+        .route_layer(middleware::from_fn(track_metrics));
 
-    let listener = tokio::net::TcpListener::bind(cli.addr.clone())
-        .await
-        .map_err(|e| anyhow::anyhow!("Failed to bind to address, should be a valid address and port like 127.0.0.1:3333: {e}"))?;
-    info!("fedimint-clientd Listening on {}", &cli.addr);
-    axum::serve(listener, app)
-        .await
-        .map_err(|e| anyhow::anyhow!("Failed to start server: {e}"))?;
-
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    info!("fedimint-clientd listening on {addr:?}");
+    axum::serve(listener, app).await?;
     Ok(())
+}
+
+async fn start_metrics_server(bind: &str) -> anyhow::Result<()> {
+    let app = metrics_app()?;
+    let listener = tokio::net::TcpListener::bind(bind).await?;
+    tracing::info!("Prometheus listening on {}", listener.local_addr()?);
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+
+fn metrics_app() -> anyhow::Result<Router> {
+    let recorder_handle = setup_metrics_recorder()?;
+    Ok(Router::new().route("/metrics", get(move || ready(recorder_handle.render()))))
+}
+
+fn setup_metrics_recorder() -> anyhow::Result<PrometheusHandle> {
+    const EXPONENTIAL_SECONDS: &[f64] = &[
+        0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
+    ];
+
+    Ok(PrometheusBuilder::new()
+        .set_buckets_for_metric(
+            Matcher::Full("http_requests_duration_seconds".to_string()),
+            EXPONENTIAL_SECONDS,
+        )?
+        .install_recorder()?)
+}
+
+async fn track_metrics(req: Request, next: Next) -> impl IntoResponse {
+    let start = Instant::now();
+    let path = if let Some(matched_path) = req.extensions().get::<MatchedPath>() {
+        matched_path.as_str().to_owned()
+    } else {
+        req.uri().path().to_owned()
+    };
+    let method = req.method().clone();
+
+    let response = next.run(req).await;
+
+    let latency = start.elapsed().as_secs_f64();
+    let status = response.status().as_u16().to_string();
+
+    let labels = [
+        ("method", method.to_string()),
+        ("path", path),
+        ("status", status),
+    ];
+
+    metrics::counter!("http_requests_total", &labels).increment(1);
+    metrics::histogram!("http_requests_duration_seconds", &labels).record(latency);
+
+    response
 }
 
 /// Implements Fedimint V0.2 API Route matching against CLI commands:

@@ -51,7 +51,7 @@ impl NostrService {
             .map(|line| line.to_string())
             .collect::<Vec<_>>();
 
-        let client = Client::new(&Keys::new(server_key.into()));
+        let client = Client::new(Keys::new(server_key.into()));
         let service = Self {
             client,
             server_key,
