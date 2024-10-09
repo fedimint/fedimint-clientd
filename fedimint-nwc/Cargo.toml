@@ -1,5 +1,6 @@
 [package]
 name = "fedimint-nwc"
+description = "A Nostr Wallet Connect implementation using Fedimint"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true
