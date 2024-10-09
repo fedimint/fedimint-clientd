@@ -70,7 +70,7 @@ async fn _spend(client: ClientHandleArc, req: SpendRequest) -> Result<SpendRespo
             )
             .await?
     };
-    info!("Spend e-cash operation: {operation}");
+    info!("Spend e-cash operation: {:?}", operation);
     Ok(SpendResponse { operation, notes })
 }
 

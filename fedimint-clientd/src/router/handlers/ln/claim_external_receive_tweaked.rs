@@ -2,11 +2,10 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use bitcoin::secp256k1::{Secp256k1, SecretKey};
-use bitcoin::util::key::KeyPair;
 use futures_util::StreamExt;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_core::config::FederationId;
+use multimint::fedimint_core::secp256k1::{KeyPair, Secp256k1, SecretKey};
 use multimint::fedimint_ln_client::{LightningClientModule, LnReceiveState};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -46,7 +45,7 @@ async fn _await_claim_external_receive_tweaked(
             .await?
             .into_stream();
         info!(
-            "Created claim external receive tweaked stream for operation id: {}",
+            "Created claim external receive tweaked stream for operation id: {:?}",
             operation_id
         );
         while let Some(update) = updates.next().await {
