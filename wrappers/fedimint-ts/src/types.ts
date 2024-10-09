@@ -54,13 +54,10 @@ export interface OperationOutput {
   outcome?: any;
 }
 
-export interface OnchainDepositAddressRequest {
-  timeout: number;
-}
-
 export interface OnchainDepositAddressResponse {
   operationId: string;
   address: string;
+  tweakIdx: number;
 }
 
 export interface OnchainAwaitDepositRequest {
@@ -239,7 +236,7 @@ export interface MintEncodeNotesRequest {
 }
 
 export interface MintEncodeNotesResponse {
-  notes: string;
+  notesJson: string;
 }
 
 export interface MintReissueRequest {

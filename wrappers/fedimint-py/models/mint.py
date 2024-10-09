@@ -17,7 +17,7 @@ class NotesJson(BaseModel):
 
 
 class MintDecodeNotesResponse(BaseModel):
-    notesJson: NotesJson
+    notes: NotesJson
 
 
 class MintEncodeNotesRequest(BaseModel):
@@ -25,7 +25,7 @@ class MintEncodeNotesRequest(BaseModel):
 
 
 class MintEncodeNotesResponse(BaseModel):
-    notes: str
+    notesJson: str
 
 
 class MintReissueRequest(BaseModel):

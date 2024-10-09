@@ -6,7 +6,6 @@ import aiohttp
 import atexit
 
 from models.common import (
-    DiscoverVersionRequest,
     DiscoverVersionResponse,
     InfoResponse,
     ListOperationsRequest,
@@ -29,7 +28,6 @@ from models.lightning import (
 from models.onchain import (
     OnchainAwaitDepositRequest,
     OnchainAwaitDepositResponse,
-    OnchainDepositAddressRequest,
     OnchainDepositAddressResponse,
     OnchainWithdrawRequest,
     OnchainWithdrawResponse,
@@ -185,9 +183,12 @@ class AsyncFedimintClient:
     # async def backup(self, request: BackupRequest, federationId: str = None):
     #     return await self._post_with_id("/admin/backup", request, federationId)
 
-    async def discover_version(self, threshold: int) -> DiscoverVersionResponse:
-        request: DiscoverVersionRequest = {"threshold": threshold}
-        return await self._post("/admin/discover-version", request)
+    async def discover_version(
+        self, federation_id: str = None
+    ) -> DiscoverVersionResponse:
+        return await self._post_with_federation_id(
+            "/admin/discover-version", {}, federation_id
+        )
 
     async def federation_ids(self):
         return await self._get("/admin/federation-ids")
@@ -378,10 +379,9 @@ class AsyncFedimintClient:
         def __init__(self, client):
             self.client = client
 
-        async def create_deposit_address(self, timeout: int, federation_id: str = None):
-            request: OnchainDepositAddressRequest = {"timeout": timeout}
+        async def create_deposit_address(self, federation_id: str = None):
             return await self.client._post_with_federation_id(
-                "/onchain/deposit-address", request, federation_id
+                "/onchain/deposit-address", {}, federation_id
             )
 
         async def await_deposit(

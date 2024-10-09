@@ -4,7 +4,6 @@ from typing import List, Literal, Union
 import requests
 
 from models.common import (
-    DiscoverVersionRequest,
     DiscoverVersionResponse,
     InfoResponse,
     ListOperationsRequest,
@@ -26,7 +25,6 @@ from models.lightning import (
 from models.onchain import (
     OnchainAwaitDepositRequest,
     OnchainAwaitDepositResponse,
-    OnchainDepositAddressRequest,
     OnchainWithdrawRequest,
     OnchainWithdrawResponse,
 )
@@ -157,9 +155,8 @@ class FedimintClient:
     def config(self):
         return self._get("/admin/config")
 
-    def discover_version(self, threshold: int) -> DiscoverVersionResponse:
-        request: DiscoverVersionRequest = {"threshold": threshold}
-        return self._post("/admin/discover-version", request)
+    def discover_version(self, federation_id: str = None) -> DiscoverVersionResponse:
+        return self._post_with_federation_id("/admin/discover-version", {})
 
     def federation_ids(self):
         return self._get("/admin/federation-ids")
@@ -343,10 +340,9 @@ class FedimintClient:
         def __init__(self, client):
             self.client = client
 
-        def create_deposit_address(self, timeout: int, federation_id: str = None):
-            request: OnchainDepositAddressRequest = {"timeout": timeout}
+        def create_deposit_address(self, federation_id: str = None):
             return self.client._post_with_federation_id(
-                "/onchain/deposit-address", request, federation_id
+                "/onchain/deposit-address", {}, federation_id
             )
 
         def await_deposit(
