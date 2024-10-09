@@ -25,7 +25,6 @@ import {
   MintValidateResponse,
   OnchainAwaitDepositRequest,
   OnchainAwaitDepositResponse,
-  OnchainDepositAddressRequest,
   OnchainDepositAddressResponse,
   OnchainWithdrawRequest,
   OnchainWithdrawResponse,
@@ -612,17 +611,13 @@ export class FedimintClient {
   public onchain = {
     /**
      * Creates a new bitcoin deposit address to peg in bitcoin to the federation.
-     * @param timeout - The number of seconds for the fedimint-clientd to watch for a deposit to the created address
      */
     createDepositAddress: async (
-      timeout: number,
       federationId?: string
     ): Promise<OnchainDepositAddressResponse> => {
-      const request: OnchainDepositAddressRequest = { timeout };
-
       return await this.postWithFederationId<OnchainDepositAddressResponse>(
         "/onchain/deposit-address",
-        request,
+        {},
         federationId
       );
     },
