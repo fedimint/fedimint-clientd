@@ -1373,7 +1373,7 @@ dependencies = [
  "lnurl-rs 0.5.0",
  "metrics",
  "metrics-exporter-prometheus",
- "multimint",
+ "multimint 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.12.7",
  "serde",
  "serde_json",
@@ -1611,7 +1611,7 @@ dependencies = [
  "futures-util",
  "image",
  "itertools 0.13.0",
- "multimint",
+ "multimint 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nostr",
  "nostr-sdk",
  "qrcode",
@@ -3000,6 +3000,30 @@ dependencies = [
 [[package]]
 name = "multimint"
 version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "fedimint-api-client",
+ "fedimint-client",
+ "fedimint-core",
+ "fedimint-ln-client",
+ "fedimint-ln-common",
+ "fedimint-mint-client",
+ "fedimint-rocksdb",
+ "fedimint-wallet-client",
+ "futures-util",
+ "hex",
+ "rand",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
+name = "multimint"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9fc5c84a70ef0fd1e87b9aa3bea319b90785a1665757da27242474e1655cb96"
 dependencies = [
  "anyhow",
  "fedimint-api-client",
