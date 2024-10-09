@@ -11,7 +11,7 @@ use axum::response::IntoResponse;
 use futures::future::TryFutureExt;
 use futures::try_join;
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
-use multimint::fedimint_core::api::InviteCode;
+use multimint::fedimint_core::invite_code::InviteCode;
 use router::handlers::{admin, ln, mint, onchain};
 use router::ws::websocket_handler;
 use tower_http::cors::{Any, CorsLayer};
