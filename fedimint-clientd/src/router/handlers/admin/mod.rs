@@ -27,7 +27,7 @@ pub async fn _get_note_summary(client: &ClientHandleArc) -> anyhow::Result<InfoR
         .await;
     Ok(InfoResponse {
         network: wallet_client.get_network().to_string(),
-        meta: client.get_config().global.meta.clone(),
+        meta: client.config().await.global.meta.clone(),
         total_amount_msat: summary.total_amount(),
         total_num_notes: summary.count_items(),
         denominations_msat: summary,
