@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use itertools::Itertools;
-use lightning_invoice::Bolt11Invoice;
+use multimint::fedimint_ln_common::lightning_invoice::Bolt11Invoice;
 use nostr::nips::nip47::LookupInvoiceRequestParams;
 use nostr::util::hex;
 use redb::{Database as RedbDatabase, ReadTransaction, ReadableTable, WriteTransaction};

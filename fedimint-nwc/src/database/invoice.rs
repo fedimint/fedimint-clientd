@@ -1,6 +1,6 @@
 use std::time::{Duration, UNIX_EPOCH};
 
-use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
+use multimint::fedimint_ln_common::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use nostr::util::hex;
 use redb::{TableDefinition, TypeName, Value};
 use serde::{Deserialize, Serialize};

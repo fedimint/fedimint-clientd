@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
-use lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
+use multimint::fedimint_ln_common::lightning_invoice::{Bolt11Invoice, Bolt11InvoiceDescription};
 use nostr::nips::nip04;
 use nostr::nips::nip47::{
     ErrorCode, GetBalanceResponseResult, GetInfoResponseResult, LookupInvoiceRequestParams,
