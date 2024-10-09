@@ -4,8 +4,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fedimint-go-client/pkg/fedimint"
+	"fedimint-go-client/pkg/handlers"
 	"fmt"
+	"log"
 	"os"
+
+	"html/template"
+	"net/http"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/joho/godotenv"
@@ -64,17 +69,7 @@ func buildTestClient() *fedimint.FedimintClient {
 	return fedimint.NewFedimintClient(baseUrl, password, federationId)
 }
 
-func main() {
-	fc := buildTestClient()
-	fc.UseDefaultGateway()
-	keyPair := newKeyPair()
-	fmt.Printf("Generated Key Pair: ")
-	fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
-	fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
-
-	///////////////////
-	// ADMIN METHODS //
-	///////////////////
+func adminMethods(fc *fedimint.FedimintClient) {
 
 	// `/v2/admin/config`
 	logMethod("/v2/admin/config")
@@ -186,9 +181,9 @@ func main() {
 
 	logInputAndOutput([]interface{}{10}, listOperationsResponseData)
 
-	///////////////////////
-	// LIGHTNING METHODS //
-	///////////////////////
+}
+
+func lnMethods(fc *fedimint.FedimintClient, kp KeyPair) {
 
 	// `/v2/ln/list-gateways`
 	logMethod("/v2/ln/list-gateways")
@@ -198,7 +193,7 @@ func main() {
 		return
 	}
 
-	jsonBytes, err = json.Marshal(gatewayList)
+	jsonBytes, err := json.Marshal(gatewayList)
 	if err != nil {
 		fmt.Println("Error marshaling JSON(list-gateways):", err)
 		return
@@ -284,9 +279,9 @@ func main() {
 
 	logInputAndOutput(invoiceData.OperationId, awaitInvoiceResponseData)
 
-	// `/v1/ln/invoice-external-pubkey-tweaked`
-	logMethod("/v1/ln/invoice-external-pubkey-tweaked")
-	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(keyPair.PublicKey, 1, 10000, "test", fc.GetActiveGatewayId(), nil, nil)
+	// `/v2/ln/invoice-external-pubkey-tweaked`
+	logMethod("/v2/ln/invoice-external-pubkey-tweaked")
+	tweakInvoice, err := fc.Ln.CreateInvoiceForPubkeyTweak(kp.PublicKey, 1, 10000, "test", fc.GetActiveGatewayId(), nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_INVOICE_FOR_PUBKEY_TWEAK: ", err)
 		return
@@ -294,24 +289,24 @@ func main() {
 
 	jsonBytes, err = json.Marshal(tweakInvoice)
 	if err != nil {
-		fmt.Println("Error marshaling JSON(await-invoice):", err)
+		fmt.Println("Error marshaling JSON(invoice-external-pubkey-tweaked):", err)
 		return
 	}
 	var tweakInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &tweakInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON(await-invoice):", err)
+		fmt.Println("Error unmarshalling JSON(invoice-external-pubkey-tweaked):", err)
 		return
 	}
 
-	logInputAndOutput([]interface{}{keyPair.PublicKey, 1, 10000, "test"}, tweakInvoiceResponseData)
+	logInputAndOutput([]interface{}{kp.PublicKey, 1, 10000, "test"}, tweakInvoiceResponseData)
 	// pay the invoice
 	_, _ = fc.Ln.Pay(tweakInvoice.Invoice, nil, nil, nil, nil)
 	fmt.Println("Paid locked invoice!")
 
-	// `/v1/ln/claim-external-pubkey-tweaked`
-	logMethod("/v1/ln/claim-external-pubkey-tweaked")
-	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(keyPair.PrivateKey, []uint64{1}, nil, nil)
+	// `/v2/ln/claim-external-receive-tweaked`
+	logMethod("/v2/ln/claim-external-receive-tweaked")
+	claimInvoice, err := fc.Ln.ClaimPubkeyTweakReceive(kp.PrivateKey, []uint64{1}, nil, nil)
 	if err != nil {
 		fmt.Println("Error calling CLAIM_PUBKEY_RECEIVE_TWEAKED: ", err)
 		return
@@ -319,21 +314,21 @@ func main() {
 
 	jsonBytes, err = json.Marshal(claimInvoice)
 	if err != nil {
-		fmt.Println("Error marshaling JSON(claim-external-pubkey-tweaked):", err)
+		fmt.Println("Error marshaling JSON(claim-external-receive-tweaked):", err)
 		return
 	}
 	var claimInvoiceResponseData interface{}
 	err = json.Unmarshal(jsonBytes, &claimInvoiceResponseData)
 	if err != nil {
-		fmt.Println("Error unmarshalling JSON(claim-external-pubkey-tweaked):", err)
+		fmt.Println("Error unmarshalling JSON(claim-external-receive-tweaked):", err)
 		return
 	}
 
-	logInputAndOutput([]interface{}{keyPair.PrivateKey, []uint64{1}}, claimInvoiceResponseData)
+	logInputAndOutput([]interface{}{kp.PrivateKey, []uint64{1}}, claimInvoiceResponseData)
 
-	//////////////////
-	// MINT METHODS //
-	//////////////////
+}
+
+func mintMethods(fc *fedimint.FedimintClient) {
 
 	// `/v2/mint/spend`
 	logMethod("/v2/mint/spend")
@@ -343,7 +338,7 @@ func main() {
 		return
 	}
 
-	jsonBytes, err = json.Marshal(mintData)
+	jsonBytes, err := json.Marshal(mintData)
 	if err != nil {
 		fmt.Println("Error marshaling JSON(spend):", err)
 		return
@@ -391,7 +386,7 @@ func main() {
 	}
 	encodedData, err := fc.Mint.EncodeNotes(decodedData.NotesJson)
 	if err != nil {
-		fmt.Println("Error calling DECODE_NOTES: ", err)
+		fmt.Println("Error calling ENCODE_NOTES: ", err)
 		return
 	}
 
@@ -522,10 +517,9 @@ func main() {
 	}
 
 	logInputAndOutput(splitData.Notes, combineResponseData)
+}
 
-	/////////////////////
-	// ONCHAIN METHODS //
-	/////////////////////
+func onchainMethods(fc *fedimint.FedimintClient) {
 
 	// `/v2/onchain/deposit-address`
 	logMethod("/v2/onchain/deposit-address")
@@ -535,7 +529,7 @@ func main() {
 		return
 	}
 
-	jsonBytes, err = json.Marshal(addr)
+	jsonBytes, err := json.Marshal(addr)
 	if err != nil {
 		fmt.Println("Error marshaling JSON(deposit-address):", err)
 		return
@@ -574,4 +568,52 @@ func main() {
 	fmt.Println("============================================")
 	fmt.Println("|| Done: All methods tested successfully! ||")
 	fmt.Println("============================================")
+
+}
+
+func main() {
+	fc := buildTestClient()
+	fc.UseDefaultGateway()
+	// keyPair := newKeyPair()
+	// fmt.Printf("Generated Key Pair: ")
+	// fmt.Printf("       Private Key: %s\n", keyPair.PrivateKey)
+	// fmt.Printf("        Public Key: %s\n", keyPair.PublicKey)
+
+	// admin methods
+	// adminMethods(fc)
+	//lightening methods
+	// lnMethods(fc, keyPair)
+	// mint methods
+	// mintMethods(fc)
+	//onchain methods
+	// onchainMethods(fc)
+
+	handlers := &handlers.Handler{
+		Tmpl: template.Must(template.ParseGlob("templates/*.gohtml")),
+		Fc:   buildTestClient(),
+	}
+
+	r := http.NewServeMux()
+	r.HandleFunc("/", handlers.Index)
+	r.HandleFunc("/admin/config", handlers.AdminConfigHandler)
+	r.HandleFunc("/ln/invoice", handlers.InvoiceHandler)
+	r.HandleFunc("/create_invoice", handlers.CreateInvoiceHandler)
+	r.HandleFunc("/ln_pay", handlers.LnPayHandler)
+	r.HandleFunc("/create_invoice_pubkey_tweak", handlers.CreatePubKeyTweakInvoiceHandler)
+	r.HandleFunc("/claim_external", handlers.ClaimExternalReceiveTweak)
+	r.HandleFunc("/claim_invoice", handlers.ClaimInvoice)
+	r.HandleFunc("/onchain", handlers.OnchainHandler)
+	r.HandleFunc("/deposit", handlers.DepositHandler)
+	r.HandleFunc("/withdraw", handlers.WithdrawHandler)
+	r.HandleFunc("/mint", handlers.MintHandler)
+	r.HandleFunc("/spend", handlers.SpendHandler)
+	r.HandleFunc("/decode_notes", handlers.DecodeNotesHandler)
+	r.HandleFunc("/encode_notes", handlers.EncodeNotesHandler)
+	r.HandleFunc("/validate", handlers.ValidateNotesHandler)
+	r.HandleFunc("/reissue", handlers.ReissueNotesHandler)
+	r.HandleFunc("/split", handlers.SplitNotesHandler)
+	r.HandleFunc("/combine", handlers.CombineHandler)
+
+	log.Fatal(http.ListenAndServe(":8080", r))
+
 }

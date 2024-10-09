@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spend mint</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .form-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .form-group input[type="number"]::-webkit-outer-spin-button,
+        .form-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .form-notes {
+    width: 100%;        
+    max-height: 200px;  
+    overflow: auto;     
+    word-wrap: break-word; 
+}
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Spend Mint</h2>
+        <form action="/spend" method="post">
+           <div class="form-group">
+    <label for="allowOverpay">Allow Overpay:</label>
+    <input type="checkbox" id="allowOverpay" name="allowOverpay" value="true" checked>
+    <input type="hidden" id="allowOverpayHidden" name="allowOverpay" value="false">
+</div>
+
+
+            <div class="form-group">
+                <label for="timeout">Timeout (ms):</label>
+                <input type="number" id="timeout" name="timeout" value="1000">
+            </div>
+
+            <div class="form-group">
+                <label for="amountMsat">Amount (msat):</label>
+                <input type="number" id="amountMsat" name="amountMsat" value="1000">
+            </div>
+
+            <div class="form-group">
+    <label for="includeInvite">Include Invite:</label>
+    <input type="checkbox" id="includeInvite" name="includeInvite" value="false">
+    <input type="hidden" id="includeInviteHidden" name="includeInvite" value="false">
+</div>
+
+
+            <div class="form-group">
+                <label for="federationId">Federation ID:</label>
+                <input type="text" id="federationId" name="federationId">
+            </div>
+
+            <div class="form-group">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    <div class="form-notes">
+    <p>Notes: {{.Notes}}</p>
+</div>
+
+        
+
+       
+    </div>
+
+ <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function setupCheckboxHandling(checkboxId, hiddenInputId) {
+            var checkbox = document.getElementById(checkboxId);
+            var hiddenInput = document.getElementById(hiddenInputId);
+
+            // Function to update the state of the hidden input based on the checkbox
+            function updateHiddenInput() {
+                // If the checkbox is checked, disable the hidden input to prevent it from being submitted
+                hiddenInput.disabled = checkbox.checked;
+            }
+
+            // Attach the update function to the checkbox's change event
+            checkbox.addEventListener('change', updateHiddenInput);
+
+            // Call the update function initially to set the correct state
+            updateHiddenInput();
+        }
+
+        // Setup handling for both checkboxes
+        setupCheckboxHandling('allowOverpay', 'allowOverpayHidden');
+        setupCheckboxHandling('includeInvite', 'includeInviteHidden');
+    });
+</script>
+
+
+   
+</body>
+</html>

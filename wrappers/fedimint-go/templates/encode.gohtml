@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encode Note</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f8ff;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+        }
+        div {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #1e90ff;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #1c86ee;
+        }
+    </style>
+</head>
+<body>
+    <form id="notesForm" action="/encode_notes" method="post">
+        <h1>Encode Note</h1>
+        <div>
+            <label for="federationIdPrefix">Federation ID Prefix:</label>
+            <input type="text" id="federationIdPrefix" name="federation_id_prefix" required>
+        </div>
+        <div id="notes-section">
+            <!-- Notes will be added here dynamically -->
+        </div>
+        <button type="button" onclick="addNote()">Add Note</button>
+        <button type="submit">Submit</button>
+        <input type="hidden" name="notesJsonStr" id="notesJsonStr">
+    </form>
+
+    {{if .}}
+        <p>{{.}}</p>
+    {{end}}
+
+</body>
+</html>
+
+
+<script>
+
+let notes = {};
+
+function addNote() {
+    const noteSection = document.getElementById('notes-section');
+    const index = noteSection.children.length;  
+
+    const noteContainer = document.createElement('div');
+    noteContainer.classList.add('note-entry');
+    noteContainer.dataset.index = index;
+
+    const inputKey = document.createElement('input');
+    inputKey.placeholder = 'Note Key (e.g., 128)';
+    const inputSignature = document.createElement('input');
+    inputSignature.placeholder = 'Signature';
+    const inputSpendKey = document.createElement('input');
+    inputSpendKey.placeholder = 'Spend Key';
+
+    noteContainer.append(inputKey, inputSignature, inputSpendKey);
+    noteSection.appendChild(noteContainer);
+}
+
+document.getElementById('notesForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const federationIdPrefix = document.getElementById('federationIdPrefix').value;
+    
+    const allNoteEntries = document.querySelectorAll('.note-entry');
+    allNoteEntries.forEach(entry => {
+        const key = entry.querySelector('input[placeholder="Note Key (e.g., 128)"]').value;
+        const signature = entry.querySelector('input[placeholder="Signature"]').value;
+        const spend_key = entry.querySelector('input[placeholder="Spend Key"]').value;
+
+        if (key && signature && spend_key) {
+            if (!notes[key]) {
+                notes[key] = [];
+            }
+            notes[key].push({
+                signature: signature,
+                spend_key: spend_key
+            });
+        }
+    });
+
+    const notesJsonStr = JSON.stringify({
+        federation_id_prefix: federationIdPrefix,
+        notes: notes
+    });
+    document.getElementById('notesJsonStr').value = notesJsonStr;
+    this.submit();
+});
+
+</script>
