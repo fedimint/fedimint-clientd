@@ -2,13 +2,10 @@ from typing import Dict, List, Literal, Union
 from pydantic import BaseModel
 
 
-class OnchainDepositAddressRequest(BaseModel):
-    timeout: int
-
-
 class OnchainDepositAddressResponse(BaseModel):
     operation_id: str
     address: str
+    tweak_idx: int
 
 
 class OnchainAwaitDepositRequest(BaseModel):

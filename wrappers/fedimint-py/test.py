@@ -45,7 +45,7 @@ def main():
     log_input_and_output({}, data)
 
     log_method("/v2/admin/discover-version")
-    data = fedimint_client.discover_version(1)
+    data = fedimint_client.discover_version()
     log_input_and_output({}, data)
 
     log_method("/v2/admin/federation-ids")
@@ -120,8 +120,8 @@ def main():
     log_input_and_output({"notes": mint_data["notes"]}, data)
 
     log_method("/v2/mint/encode-notes")
-    data = fedimint_client.mint.encode_notes(data["notesJson"])
-    log_input_and_output({"notesJson": data}, data)
+    encoded_data = fedimint_client.mint.encode_notes(data["notesJson"])
+    log_input_and_output({"notesJson": data}, encoded_data)
 
     log_method("/v2/mint/validate")
     data = fedimint_client.mint.validate(mint_data["notes"])
@@ -145,8 +145,8 @@ def main():
 
     # ONCHAIN METHODS
     log_method("/v2/onchain/deposit-address")
-    data = fedimint_client.onchain.create_deposit_address(1000)
-    log_input_and_output({"timeout": 1000}, data)
+    data = fedimint_client.onchain.create_deposit_address()
+    log_input_and_output({}, data)
     log_method("/v2/onchain/withdraw")
     withdraw_data = fedimint_client.onchain.withdraw(data["address"], 1000)
     log_input_and_output({"address": data["address"], "amountSat": 1000}, withdraw_data)
