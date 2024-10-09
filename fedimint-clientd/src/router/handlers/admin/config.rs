@@ -11,7 +11,7 @@ use crate::state::AppState;
 async fn _config(multimint: MultiMint) -> Result<Value, AppError> {
     let mut config = HashMap::new();
     for (id, client) in multimint.clients.lock().await.iter() {
-        config.insert(*id, client.get_config_json());
+        config.insert(*id, client.config().await.to_json());
     }
     Ok(serde_json::to_value(config)
         .map_err(|e| anyhow::anyhow!("Client config is serializable: {e}"))?)
