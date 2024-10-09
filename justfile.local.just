@@ -29,3 +29,6 @@ wscat:
 
 publish:
   cargo publish -p multimint && cargo publish -p fedimint-clientd && cargo publish -p clientd-stateless
+
+test-invoice amountMsat:
+  ./scripts/mutinynet-invoice.sh {{amountMsat}}

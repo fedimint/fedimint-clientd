@@ -222,49 +222,46 @@ async fn track_metrics(req: Request, next: Next) -> impl IntoResponse {
 }
 
 /// Implements Fedimint V0.2 API Route matching against CLI commands:
-/// - `/fedimint/v2/admin/backup`: Upload the (encrypted) snapshot of mint notes
-///   to federation.
-/// - `/fedimint/v2/admin/discover-version`: Discover the common api version to
-///   use to communicate with the federation.
-/// - `/fedimint/v2/admin/info`: Display wallet info (holdings, tiers).
-/// - `/fedimint/v2/admin/join`: Join a federation with an invite code.
-/// - `/fedimint/v2/admin/restore`: Restore the previously created backup of
-///   mint notes (with `backup` command).
-/// - `/fedimint/v2/admin/list-operations`: List operations.
-/// - `/fedimint/v2/admin/module`: Call a module subcommand.
-/// - `/fedimint/v2/admin/config`: Returns the client config.
+/// - `/v2/admin/backup`: Upload the (encrypted) snapshot of mint notes to
+///   federation.
+/// - `/v2/admin/discover-version`: Discover the common api version to use to
+///   communicate with the federation.
+/// - `/v2/admin/info`: Display wallet info (holdings, tiers).
+/// - `/v2/admin/join`: Join a federation with an invite code.
+/// - `/v2/admin/restore`: Restore the previously created backup of mint notes
+///   (with `backup` command).
+/// - `/v2/admin/list-operations`: List operations.
+/// - `/v2/admin/module`: Call a module subcommand.
+/// - `/v2/admin/config`: Returns the client config.
 ///
 /// Mint related commands:
-/// - `/fedimint/v2/mint/reissue`: Reissue notes received from a third party to
-///   avoid double spends.
-/// - `/fedimint/v2/mint/spend`: Prepare notes to send to a third party as a
-///   payment.
-/// - `/fedimint/v2/mint/validate`: Verifies the signatures of e-cash notes, but
-///   *not* if they have been spent already.
-/// - `/fedimint/v2/mint/split`: Splits a string containing multiple e-cash
-///   notes (e.g. from the `spend` command) into ones that contain exactly one.
-/// - `/fedimint/v2/mint/combine`: Combines two or more serialized e-cash notes
-///   strings.
+/// - `/v2/mint/reissue`: Reissue notes received from a third party to avoid
+///   double spends.
+/// - `/v2/mint/spend`: Prepare notes to send to a third party as a payment.
+/// - `/v2/mint/validate`: Verifies the signatures of e-cash notes, but *not* if
+///   they have been spent already.
+/// - `/v2/mint/split`: Splits a string containing multiple e-cash notes (e.g.
+///   from the `spend` command) into ones that contain exactly one.
+/// - `/v2/mint/combine`: Combines two or more serialized e-cash notes strings.
 ///
 /// Lightning network related commands:
-/// - `/fedimint/v2/ln/invoice`: Create a lightning invoice to receive payment
-///   via gateway.
-/// - `/fedimint/v2/ln/invoice-external-pubkey-tweaked`: Create a lightning
-///   invoice to receive payment via gateway with external pubkey.
-/// - `/fedimint/v2/ln/await-invoice`: Wait for incoming invoice to be paid.
-/// - `/fedimint/v2/ln/claim-external-receive-tweaked`: Claim an external
-///   receive.
-/// - `/fedimint/v2/ln/pay`: Pay a lightning invoice or lnurl via a gateway.
-/// - `/fedimint/v2/ln/await-pay`: Wait for a lightning payment to complete.
-/// - `/fedimint/v2/ln/list-gateways`: List registered gateways.
-/// - `/fedimint/v2/ln/switch-gateway`: Switch active gateway.
+/// - `/v2/ln/invoice`: Create a lightning invoice to receive payment via
+///   gateway.
+/// - `/v2/ln/invoice-external-pubkey-tweaked`: Create a lightning invoice to
+///   receive payment via gateway with external pubkey.
+/// - `/v2/ln/await-invoice`: Wait for incoming invoice to be paid.
+/// - `/v2/ln/claim-external-receive-tweaked`: Claim an external receive.
+/// - `/v2/ln/pay`: Pay a lightning invoice or lnurl via a gateway.
+/// - `/v2/ln/await-pay`: Wait for a lightning payment to complete.
+/// - `/v2/ln/list-gateways`: List registered gateways.
+/// - `/v2/ln/switch-gateway`: Switch active gateway.
 ///
 /// Onchain related commands:
-/// - `/fedimint/v2/onchain/deposit-address`: Generate a new deposit address,
-///   funds sent to it can later be claimed.
-/// - `/fedimint/v2/onchain/await-deposit`: Wait for deposit on previously
-///   generated address.
-/// - `/fedimint/v2/onchain/withdraw`: Withdraw funds from the federation.
+/// - `/v2/onchain/deposit-address`: Generate a new deposit address, funds sent
+///   to it can later be claimed.
+/// - `/v2/onchain/await-deposit`: Wait for deposit on previously generated
+///   address.
+/// - `/v2/onchain/withdraw`: Withdraw funds from the federation.
 fn fedimint_v2_rest() -> Router<AppState> {
     let mint_router = Router::new()
         .route("/decode-notes", post(mint::decode_notes::handle_rest))
