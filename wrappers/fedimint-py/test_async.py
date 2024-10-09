@@ -47,9 +47,7 @@ async def main():
     # log_input_and_output({}, data)
     # `/v2/admin/discover-version`
     log_method("/v2/admin/discover-version")
-    data = await fedimint_client.discover_version(
-        1
-    )  # Assuming threshold is required, adjust as needed
+    data = await fedimint_client.discover_version()
     log_input_and_output({}, data)
     # `/v2/admin/federation-ids`
     log_method("/v2/admin/federation-ids")
@@ -130,8 +128,8 @@ async def main():
     log_input_and_output({"notes": mint_data["notes"]}, data)
     # `/v2/mint/encode-notes`
     log_method("/v2/mint/encode-notes")
-    data = await fedimint_client.mint.encode_notes(data["notesJson"])
-    log_input_and_output({"notesJson": data}, data)
+    encoded_data = await fedimint_client.mint.encode_notes(data["notesJson"])
+    log_input_and_output({"notesJson": data}, encoded_data)
     # `/v2/mint/validate`
     log_method("/v2/mint/validate")
     data = await fedimint_client.mint.validate(mint_data["notes"])
@@ -157,9 +155,8 @@ async def main():
     # ONCHAIN METHODS
     # `/v2/onchain/deposit-address`
     log_method("/v2/onchain/deposit-address")
-    data = await fedimint_client.onchain.create_deposit_address(1000)
-    print("data: ", data)
-    log_input_and_output({"timeout": 1000}, data)
+    data = await fedimint_client.onchain.create_deposit_address()
+    log_input_and_output({}, data)
     # `/v2/onchain/withdraw`
     log_method("/v2/onchain/withdraw")
     withdraw_data = await fedimint_client.onchain.withdraw(data["address"], 1000)

@@ -239,9 +239,8 @@ func (fc *FedimintClient) Backup(metadata *types.BackupRequest, federationId *st
 	return err
 }
 
-func (fc *FedimintClient) DiscoverVersion(threshold uint16) (*types.FedimintResponse, error) {
-	request := types.DiscoverVersionRequest{Threshold: threshold}
-	resp, err := fc.post("/admin/discover-version", request)
+func (fc *FedimintClient) DiscoverVersion(federationId *string) (*types.FedimintResponse, error) {
+	resp, err := fc.postWithFederationId("/admin/discover-version", nil, federationId)
 	if err != nil {
 		return nil, err
 	}
@@ -306,9 +305,8 @@ func (fc *FedimintClient) Join(inviteCode string, setActiveFederationId bool, us
 // Onchain //
 ////////////
 
-func (onchain *OnchainModule) CreateDepositAddress(timeout int, federationId *string) (*modules.OnchainDepositAddressResponse, error) {
-	request := modules.OnchainDepositAddressRequest{Timeout: timeout}
-	resp, err := onchain.Client.postWithFederationId("/onchain/deposit-address", request, federationId)
+func (onchain *OnchainModule) CreateDepositAddress(federationId *string) (*modules.OnchainDepositAddressResponse, error) {
+	resp, err := onchain.Client.postWithFederationId("/onchain/deposit-address", nil, federationId)
 	if err != nil {
 		return nil, err
 	}

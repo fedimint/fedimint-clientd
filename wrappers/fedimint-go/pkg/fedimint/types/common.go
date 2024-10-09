@@ -53,8 +53,4 @@ type JoinResponse struct {
 	FederationIds    []string `json:"federationIds"`
 }
 
-type DiscoverVersionRequest struct {
-	Threshold uint16 `json:"threshold"`
-}
-
 type FedimintResponse map[string]interface{}

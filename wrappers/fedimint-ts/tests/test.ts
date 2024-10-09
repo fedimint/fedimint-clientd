@@ -196,8 +196,8 @@ async function main() {
   logInputAndOutput({ notes: mintData.notes }, data);
   // `/v2/mint/encode-notes`
   logMethod("/v2/mint/encode-notes");
-  data = await fedimintClient.mint.encodeNotes(data.notesJson);
-  logInputAndOutput({ notesJson: data.notesJson }, data);
+  const encodeData = await fedimintClient.mint.encodeNotes(data.notesJson);
+  logInputAndOutput({ notesJson: data.notesJson }, encodeData);
   // `/v2/mint/validate`
   logMethod("/v2/mint/validate");
   data = await fedimintClient.mint.validate(mintData.notes);
@@ -219,12 +219,16 @@ async function main() {
   // ONCHAIN METHODS
   // `/v2/onchain/deposit-address`
   logMethod("/v2/onchain/deposit-address");
-  data = await fedimintClient.onchain.createDepositAddress(1000);
-  logInputAndOutput({ timeout: 1000 }, data);
+  data = await fedimintClient.onchain.createDepositAddress();
+  logInputAndOutput({}, data);
   // `/v2/onchain/withdraw`
   logMethod("/v2/onchain/withdraw");
-  data = await fedimintClient.onchain.withdraw(data.address, 1000);
-  logInputAndOutput({ address: data.address, amountSat: 1000 }, data);
+  const withdrawData = await fedimintClient.onchain.withdraw(
+    data.address,
+    1000
+  );
+  console.log("Withdrew: ", withdrawData);
+  logInputAndOutput({ address: data.address, amountSat: 1000 }, withdrawData);
   // // `/v2/onchain/await-deposit`
   // logMethod("/v2/onchain/await-deposit");
   // data = await fedimintClient.onchain.awaitDeposit(data.operationId);

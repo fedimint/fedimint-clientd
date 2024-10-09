@@ -87,7 +87,7 @@ func main() {
 
 	// `/v2/admin/discover-version`
 	logMethod("/v2/admin/discover-version")
-	discoverResponseData, err := fc.DiscoverVersion(1)
+	discoverResponseData, err := fc.DiscoverVersion(nil)
 	if err != nil {
 		fmt.Println("Error calling VERSION: ", err)
 		return
@@ -529,7 +529,7 @@ func main() {
 
 	// `/v2/onchain/deposit-address`
 	logMethod("/v2/onchain/deposit-address")
-	addr, err := fc.Onchain.CreateDepositAddress(1000, nil)
+	addr, err := fc.Onchain.CreateDepositAddress(nil)
 	if err != nil {
 		fmt.Println("Error calling CREATE_DEPOSIT_ADDRESS: ", err)
 		return
