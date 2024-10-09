@@ -38,14 +38,26 @@ async fn _await_deposit(
 
     while let Some(update) = updates.next().await {
         match update {
-            DepositStateV2::Confirmed(tx) => {
+            DepositStateV2::Confirmed {
+                btc_deposited,
+                btc_out_point,
+            } => {
                 return Ok(AwaitDepositResponse {
-                    status: DepositStateV2::Confirmed(tx),
+                    status: DepositStateV2::Confirmed {
+                        btc_deposited,
+                        btc_out_point,
+                    },
                 })
             }
-            DepositStateV2::Claimed(tx) => {
+            DepositStateV2::Claimed {
+                btc_deposited,
+                btc_out_point,
+            } => {
                 return Ok(AwaitDepositResponse {
-                    status: DepositStateV2::Claimed(tx),
+                    status: DepositStateV2::Claimed {
+                        btc_deposited,
+                        btc_out_point,
+                    },
                 })
             }
             DepositStateV2::Failed(reason) => {
