@@ -37,7 +37,7 @@ async fn _await_invoice(
         .await?
         .into_stream();
     info!(
-        "Created await invoice stream for operation id: {}",
+        "Created await invoice stream for operation id: {:?}",
         req.operation_id
     );
     while let Some(update) = updates.next().await {
