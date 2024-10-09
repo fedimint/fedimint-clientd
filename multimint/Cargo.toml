@@ -1,7 +1,7 @@
 [package]
 name = "multimint"
 description = "A library for managing fedimint clients across multiple federations"
-version = "0.3.8"
+version.workspace = true
 edition.workspace = true
 repository.workspace = true
 keywords.workspace = true
@@ -13,6 +13,7 @@ authors.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+fedimint-api-client = { workspace = true }
 fedimint-client = { workspace = true }
 anyhow = "1.0.75"
 serde = "1.0.193"

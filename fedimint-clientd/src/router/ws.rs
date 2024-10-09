@@ -167,7 +167,7 @@ async fn match_method(req: JsonRpcRequest, state: AppState) -> Result<Value, App
         }
         JsonRpcMethod::AdminConfig => handlers::admin::config::handle_ws(state.clone()).await,
         JsonRpcMethod::AdminDiscoverVersion => {
-            handlers::admin::discover_version::handle_ws(state.clone(), req.params).await
+            handlers::admin::discover_version::handle_ws(state.clone()).await
         }
         JsonRpcMethod::AdminFederationIds => {
             handlers::admin::federation_ids::handle_ws(state.clone(), req.params).await

@@ -2,12 +2,13 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use bitcoin::hashes::hex::ToHex;
-use bitcoin::Address;
+use bitcoin::address::NetworkUnchecked;
+use bitcoin::{Amount, Txid};
 use futures_util::StreamExt;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_core::config::FederationId;
 use multimint::fedimint_core::BitcoinAmountOrAll;
+use multimint::fedimint_ln_common::bitcoin::Address;
 use multimint::fedimint_wallet_client::{WalletClientModule, WithdrawState};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -19,7 +20,7 @@ use crate::state::AppState;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WithdrawRequest {
-    pub address: Address,
+    pub address: Address<NetworkUnchecked>,
     pub amount_sat: BitcoinAmountOrAll,
     pub federation_id: FederationId,
 }
@@ -27,7 +28,7 @@ pub struct WithdrawRequest {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WithdrawResponse {
-    pub txid: String,
+    pub txid: Txid,
     pub fees_sat: u64,
 }
 
@@ -40,7 +41,7 @@ async fn _withdraw(
         // If the amount is "all", then we need to subtract the fees from
         // the amount we are withdrawing
         BitcoinAmountOrAll::All => {
-            let balance = bitcoin::Amount::from_sat(client.get_balance().await.msats / 1000);
+            let balance = Amount::from_sat(client.get_balance().await.msats / 1000);
             let fees = wallet_module
                 .get_withdraw_fees(req.address.clone(), balance)
                 .await?;
@@ -83,7 +84,7 @@ async fn _withdraw(
         match update {
             WithdrawState::Succeeded(txid) => {
                 return Ok(WithdrawResponse {
-                    txid: txid.to_hex(),
+                    txid: txid,
                     fees_sat: absolute_fees.to_sat(),
                 });
             }

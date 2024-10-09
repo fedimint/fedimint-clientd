@@ -68,9 +68,9 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use fedimint_client::ClientHandleArc;
-use fedimint_core::api::InviteCode;
 use fedimint_core::config::{FederationId, FederationIdPrefix, JsonClientConfig};
 use fedimint_core::db::Database;
+use fedimint_core::invite_code::InviteCode;
 use fedimint_core::Amount;
 use fedimint_ln_client::LightningClientModule;
 use fedimint_mint_client::MintClientModule;
@@ -313,7 +313,7 @@ impl MultiMint {
         let clients = self.clients.lock().await;
 
         for (federation_id, client) in clients.iter() {
-            let client_config = client.get_config_json();
+            let client_config = client.get_config_json().await;
             configs_map.insert(*federation_id, client_config);
         }
 
@@ -354,7 +354,7 @@ impl MultiMint {
             let info = InfoResponse {
                 federation_id: *federation_id,
                 network: wallet_client.get_network().to_string(),
-                meta: client.get_config().global.meta.clone(),
+                meta: client.config().await.global.meta.clone(),
                 total_amount_msat: summary.total_amount(),
                 total_num_notes: summary.count_items(),
                 denominations_msat: summary,

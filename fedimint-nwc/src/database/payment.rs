@@ -1,4 +1,4 @@
-use lightning_invoice::Bolt11Invoice;
+use multimint::fedimint_ln_common::lightning_invoice::Bolt11Invoice;
 use redb::{TableDefinition, TypeName, Value};
 use serde::{Deserialize, Serialize};
 

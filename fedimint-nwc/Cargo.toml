@@ -1,5 +1,6 @@
 [package]
 name = "fedimint-nwc"
+description = "A Nostr Wallet Connect implementation using Fedimint"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true
@@ -18,9 +19,8 @@ dotenv = "0.15.0"
 futures-util = "0.3.30"
 image = "0.25.1"
 itertools = "0.13.0"
-lightning-invoice = { version = "0.26.0", features = ["serde"] }
-# multimint = { version = "0.3.6" }
-multimint = { path = "../multimint" }
+# multimint = { path = "../multimint" }
+multimint = { version = "0.4.0" }
 nostr = { version = "0.31.2", features = ["nip47"] }
 nostr-sdk = { version = "0.31.0", features = ["nip47"] }
 qrcode = "0.14.0"

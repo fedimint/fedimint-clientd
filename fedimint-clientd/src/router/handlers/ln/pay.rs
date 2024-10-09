@@ -2,10 +2,10 @@ use anyhow::anyhow;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::Json;
-use bitcoin::secp256k1::PublicKey;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_core::config::FederationId;
 use multimint::fedimint_core::core::OperationId;
+use multimint::fedimint_core::secp256k1::PublicKey;
 use multimint::fedimint_core::Amount;
 use multimint::fedimint_ln_client::{LightningClientModule, OutgoingLightningPayment, PayType};
 use serde::{Deserialize, Serialize};
@@ -59,7 +59,7 @@ async fn _pay(client: ClientHandleArc, req: LnPayRequest) -> Result<LnPayRespons
         .pay_bolt11_invoice(Some(gateway), bolt11, ())
         .await?;
     let operation_id = payment_type.operation_id();
-    info!("Gateway fee: {fee}, payment operation id: {operation_id}");
+    info!("Gateway fee: {fee}, payment operation id: {operation_id:?}");
 
     wait_for_ln_payment(&client, payment_type, contract_id.to_string(), false)
         .await?

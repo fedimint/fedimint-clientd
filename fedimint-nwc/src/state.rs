@@ -4,7 +4,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration;
 
-use multimint::fedimint_core::api::InviteCode;
+use multimint::fedimint_core::invite_code::InviteCode;
 use nostr_sdk::{Event, EventId, JsonUtil};
 use tokio::sync::Mutex;
 use tracing::{debug, error, info};

@@ -6,7 +6,7 @@ use futures_util::StreamExt;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_core::config::FederationId;
 use multimint::fedimint_core::core::OperationId;
-use multimint::fedimint_wallet_client::{DepositState, WalletClientModule};
+use multimint::fedimint_wallet_client::{DepositStateV2, WalletClientModule};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -23,7 +23,7 @@ pub struct AwaitDepositRequest {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AwaitDepositResponse {
-    pub status: DepositState,
+    pub status: DepositStateV2,
 }
 
 async fn _await_deposit(
@@ -32,23 +32,35 @@ async fn _await_deposit(
 ) -> Result<AwaitDepositResponse, AppError> {
     let mut updates = client
         .get_first_module::<WalletClientModule>()
-        .subscribe_deposit_updates(req.operation_id)
+        .subscribe_deposit(req.operation_id)
         .await?
         .into_stream();
 
     while let Some(update) = updates.next().await {
         match update {
-            DepositState::Confirmed(tx) => {
+            DepositStateV2::Confirmed {
+                btc_deposited,
+                btc_out_point,
+            } => {
                 return Ok(AwaitDepositResponse {
-                    status: DepositState::Confirmed(tx),
+                    status: DepositStateV2::Confirmed {
+                        btc_deposited,
+                        btc_out_point,
+                    },
                 })
             }
-            DepositState::Claimed(tx) => {
+            DepositStateV2::Claimed {
+                btc_deposited,
+                btc_out_point,
+            } => {
                 return Ok(AwaitDepositResponse {
-                    status: DepositState::Claimed(tx),
+                    status: DepositStateV2::Claimed {
+                        btc_deposited,
+                        btc_out_point,
+                    },
                 })
             }
-            DepositState::Failed(reason) => {
+            DepositStateV2::Failed(reason) => {
                 return Err(AppError::new(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     anyhow!(reason),

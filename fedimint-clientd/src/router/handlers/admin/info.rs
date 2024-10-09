@@ -4,7 +4,7 @@ use anyhow::Error;
 use axum::extract::State;
 use axum::Json;
 use multimint::fedimint_core::config::FederationId;
-use multimint::fedimint_core::{Amount, TieredSummary};
+use multimint::fedimint_core::{Amount, TieredCounts};
 use multimint::fedimint_mint_client::MintClientModule;
 use multimint::fedimint_wallet_client::WalletClientModule;
 use multimint::MultiMint;
@@ -21,7 +21,7 @@ pub struct InfoResponse {
     pub meta: BTreeMap<String, String>,
     pub total_amount_msat: Amount,
     pub total_num_notes: usize,
-    pub denominations_msat: TieredSummary,
+    pub denominations_msat: TieredCounts,
 }
 
 async fn _info(multimint: MultiMint) -> Result<HashMap<FederationId, InfoResponse>, Error> {
@@ -44,7 +44,7 @@ async fn _info(multimint: MultiMint) -> Result<HashMap<FederationId, InfoRespons
             *id,
             InfoResponse {
                 network: wallet_client.get_network().to_string(),
-                meta: client.get_config().global.meta.clone(),
+                meta: client.config().await.global.meta.clone(),
                 total_amount_msat: summary.total_amount(),
                 total_num_notes: summary.count_items(),
                 denominations_msat: summary,

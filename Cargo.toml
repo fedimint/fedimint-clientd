@@ -3,7 +3,7 @@ members = ["multimint", "fedimint-clientd", "fedimint-nwc"]
 resolver = "2"
 
 [workspace.package]
-version = "0.3.7"
+version = "0.4.0"
 edition = "2021"
 repository = "https://github.com/fedimint/fedimint-clientd"
 keywords = ["fedimint", "bitcoin", "lightning", "ecash"]
@@ -12,13 +12,14 @@ readme = "README.md"
 authors = ["The Fedimint Developers"]
 
 [workspace.dependencies]
-fedimint-client = "0.3.3"
-fedimint-core = "0.3.3"
-fedimint-wallet-client = "0.3.3"
-fedimint-mint-client = "0.3.3"
-fedimint-ln-client = "0.3.3"
-fedimint-ln-common = "0.3.3"
-fedimint-rocksdb = "0.3.3"
+fedimint-api-client = "0.4.2"
+fedimint-client = "0.4.2"
+fedimint-core = "0.4.2"
+fedimint-wallet-client = "0.4.2"
+fedimint-mint-client = "0.4.2"
+fedimint-ln-client = "0.4.2"
+fedimint-ln-common = "0.4.2"
+fedimint-rocksdb = "0.4.2"
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]

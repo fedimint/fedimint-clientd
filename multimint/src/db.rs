@@ -1,6 +1,6 @@
-use fedimint_core::api::InviteCode;
 use fedimint_core::config::FederationId;
 use fedimint_core::encoding::{Decodable, Encodable};
+use fedimint_core::invite_code::InviteCode;
 use fedimint_core::{impl_db_lookup, impl_db_record};
 use serde::{Deserialize, Serialize};
 

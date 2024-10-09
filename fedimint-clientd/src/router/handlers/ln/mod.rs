@@ -2,10 +2,10 @@ use std::str::FromStr;
 
 use anyhow::{bail, Context};
 use futures_util::StreamExt;
-use lightning_invoice::Bolt11Invoice;
 use multimint::fedimint_client::ClientHandleArc;
 use multimint::fedimint_core::Amount;
 use multimint::fedimint_ln_client::{InternalPayState, LightningClientModule, LnPayState, PayType};
+use multimint::fedimint_ln_common::lightning_invoice::Bolt11Invoice;
 use tracing::{debug, info};
 
 use self::pay::{LnPayRequest, LnPayResponse};
@@ -137,11 +137,11 @@ pub async fn wait_for_ln_payment(
                     LnPayState::Canceled => {
                         Err(anyhow::anyhow!("Payment was canceled"))?;
                     }
+                    LnPayState::Funded { block_height: _ } if return_on_funding => return Ok(None),
                     LnPayState::Created
                     | LnPayState::AwaitingChange
-                    | LnPayState::WaitingForRefund { .. } => {}
-                    LnPayState::Funded if return_on_funding => return Ok(None),
-                    LnPayState::Funded => {}
+                    | LnPayState::WaitingForRefund { .. }
+                    | LnPayState::Funded { block_height: _ } => {}
                     LnPayState::UnexpectedError { error_message } => {
                         bail!("UnexpectedError: {error_message}")
                     }
