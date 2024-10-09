@@ -137,11 +137,11 @@ pub async fn wait_for_ln_payment(
                     LnPayState::Canceled => {
                         Err(anyhow::anyhow!("Payment was canceled"))?;
                     }
+                    LnPayState::Funded { block_height: _ } if return_on_funding => return Ok(None),
                     LnPayState::Created
                     | LnPayState::AwaitingChange
-                    | LnPayState::WaitingForRefund { .. } => {}
-                    LnPayState::Funded if return_on_funding => return Ok(None),
-                    LnPayState::Funded => {}
+                    | LnPayState::WaitingForRefund { .. }
+                    | LnPayState::Funded { block_height: _ } => {}
                     LnPayState::UnexpectedError { error_message } => {
                         bail!("UnexpectedError: {error_message}")
                     }
