@@ -1,12 +1,9 @@
 package modules
 
-type OnchainDepositAddressRequest struct {
-	Timeout int `json:"timeout"`
-}
-
 type OnchainDepositAddressResponse struct {
 	OperationId string `json:"operationId"`
 	Address     string `json:"address"`
+	TweakIdx    int    `json:"tweakIdx"`
 }
 
 type OnchainAwaitDepositRequest struct {
