@@ -8,6 +8,7 @@ fm_client_db
 .DS_Store
 fm_db
 fm_db_dir
+fm_db_mnemonic
 result
 /vendor
 

@@ -97,20 +97,9 @@ async fn main() -> Result<()> {
 
     let mut state = AppState::new(cli.db_path).await?;
 
-    let manual_secret = match cli.manual_secret {
-        Some(secret) => Some(secret),
-        None => match std::env::var("FEDIMINT_CLIENTD_MANUAL_SECRET") {
-            Ok(secret) => Some(secret),
-            Err(_) => None,
-        },
-    };
-
     match InviteCode::from_str(&cli.invite_code) {
         Ok(invite_code) => {
-            let federation_id = state
-                .multimint
-                .register_new(invite_code, manual_secret)
-                .await?;
+            let federation_id = state.multimint.register_new(invite_code).await?;
             info!("Created client for federation id: {:?}", federation_id);
         }
         Err(e) => {

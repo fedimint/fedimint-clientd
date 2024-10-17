@@ -25,7 +25,9 @@ fedimint-mint-client = { workspace = true }
 fedimint-ln-client = { workspace = true }
 fedimint-ln-common = { workspace = true }
 fedimint-rocksdb = { workspace = true }
+fedimint-bip39 = { workspace = true }
 futures-util = "0.3.30"
 rand = "0.8.5"
 tracing = "0.1.40"
 hex = "0.4.3"
+bip39 = "2.1.0"
