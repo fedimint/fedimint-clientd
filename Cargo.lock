@@ -530,11 +530,13 @@ dependencies = [
 
 [[package]]
 name = "bip39"
-version = "2.0.0"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93f2635620bf0b9d4576eb7bb9a38a55df78bd1205d26fa994b25911a69f212f"
+checksum = "33415e24172c1b7d6066f6d999545375ab8e1d95421d6784bdfff9496f292387"
 dependencies = [
- "bitcoin_hashes 0.11.0",
+ "bitcoin_hashes 0.13.0",
+ "rand",
+ "rand_core",
  "serde",
  "unicode-normalization",
 ]
@@ -1289,6 +1291,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "fedimint-bip39"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a0b2301eb60061096ab7f82bf1b8d5a98980cf27ea5fef07cbc47a1d58e2afa"
+dependencies = [
+ "bip39",
+ "fedimint-client",
+ "fedimint-core",
+ "rand",
+]
+
+[[package]]
 name = "fedimint-bitcoind"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1373,7 +1387,7 @@ dependencies = [
  "lnurl-rs 0.5.0",
  "metrics",
  "metrics-exporter-prometheus",
- "multimint 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "multimint 0.4.0",
  "reqwest 0.12.7",
  "serde",
  "serde_json",
@@ -2690,7 +2704,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c2a198fb6b0eada2a8df47933734e6d35d350665a33a3593d7164fa52c75c19"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -3002,7 +3016,9 @@ name = "multimint"
 version = "0.4.0"
 dependencies = [
  "anyhow",
+ "bip39",
  "fedimint-api-client",
+ "fedimint-bip39",
  "fedimint-client",
  "fedimint-core",
  "fedimint-ln-client",

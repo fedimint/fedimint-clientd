@@ -67,7 +67,10 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use anyhow::Result;
-use fedimint_client::ClientHandleArc;
+use bip39::Mnemonic;
+use fedimint_bip39::Bip39RootSecretStrategy;
+use fedimint_client::secret::RootSecretStrategy;
+use fedimint_client::{Client, ClientHandleArc};
 use fedimint_core::config::{FederationId, FederationIdPrefix, JsonClientConfig};
 use fedimint_core::db::Database;
 use fedimint_core::invite_code::InviteCode;
@@ -75,8 +78,9 @@ use fedimint_core::Amount;
 use fedimint_ln_client::LightningClientModule;
 use fedimint_mint_client::MintClientModule;
 use fedimint_wallet_client::WalletClientModule;
+use rand::thread_rng;
 use tokio::sync::Mutex;
-use tracing::warn;
+use tracing::{info, warn};
 use types::InfoResponse;
 // Reexport all the fedimint crates for ease of use
 pub use {
@@ -144,8 +148,9 @@ impl MultiMint {
             fedimint_rocksdb::RocksDb::open(work_dir.join("multimint.db"))?,
             Default::default(),
         );
+        let mnemonic = load_or_generate_mnemonic(&db).await?;
 
-        let client_builder = LocalClientBuilder::new(work_dir);
+        let client_builder = LocalClientBuilder::new(mnemonic);
 
         let clients = Arc::new(Mutex::new(BTreeMap::new()));
 
@@ -172,7 +177,7 @@ impl MultiMint {
         for config in configs {
             let federation_id = config.invite_code.federation_id();
 
-            if let Ok(client) = client_builder.build(config.clone(), None).await {
+            if let Ok(client) = client_builder.build(&db, config.clone()).await {
                 clients.insert(federation_id, client);
             } else {
                 warn!("Failed to load client for federation: {federation_id}");
@@ -189,22 +194,7 @@ impl MultiMint {
     /// You can provide a manual secret to use for the client's keypair. If you
     /// don't provide a secret, a 64 byte random secret will be generated, which
     /// you can extract from the client if needed.
-    pub async fn register_new(
-        &mut self,
-        invite_code: InviteCode,
-        manual_secret: Option<String>,
-    ) -> Result<FederationId> {
-        let manual_secret: Option<[u8; 64]> = match manual_secret {
-            Some(manual_secret) => {
-                let bytes = hex::decode(manual_secret)?;
-                Some(
-                    bytes
-                        .try_into()
-                        .map_err(|_| anyhow::anyhow!("Manual secret must be 64 bytes long"))?,
-                )
-            }
-            None => None,
-        };
+    pub async fn register_new(&mut self, invite_code: InviteCode) -> Result<FederationId> {
         let federation_id = invite_code.federation_id();
         if self
             .clients
@@ -224,7 +214,7 @@ impl MultiMint {
 
         let client = self
             .client_builder
-            .build(client_cfg.clone(), manual_secret)
+            .build(&self.db, client_cfg.clone())
             .await?;
 
         self.clients.lock().await.insert(federation_id, client);
@@ -384,4 +374,23 @@ impl MultiMint {
 
         Ok(())
     }
+}
+
+async fn load_or_generate_mnemonic(db: &Database) -> Result<Mnemonic> {
+    Ok(
+        if let Ok(entropy) = Client::load_decodable_client_secret::<Vec<u8>>(db).await {
+            Mnemonic::from_entropy(&entropy)?
+        } else {
+            let mnemonic = if let Ok(words) = std::env::var("MULTIMINT_MNEMONIC_ENV") {
+                info!("Using provided mnemonic from environment variable");
+                Mnemonic::parse_in_normalized(bip39::Language::English, words.as_str())?
+            } else {
+                info!("Generating mnemonic and writing entropy to client storage");
+                Bip39RootSecretStrategy::<12>::random(&mut thread_rng())
+            };
+
+            Client::store_encodable_client_secret(&db, mnemonic.to_entropy()).await?;
+            mnemonic
+        },
+    )
 }
