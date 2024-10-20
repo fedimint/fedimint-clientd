@@ -47,6 +47,7 @@
             "src"
             "multimint"
             "fedimint-clientd"
+            "fedimint-nwc"
             "clientd-stateless"
           ];
         };
@@ -105,6 +106,14 @@
               pname = "fedimint-clientd";
               packages = [ "fedimint-clientd" ];
               mainProgram = "fedimint-clientd";
+            };
+
+            fedimint-clientd-oci = pkgs.dockerTools.buildLayeredImage {
+              name = "fedimint-clientd";
+              contents = [ fedimint-clientd ];
+              config = {
+                Cmd = [ "${fedimint-clientd}/bin/fedimint-clientd" ];
+              };
             };
           }
         );

@@ -72,3 +72,30 @@ curl http://localhost:3333/v2/admin/info -H 'Authorization: Bearer some-secure-p
 
 - `/health`: health check endpoint.
 - `/metrics`: exports API metrics using opentelemetry with prometheus exporter (num requests, latency, high-level metrics only)
+
+## Fedimint Clientd on Docker
+
+Fedimint Clientd is not officially supported on Docker. However, you can build, publish and deploy your own docker image by following these steps:
+
+- Build an OCI image
+
+```
+nix build .#fedimint-clientd-oci && docker load < ./result
+```
+
+- confirm the image is built and loaded in your local docker registry
+
+```
+docker image ls
+
+# REPOSITORY          TAG                                IMAGE ID       CREATED        SIZE
+# fedimint-clientd    f4cb5pgsw4sn7mg93xwyvx09ib4qg3rd   ff8cf0f0805b   54 years ago   91.1MB1.1GB
+# ...
+```
+
+- Tag the image image appropriately then publish to your preferred registry
+
+```
+docker tag fedimint-clientd <registry>/fedimint-clientd:v0.4.0
+docker push <registry>/fedimint-clientd:v0.4.0
+```
