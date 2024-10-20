@@ -6,26 +6,37 @@ This project is intended to be an easy-to-use starting point for those intereste
 
 ## Getting Started
 
-You can install the cli app with `cargo install fedimint-clientd` or by cloning the repo and running `cargo build --release` in the root directory.
+1. You can install the cli app with `cargo install fedimint-clientd` or by cloning the repo and running `cargo build --release` in the root directory.
 
-`fedimint-clientd` runs from the command line and takes a few arguments, which are also available as environment variables. Fedimint uses rocksDB, an embedded key-value store, to store its state. The `--fm_db_path` argument is required and should be an absolute path to a directory where the database will be stored.
+    `fedimint-clientd` runs from the command line and takes a few arguments, which are also available as environment variables. Fedimint uses rocksDB, an embedded key-value store, to store its state. The `--fm_db_path` argument is required and should be an absolute path to a directory where the database will be stored.
 
-```
-CLI USAGE:
-fedimint-clientd \
-  --db-path=/absolute/path/to/dir/to/store/database \
-  --password="some-secure-password-that-becomes-the-bearer-token" \
-  --addr="127.0.0.1:8080"
-  --mode="rest"
-  --invite-code="fed1-fedimint-invite-code"
+    ```shell
+    CLI USAGE:
+    fedimint-clientd \
+      --db-path=/absolute/path/to/dir/to/store/database \
+      --password="some-secure-password-that-becomes-the-bearer-token" \
+      --addr="127.0.0.1:3333"
+      --mode="rest"
+      --invite-code="fed1-fedimint-invite-code"
+    ```
 
-ENV USAGE:
-FEDIMINT_CLIENTD_DB_PATH=/absolute/path/to/dir/to/store/database
-FEDIMINT_CLIENTD_PASSWORD="some-secure-password-that-becomes-the-bearer-token"
-FEDIMINT_CLIENTD_ADDR="127.0.0.1:8080"
-FEDIMINT_CLIENTD_MODE="rest"
-FEDIMINT_CLIENTD_INVITE_CODE="fed1-fedimint-invite-code"
-```
+2. With a Nix environment already setup:
+- Clone the repo and run `nix develop` to install and build the dependencies.
+- Run `just dev` to fire up the client app.
+
+  Make sure to configure your environment variables as shown below:
+
+  ```shell
+  ENV USAGE:
+  FEDIMINT_CLIENTD_DB_PATH=/absolute/path/to/dir/to/store/database
+  FEDIMINT_CLIENTD_PASSWORD="some-secure-password-that-becomes-the-bearer-token"
+  FEDIMINT_CLIENTD_ADDR="127.0.0.1:3333"
+  FEDIMINT_CLIENTD_BASE_URL="127.0.0.1:3333"
+  FEDIMINT_CLIENTD_MODE="rest"
+  # this is the invite code to the Fedi Alpha federation mutinynet,
+  # you can replace it with another but its the most useful one for testing so good to at least have it
+  FEDIMINT_CLIENTD_INVITE_CODE="fed11qgqrgvnhwden5te0v9k8q6rp9ekh2arfdeukuet595cr2ttpd3jhq6rzve6zuer9wchxvetyd938gcewvdhk6tcqqysptkuvknc7erjgf4em3zfh90kffqf9srujn6q53d6r056e4apze5cw27h75"
+  ```
 
 ## Fedimint Clientd Endpoints
 

@@ -16,12 +16,16 @@ test-py-async:
 test-go:
   cd wrappers/fedimint-go && go run cmd/main.go
 
+test-kotlin:
+  cd wrappers/fedimint-kotlin && ./gradlew build && ./gradlew run
+
 test-all:
   set -e
   (just test-ts && echo "test-ts completed successfully") &
   (just test-py && echo "test-py completed successfully") &
   (just test-py-async && echo "test-py-async completed successfully") &
   (just test-go && echo "test-go completed successfully") &
+  (just test-kotlin && echo "test-kotlin completed successfully") &
   wait
 
 wscat:
